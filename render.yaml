@@ -1,0 +1,21 @@
+version: "1"
+projects:
+  - name: Gello
+    environments:
+      - name: Production
+        services:
+          - type: web
+            name: Gello
+            runtime: node
+            repo: https://github.com/gello-co/gello
+            plan: free
+            region: ohio
+            buildCommand: bun install --frozen-lockfile && bun run build
+            startCommand: bun run start
+            domains:
+              - www.gello.co
+              - gello.co
+            autoDeployTrigger: commit
+            rootDir: ProjectSourceCode
+            previews:
+              generation: manual

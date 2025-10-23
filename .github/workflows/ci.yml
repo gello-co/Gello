@@ -1,0 +1,147 @@
+name: CI
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  BUN_INSTALL_CACHE_DIR: ~/.bun/install/cache
+
+jobs:
+  format:
+    name: Format & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Restore Bun cache
+        id: bun-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --no-progress
+
+      - name: Save Bun cache
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
+
+      - name: Run formatter (check)
+        run: bun run format
+
+      - name: Run linter
+        run: bun run lint
+
+  commitlint:
+    name: Commit message lint
+    runs-on: ubuntu-latest
+    needs: format
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Restore Bun cache
+        id: bun-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --no-progress
+
+      - name: Save Bun cache
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
+
+      - name: Fetch main for commit range
+        run: git fetch origin main --depth=1
+
+      - name: Commitlint (PR)
+        if: github.event_name == 'pull_request'
+        working-directory: ProjectSourceCode
+        run: |
+          git --no-pager log --format=%B origin/main..HEAD > /tmp/commits.txt || true
+          if [ -s /tmp/commits.txt ]; then
+            bunx commitlint --file /tmp/commits.txt
+          else
+            echo "No commits to lint"
+          fi
+
+      - name: Commitlint (push)
+        if: github.event_name == 'push'
+        working-directory: ProjectSourceCode
+        run: bunx commitlint --last --verbose
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: [format, commitlint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Restore Bun cache
+        id: bun-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --no-progress
+
+      - name: Save Bun cache
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
+
+      - name: Run tests (CI)
+        run: bun run --cwd ProjectSourceCode test:ci
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ProjectSourceCode/coverage/
+          if-no-files-found: ignore

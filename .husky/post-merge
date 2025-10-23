@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# Auto-update private ops repo if available; never fail the merge
+if [ -x ./.ops/scripts/ops-ensure.sh ]; then
+  ./.ops/scripts/ops-ensure.sh || true
+elif [ -f ./.ops/scripts/ops-ensure.sh ]; then
+  bash ./.ops/scripts/ops-ensure.sh || true
+fi

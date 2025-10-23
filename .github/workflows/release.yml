@@ -1,0 +1,58 @@
+name: Release and publish
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  CI: true
+  BUN_INSTALL_CACHE_DIR: ~/.bun/install/cache
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Restore Bun cache
+        id: bun-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --no-progress
+
+      - name: Save Bun cache
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
+
+      - name: Build
+        run: bun run --cwd ProjectSourceCode build
+
+      - name: Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_PRD }}
+        working-directory: ProjectSourceCode
+        run: bunx semantic-release

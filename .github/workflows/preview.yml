@@ -1,0 +1,130 @@
+name: PR Preview CI
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, review_requested]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  BUN_INSTALL_CACHE_DIR: ~/.bun/install/cache
+
+jobs:
+  pr-build:
+    name: Build, lint, test (PR)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Restore Bun cache
+        id: bun-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --no-progress
+
+      - name: Save Bun cache
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
+
+      - name: Run formatter (check)
+        run: bun run format
+
+      - name: Run linter
+        run: bun run lint
+
+      - name: Run tests (fast)
+        run: bunx vitest --run --reporter dot --root ProjectSourceCode
+
+      - name: Build artifacts
+        run: bun run --cwd ProjectSourceCode build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-build-artifacts
+          path: ProjectSourceCode/dist
+
+  pr-commitlint:
+    name: Commit message lint
+    runs-on: ubuntu-latest
+    needs: pr-build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Restore Bun cache
+        id: bun-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --no-progress
+
+      - name: Save Bun cache
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
+
+      - name: Fetch commits
+        run: git fetch origin main --depth=1
+
+      - name: Run commitlint
+        run: |
+          git --no-pager log --format=%B origin/main..HEAD > /tmp/commits.txt || true
+          if [ -s /tmp/commits.txt ]; then
+            bunx commitlint --file /tmp/commits.txt
+          else
+            echo "No commits to lint"
+          fi
+
+  badgetizr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Badgetizr
+        uses: aiKrice/homebrew-badgetizr@2.3.0
+        with:
+          pr_id: ${{ github.event.pull_request.number }}
+          configuration: .badgetizr.yml
+          pr_destination_branch: ${{ github.event.pull_request.base.ref }}
+          pr_build_number: ${{ github.run_id }}
+          pr_build_url: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
