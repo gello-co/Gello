@@ -2,7 +2,7 @@
 	"name": "team-1-gello",
 	"private": true,
 	"scripts": {
-		"dev:env": "bash .ops/scripts/sync.sh || true",
+		"dev:env": "bash .devOps/scripts/sync.sh || true",
 		"dev": "bun run --cwd ProjectSourceCode dev",
 		"build": "bun run --cwd ProjectSourceCode build",
 		"start": "bun run --cwd ProjectSourceCode start",
@@ -10,7 +10,8 @@
 		"test:ci": "bun run --cwd ProjectSourceCode test:ci",
 		"lint": "bun run --cwd ProjectSourceCode lint",
 		"format": "bun run --cwd ProjectSourceCode format",
-		"e2e": "bun run --cwd ProjectSourceCode e2e"
+		"e2e": "bun run --cwd ProjectSourceCode e2e",
+		"prepare": "husky || true"
 	},
 	"workspaces": [
 		"ProjectSourceCode"

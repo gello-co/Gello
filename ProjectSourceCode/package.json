@@ -12,7 +12,7 @@
 		"test": "vitest",
 		"test:ci": "vitest --run",
 		"e2e": "playwright test",
-		"prepare": "husky"
+		"prepare": "husky || true"
 	},
 	"dependencies": {
 		"@hono/bun-transpiler": "^0.2.1",
