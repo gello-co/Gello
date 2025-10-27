@@ -1,8 +1,6 @@
-# Team Meeting Logs 013-1
+# Reusable template (copy for each meeting)
 
-<!-- Paste the template below and fill it out for each week, newest on top. -->
-
-## Week 1: 10/23/25
+## Week #: MM/DD/YY
 
 <!-- required -->
 
@@ -21,8 +19,8 @@ Attendees
 
 Decisions made
 
-- Wireframe draft finalized
-- Weekly meetings scheduled
+- [Decision 1]
+- [Decision 2]
 
 <!-- required -->
 
