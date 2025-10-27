@@ -7,15 +7,15 @@ projects:
           - type: web
             name: Gello
             runtime: node
-            repo: https://github.com/gello-co/gello
+            repo: https://github.com/gello-co/Gello
             plan: free
             region: ohio
-            buildCommand: bun install --frozen-lockfile && bun run build
-            startCommand: bun run start
+            buildCommand: bun install --frozen-lockfile && bun run --cwd ProjectSourceCode build
+            startCommand: bun run --cwd ProjectSourceCode start
             domains:
               - www.gello.co
               - gello.co
             autoDeployTrigger: commit
-            rootDir: ProjectSourceCode
+            rootDir: .
             previews:
               generation: manual

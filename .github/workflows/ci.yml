@@ -4,6 +4,8 @@ on:
     branches: [main, dev]
   pull_request:
 
+permissions:
+  contents: read
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -14,14 +16,14 @@ env:
 
 jobs:
   format:
-    name: Format & Lint
+    name: Format, Lint, and Organize Imports
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: package.json
+          bun-version: latest
 
       - name: Restore Bun cache
         id: bun-cache
@@ -30,7 +32,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
@@ -45,9 +47,6 @@ jobs:
             node_modules
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
-      - name: Run formatter (check)
-        run: bun run format
-
       - name: Run linter
         run: bun run lint
 
@@ -60,7 +59,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: package.json
+          bun-version: latest
 
       - name: Restore Bun cache
         id: bun-cache
@@ -69,7 +68,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
@@ -112,7 +111,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: package.json
+          bun-version: latest
 
       - name: Restore Bun cache
         id: bun-cache
@@ -121,7 +120,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies

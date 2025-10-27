@@ -1,30 +1,37 @@
 # syntax=docker/dockerfile:1.7
-# Multi-stage Bun build for Gello
+# Multi-stage Bun build for Gello (workspace at repo root)
 
-FROM oven/bun:1 AS deps
+FROM oven/bun:latest AS deps
 WORKDIR /app
 
-# Install deps (cache-friendly)
-COPY package.json bun.lock* ./
+# Copy root workspace manifests and app manifest for dependency resolution
+COPY package.json ./
+COPY bun.lock* ./
+COPY ProjectSourceCode/package.json ./ProjectSourceCode/package.json
+
+# Install all dependencies for the workspace using the root lockfile
 RUN bun install --frozen-lockfile
 
-# Copy source and build
+# Copy the rest of the source and build the app
 COPY . .
-RUN bun run build
+RUN bun run --cwd ProjectSourceCode build
 
 # --- Production runtime ---
-FROM oven/bun:1 AS runner
+FROM oven/bun:latest AS runner
 WORKDIR /app
-ENV NODE_ENV=development
-# ENV NODE_ENV=production --- IGNORE ---
+ENV NODE_ENV=production
 
-# Copy only necessary files to run
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/dist ./dist
-COPY --from=deps /app/src ./src
+# Copy only what is needed and install production dependencies
 COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/bun.lock* ./
+COPY --from=deps /app/ProjectSourceCode/package.json ./ProjectSourceCode/package.json
+RUN bun install --frozen-lockfile --production
+
+# App artifacts and sources needed at runtime
+COPY --from=deps /app/ProjectSourceCode/dist ./ProjectSourceCode/dist
+COPY --from=deps /app/ProjectSourceCode/src ./ProjectSourceCode/src
 
 EXPOSE 3000
 
-# Start the server (serves dist in production)
-CMD ["bun", "run", "start"]
+# Start the server from the app workspace
+CMD ["bun", "run", "--cwd", "ProjectSourceCode", "start"]

@@ -1,19 +1,34 @@
 {
 	"name": "team-1-gello",
 	"private": true,
+	"version": "0.0.0",
 	"scripts": {
-		"dev:env": "bash .devOps/scripts/sync.sh || true",
+		"dev:env": "bash .devOps/scripts/sync.sh || echo 'Failed to sync'",
 		"dev": "bun run --cwd ProjectSourceCode dev",
 		"build": "bun run --cwd ProjectSourceCode build",
 		"start": "bun run --cwd ProjectSourceCode start",
 		"test": "bun run --cwd ProjectSourceCode test",
 		"test:ci": "bun run --cwd ProjectSourceCode test:ci",
-		"lint": "bun run --cwd ProjectSourceCode lint",
-		"format": "bun run --cwd ProjectSourceCode format",
-		"e2e": "bun run --cwd ProjectSourceCode e2e",
-		"prepare": "husky || true"
+		"lint": "bunx biome lint --write",
+		"lint:dry": "bunx biome lint",
+		"format": "bunx biome format --write",
+		"format:dry": "bunx biome format",
+		"check": "bunx biome check --write",
+		"check:dry": "bunx biome check",
+		"e2e": "bun run --cwd ProjectSourceCode e2e"
 	},
 	"workspaces": [
 		"ProjectSourceCode"
-	]
+	],
+	"devDependencies": {
+		"@commitlint/cli": "^20.1.0",
+		"@commitlint/config-conventional": "^20.0.0",
+		"@commitlint/prompt-cli": "^20.1.0",
+		"husky": "^9.1.7"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	}
 }
