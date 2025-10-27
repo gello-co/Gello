@@ -1,8 +1,8 @@
 # 3308 dock-compose.yml boilerplate
 services:
-  # Dev app container with live reload; code mounted from host
+  # Dev app container with live reload; code mounted from local host
   web:
-    image: oven/bun:1
+    image: oven/bun:latest
     user: "bun"
     working_dir: /app
     environment:
@@ -11,19 +11,24 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./:/app
-    # Ensure dependencies are installed inside the container (Bun links node_modules to its cache)
-    command: ["sh", "-lc", "bun install --frozen-lockfile && bun run dev"]
+      - ../:/app
+    # Install at repo root (workspace) and run app dev server
+    command:
+      [
+        "sh",
+        "-lc",
+        "bun install --frozen-lockfile && bun run --cwd ProjectSourceCode dev",
+      ]
 
   # Production container built from Dockerfile
   # Start with: docker compose up --build web-prod
   web-prod:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: ProjectSourceCode/Dockerfile
     environment:
       - NODE_ENV=production
       - PORT=3000
     ports:
       - "3000:3000"
-    command: ["bun", "run", "start"]
+    command: ["bun", "run", "--cwd", "ProjectSourceCode", "start"]
