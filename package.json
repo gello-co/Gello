@@ -15,7 +15,12 @@
 		"format:dry": "bunx biome format",
 		"check": "bunx biome check --write",
 		"check:dry": "bunx biome check",
-		"e2e": "playwright test"
+		"e2e": "playwright test",
+		"release:preview": "bun scripts/preview-release.mjs",
+		"release:preview:dev": "bun scripts/preview-release.mjs --branch dev",
+		"release:preview:main": "bun scripts/preview-release.mjs --branch main",
+		"release:dry:dev": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches dev",
+		"release:dry:main": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches main"
 	},
 	"dependencies": {
 		"@hono/bun-transpiler": "^0.2.1",
@@ -32,8 +37,6 @@
 		"@types/bun": "latest",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
-		"@semantic-release/npm": "^12.0.0",
-		"@semantic-release/git": "^10.0.1",
 		"semantic-release": "^25.0.1",
 		"supabase": "^2.53.6",
 		"typescript": "^5.9.3",
@@ -67,12 +70,14 @@
 			"@semantic-release/release-notes-generator",
 			"@semantic-release/changelog",
 			[
-				"@semantic-release/npm",
+				"@jno21/semantic-release-github-commit",
 				{
-					"npmPublish": false
+					"assets": [
+						"CHANGELOG.md"
+					],
+					"message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
 				}
 			],
-			"@semantic-release/git",
 			"@semantic-release/github"
 		]
 	}
