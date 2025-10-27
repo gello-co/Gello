@@ -3,9 +3,15 @@
   "workspaces": {
     "": {
       "name": "team-1-gello",
+      "devDependencies": {
+        "@commitlint/cli": "^20.1.0",
+        "@commitlint/config-conventional": "^20.0.0",
+        "@commitlint/prompt-cli": "^20.1.0",
+        "husky": "^9.1.7",
+      },
     },
     "ProjectSourceCode": {
-      "name": "gello",
+      "name": "gello-app",
       "version": "0.0.0",
       "dependencies": {
         "@hono/bun-transpiler": "^0.2.1",
@@ -18,9 +24,6 @@
       },
       "devDependencies": {
         "@biomejs/biome": "2.3.0",
-        "@commitlint/cli": "^20.1.0",
-        "@commitlint/config-conventional": "^20.0.0",
-        "@commitlint/prompt-cli": "^20.1.0",
         "@playwright/test": "^1.30.0",
         "@types/bun": "latest",
         "@types/react": "^19",
@@ -510,7 +513,7 @@
 
     "function-timeout": ["function-timeout@1.0.2", "", {}, "sha512-939eZS4gJ3htTHAldmyyuzlrD58P03fHG49v2JfFXbV6OhvZKRC9j2yAtdHw/zrp2zXHuv05zMIy40F0ge7spA=="],
 
-    "gello": ["gello@workspace:ProjectSourceCode"],
+    "gello-app": ["gello-app@workspace:ProjectSourceCode"],
 
     "get-caller-file": ["get-caller-file@2.0.5", "", {}, "sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg=="],
 

@@ -8,12 +8,22 @@
 		"start": "bun run --cwd ProjectSourceCode start",
 		"test": "bun run --cwd ProjectSourceCode test",
 		"test:ci": "bun run --cwd ProjectSourceCode test:ci",
-		"lint": "bun run --cwd ProjectSourceCode lint",
-		"format": "bun run --cwd ProjectSourceCode format",
+		"lint": "bun run --cwd ProjectSourceCode check",
 		"e2e": "bun run --cwd ProjectSourceCode e2e",
-		"prepare": "husky || true"
+		"prepare": "husky"
 	},
 	"workspaces": [
 		"ProjectSourceCode"
-	]
+	],
+	"devDependencies": {
+		"@commitlint/cli": "^20.1.0",
+		"@commitlint/config-conventional": "^20.0.0",
+		"@commitlint/prompt-cli": "^20.1.0",
+		"husky": "^9.1.7"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	}
 }

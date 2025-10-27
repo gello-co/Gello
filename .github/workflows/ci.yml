@@ -14,7 +14,7 @@ env:
 
 jobs:
   format:
-    name: Format & Lint
+    name: Format, Lint, and Organize Imports
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,9 +44,6 @@ jobs:
             ~/.bun/install/cache
             node_modules
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
-
-      - name: Run formatter (check)
-        run: bun run format
 
       - name: Run linter
         run: bun run lint
