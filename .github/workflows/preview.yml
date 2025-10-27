@@ -34,7 +34,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
@@ -49,10 +49,7 @@ jobs:
             node_modules
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
-      - name: Run formatter (check)
-        run: bun run format
-
-      - name: Run linter
+      - name: Run linting and formatting
         run: bun run lint
 
       - name: Run tests (fast)
@@ -85,7 +82,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies

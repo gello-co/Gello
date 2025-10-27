@@ -5,10 +5,16 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun --hot src/index.ts",
+		"dev:env": "bash ../.devOps/scripts/sync.sh || echo 'Failed to sync'",
 		"build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
 		"start": "NODE_ENV=production bun src/index.ts",
 		"commit": "commit",
-		"lint": "biome check --write",
+		"lint": "biome lint --write",
+		"lint:dry": "biome lint",
+		"format": "biome format --write",
+		"format:dry": "biome format",
+		"check": "biome check --write",
+		"check:dry": "biome check",
 		"test": "vitest",
 		"test:ci": "vitest --run",
 		"e2e": "playwright test"

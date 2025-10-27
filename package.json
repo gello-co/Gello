@@ -3,15 +3,15 @@
 	"private": true,
 	"version": "0.0.0",
 	"scripts": {
-		"dev:env": "bash .devOps/scripts/sync.sh || true",
+		"dev:env": "bash .devOps/scripts/sync.sh || echo 'Failed to sync'",
 		"dev": "bun run --cwd ProjectSourceCode dev",
 		"build": "bun run --cwd ProjectSourceCode build",
 		"start": "bun run --cwd ProjectSourceCode start",
 		"test": "bun run --cwd ProjectSourceCode test",
 		"test:ci": "bun run --cwd ProjectSourceCode test:ci",
 		"lint": "bun run --cwd ProjectSourceCode lint",
-		"e2e": "bun run --cwd ProjectSourceCode e2e",
-		"prepare": "husky"
+		"format": "bunx biome check --fix",
+		"e2e": "bun run --cwd ProjectSourceCode e2e"
 	},
 	"workspaces": [
 		"ProjectSourceCode"
