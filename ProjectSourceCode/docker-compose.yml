@@ -13,12 +13,7 @@ services:
     volumes:
       - ../:/app
     # Install at repo root (workspace) and run app dev server
-    command:
-      [
-        "sh",
-        "-lc",
-        "bun install --frozen-lockfile && bun run --cwd ProjectSourceCode dev",
-      ]
+    command: ["sh", "-lc", "bun install --frozen-lockfile && bun run dev"]
 
   # Production container built from Dockerfile
   # Start with: docker compose up --build web-prod
@@ -31,4 +26,4 @@ services:
       - PORT=3000
     ports:
       - "3000:3000"
-    command: ["bun", "run", "--cwd", "ProjectSourceCode", "start"]
+    command: ["bun", "run", "start"]

@@ -10,8 +10,8 @@ projects:
             repo: https://github.com/gello-co/Gello
             plan: free
             region: ohio
-            buildCommand: bun install --frozen-lockfile && bun run --cwd ProjectSourceCode build
-            startCommand: bun run --cwd ProjectSourceCode start
+            buildCommand: bun install --frozen-lockfile && bun run build
+            startCommand: bun run start
             domains:
               - www.gello.co
               - gello.co

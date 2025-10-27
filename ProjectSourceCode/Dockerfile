@@ -7,14 +7,14 @@ WORKDIR /app
 # Copy root workspace manifests and app manifest for dependency resolution
 COPY package.json ./
 COPY bun.lock* ./
-COPY ProjectSourceCode/package.json ./ProjectSourceCode/package.json
+## No sub-package manifest; single root package.json is the source of truth
 
 # Install all dependencies for the workspace using the root lockfile
 RUN bun install --frozen-lockfile
 
 # Copy the rest of the source and build the app
 COPY . .
-RUN bun run --cwd ProjectSourceCode build
+RUN bun run build
 
 # --- Production runtime ---
 FROM oven/bun:latest AS runner
@@ -24,7 +24,6 @@ ENV NODE_ENV=production
 # Copy only what is needed and install production dependencies
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/bun.lock* ./
-COPY --from=deps /app/ProjectSourceCode/package.json ./ProjectSourceCode/package.json
 RUN bun install --frozen-lockfile --production
 
 # App artifacts and sources needed at runtime
@@ -33,5 +32,5 @@ COPY --from=deps /app/ProjectSourceCode/src ./ProjectSourceCode/src
 
 EXPOSE 3000
 
-# Start the server from the app workspace
-CMD ["bun", "run", "--cwd", "ProjectSourceCode", "start"]
+# Start the server using root script
+CMD ["bun", "run", "start"]
