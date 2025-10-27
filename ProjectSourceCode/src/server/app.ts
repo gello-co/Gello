@@ -5,7 +5,7 @@ import { serveStatic } from "hono/bun";
 const app = new Hono();
 const isProd = process.env.NODE_ENV === "production";
 
-// API routes
+// API routes placeholder for examples (same as lab routes)
 app.get("/api/health", (c) => c.json({ ok: true }));
 
 app.get("/api/hello", (c) =>
