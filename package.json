@@ -9,8 +9,12 @@
 		"start": "bun run --cwd ProjectSourceCode start",
 		"test": "bun run --cwd ProjectSourceCode test",
 		"test:ci": "bun run --cwd ProjectSourceCode test:ci",
-		"lint": "bun run --cwd ProjectSourceCode lint",
-		"format": "bunx biome check --fix",
+		"lint": "bunx biome lint --write",
+		"lint:dry": "bunx biome lint",
+		"format": "bunx biome format --write",
+		"format:dry": "bunx biome format",
+		"check": "bunx biome check --write",
+		"check:dry": "bunx biome check",
 		"e2e": "bun run --cwd ProjectSourceCode e2e"
 	},
 	"workspaces": [
