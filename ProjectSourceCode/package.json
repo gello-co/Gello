@@ -1,6 +1,5 @@
 {
 	"name": "gello-app",
-	"version": "0.0.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -39,23 +38,5 @@
 		"supabase": "^2.53.6",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.3"
-	},
-	"release": {
-		"branches": [
-			"main"
-		],
-		"repositoryUrl": "git@github.com:gello-co/Gello.git",
-		"plugins": [
-			"@semantic-release/commit-analyzer",
-			"@semantic-release/release-notes-generator",
-			"@semantic-release/changelog",
-			[
-				"@semantic-release/npm",
-				{
-					"npmPublish": false
-				}
-			],
-			"@semantic-release/git"
-		]
 	}
 }
