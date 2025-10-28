@@ -1,84 +1,84 @@
 {
-	"name": "team-1-gello",
-	"private": true,
-	"version": "0.0.0",
-	"scripts": {
-		"dev:env": "bash .devOps/scripts/sync.sh || echo 'Failed to sync'",
-		"dev": "bun --hot ProjectSourceCode/src/index.ts",
-		"build": "bun build ProjectSourceCode/src/index.html --outdir=ProjectSourceCode/dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
-		"start": "NODE_ENV=production bun ProjectSourceCode/src/index.ts",
-		"test": "vitest --config ProjectSourceCode/vitest.config.ts",
-		"test:ci": "vitest --run --config ProjectSourceCode/vitest.config.ts",
-		"lint": "bunx biome lint --write",
-		"lint:dry": "bunx biome lint",
-		"format": "bunx biome format --write",
-		"format:dry": "bunx biome format",
-		"check": "bunx biome check --write",
-		"check:dry": "bunx biome check",
-		"e2e": "playwright test",
-		"release:preview": "bun scripts/preview-release.mjs",
-		"release:preview:dev": "bun scripts/preview-release.mjs --branch dev",
-		"release:preview:main": "bun scripts/preview-release.mjs --branch main",
-		"release:dry:dev": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches dev",
-		"release:dry:main": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches main"
-	},
-	"dependencies": {
-		"@hono/bun-transpiler": "^0.2.1",
-		"@supabase/supabase-js": "^2.45.4",
-		"bootstrap": "^5.3.8",
-		"hono": "^4.10.3",
-		"react": "^19",
-		"react-bootstrap": "^2.10.10",
-		"react-dom": "^19"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.3.0",
-		"@playwright/test": "^1.30.0",
-		"@types/bun": "latest",
-		"@types/react": "^19",
-		"@types/react-dom": "^19",
-		"semantic-release": "^25.0.1",
-		"supabase": "^2.53.6",
-		"typescript": "^5.9.3",
-		"vitest": "^4.0.3",
-		"@jno21/semantic-release-github-commit": "^1.0.0",
-		"@semantic-release/changelog": "^6.0.3",
-		"@semantic-release/commit-analyzer": "^13.0.0",
-		"@semantic-release/github": "^10.0.0",
-		"@semantic-release/release-notes-generator": "^14.1.0",
-		"@commitlint/cli": "^20.1.0",
-		"@commitlint/config-conventional": "^20.0.0",
-		"@commitlint/prompt-cli": "^20.1.0",
-		"husky": "^9.1.7"
-	},
-	"commitlint": {
-		"extends": [
-			"@commitlint/config-conventional"
-		]
-	},
-	"release": {
-		"branches": [
-			"main",
-			{
-				"name": "dev",
-				"prerelease": "dev"
-			}
-		],
-		"repositoryUrl": "git@github.com:gello-co/Gello.git",
-		"plugins": [
-			"@semantic-release/commit-analyzer",
-			"@semantic-release/release-notes-generator",
-			"@semantic-release/changelog",
-			[
-				"@jno21/semantic-release-github-commit",
-				{
-					"assets": [
-						"CHANGELOG.md"
-					],
-					"message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-				}
-			],
-			"@semantic-release/github"
-		]
-	}
+  "name": "team-1-gello",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev:env": "bash .devOps/scripts/sync.sh || echo 'Failed to sync'",
+    "dev": "bun --hot ProjectSourceCode/src/index.ts",
+    "build": "bun build ProjectSourceCode/src/index.html --outdir=ProjectSourceCode/dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
+    "start": "NODE_ENV=production bun ProjectSourceCode/src/index.ts",
+    "test": "vitest --config ProjectSourceCode/vitest.config.ts",
+    "test:ci": "vitest --run --config ProjectSourceCode/vitest.config.ts",
+    "lint": "bunx biome lint --write",
+    "lint:dry": "bunx biome lint",
+    "format": "bunx biome format --write",
+    "format:dry": "bunx biome format",
+    "check": "bunx biome check --write",
+    "check:dry": "bunx biome check",
+    "e2e": "playwright test",
+    "release:preview": "bun scripts/preview-release.mjs",
+    "release:preview:dev": "bun scripts/preview-release.mjs --branch dev",
+    "release:preview:main": "bun scripts/preview-release.mjs --branch main",
+    "release:dry:dev": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches dev",
+    "release:dry:main": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches main"
+  },
+  "dependencies": {
+    "@hono/bun-transpiler": "^0.2.1",
+    "@supabase/supabase-js": "^2.45.4",
+    "bootstrap": "^5.3.8",
+    "hono": "^4.10.3",
+    "react": "^19",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.0",
+    "@playwright/test": "^1.30.0",
+    "@types/bun": "latest",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "semantic-release": "^25.0.1",
+    "supabase": "^2.53.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.3",
+    "@jno21/semantic-release-github-commit": "^1.0.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/github": "^10.0.0",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@commitlint/prompt-cli": "^20.1.0",
+    "husky": "^9.1.7"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "release": {
+    "branches": [
+      "main",
+      {
+        "name": "dev",
+        "prerelease": "dev"
+      }
+    ],
+    "repositoryUrl": "git@github.com:gello-co/Gello.git",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      [
+        "@jno21/semantic-release-github-commit",
+        {
+          "assets": [
+            "CHANGELOG.md"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ]
+  }
 }
