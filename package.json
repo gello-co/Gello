@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@hono/bun-transpiler": "^0.2.1",
-    "@supabase/supabase-js": "^2.45.4",
+    "@supabase/supabase-js": "^2.76.1",
     "bootstrap": "^5.3.8",
     "hono": "^4.10.3",
     "react": "^19",
@@ -40,7 +40,7 @@
     "semantic-release": "^25.0.1",
     "supabase": "^2.53.6",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.3",
+    "vitest": "^4.0.4",
     "@jno21/semantic-release-github-commit": "^1.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
