@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: bun install --no-progress
 
+      - name: Ensure Bun cache dir exists
+        run: mkdir -p ~/.bun/install/cache
+
       - name: Save Bun cache
         if: steps.bun-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
@@ -84,6 +87,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --no-progress
+
+      - name: Ensure Bun cache dir exists
+        run: mkdir -p ~/.bun/install/cache
 
       - name: Save Bun cache
         if: steps.bun-cache.outputs.cache-hit != 'true'
