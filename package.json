@@ -9,7 +9,7 @@
     "start": "NODE_ENV=production bun ProjectSourceCode/src/index.ts",
     "test": "vitest --config ProjectSourceCode/vitest.config.ts",
     "test:ci": "vitest --run --config ProjectSourceCode/vitest.config.ts",
-    "lint": "bunx --bun @biomejs/biome@2.3.0 lint --write .",
+    "lint": "bunx biome lint --write",
     "lint:dry": "bunx biome lint",
     "format": "bunx biome format --write",
     "format:dry": "bunx biome format",

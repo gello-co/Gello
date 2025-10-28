@@ -48,7 +48,7 @@ jobs:
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
       - name: Run linting and formatting
-        run: bun run lint
+        run: bun run check
 
       - name: Run tests (fast)
         run: bun run test:ci

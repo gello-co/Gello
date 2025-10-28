@@ -47,8 +47,8 @@ jobs:
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
-      - name: Run linter
-        run: bun run lint
+      - name: Run lint and format
+        run: bun run check
 
   commitlint:
     name: Commit message lint
