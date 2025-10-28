@@ -1,3 +1,10 @@
+# [1.0.0-dev.2](https://github.com/gello-co/Gello/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-10-28)
+
+
+### Bug Fixes
+
+* **ci:** bun cache directory warn ([3a0ba7e](https://github.com/gello-co/Gello/commit/3a0ba7e285f6aa5048a91fd018938f37d15ad947))
+
 # 1.0.0-dev.1 (2025-10-28)
 
 
@@ -14,10 +21,3 @@
 
 * add cleanup script for orphaned dev prerelease tags and deduplication for changelog ([0af2643](https://github.com/gello-co/Gello/commit/0af2643c40389c98755ea01188675a835fdb2d77))
 * add version tag detection to skip semantic-release if tags exist ([6cac3d4](https://github.com/gello-co/Gello/commit/6cac3d47bbd6cb8e1b5d60382da7fdd2b0855771))
-
-# [1.0.0-dev.2](https://github.com/gello-co/Gello/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-10-28)
-
-
-### Bug Fixes
-
-* skip condition in commit msg ([15b41d4](https://github.com/gello-co/Gello/commit/15b41d49a487df0a1945f28008d59c0b4ae43ea9))
