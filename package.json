@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@hono/bun-transpiler": "^0.2.1",
-    "@supabase/supabase-js": "^2.45.4",
+    "@supabase/supabase-js": "^2.76.1",
     "bootstrap": "^5.3.8",
     "hono": "^4.10.3",
     "react": "^19",
