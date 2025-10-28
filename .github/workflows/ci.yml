@@ -53,8 +53,11 @@ jobs:
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
-      - name: Run lint and format (no-write)
-        run: bun run check:dry
+      - name: Format
+        run: bunx --bun @biomejs/biome@2.3.1 format . --write
+
+      - name: Lint
+        run: bunx --bun @biomejs/biome@2.3.1 lint . --write
 
   commitlint:
     name: Commit message lint
