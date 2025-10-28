@@ -1,9 +1,10 @@
 name: Release and publish
 on:
+  # Manual dry-run or backfill
   workflow_dispatch:
     inputs:
       release_branch:
-        description: "Branch to evaluate for release (main or dev)"
+        description: "Branch to evaluate for release (dev)"
         required: false
         default: "dev"
       dry_run:
@@ -18,8 +19,10 @@ on:
         description: "Skip running tests (useful for quick dry-run)"
         required: false
         default: "false"
-  push:
-    branches: [main, dev]
+  # Only release on merges to dev (squash recommended via branch protection)
+  pull_request:
+    types: [closed]
+    branches: [dev]
 
 permissions:
   contents: write
@@ -35,14 +38,24 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-    if: ${{ !contains((github.event.head_commit.message || ''), '[skip ci]') }}
+    # Only proceed if not [skip ci] and if PRs are actually merged
+    if: >-
+      ${{ !contains((github.event.head_commit && github.event.head_commit.message || ''), '[skip ci]')
+          && (
+            github.event_name != 'pull_request' || github.event.pull_request.merged == true
+          )
+      }}
 
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/heads/{0}', inputs.release_branch) || github.ref }}
+          # When triggered by a merged PR, check out the merge/squash commit on dev
+          ref:
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.merge_commit_sha
+            || (github.event_name == 'workflow_dispatch' && format('refs/heads/{0}', inputs.release_branch))
+            || github.ref }}
 
       - name: Setup Node.js (for semantic-release)
         uses: actions/setup-node@v4
@@ -86,7 +99,9 @@ jobs:
         run: bun run test:ci
 
       - name: Prune orphaned dev prerelease tags
-        if: github.ref_name == 'dev'
+        if: >-
+          ${{ (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev')
+              || (github.event_name != 'pull_request' && github.ref_name == 'dev') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
