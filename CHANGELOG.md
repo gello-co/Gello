@@ -1,3 +1,10 @@
+# [1.0.0-dev.2](https://github.com/gello-co/Gello/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-10-28)
+
+
+### Bug Fixes
+
+* skip condition in commit msg ([15b41d4](https://github.com/gello-co/Gello/commit/15b41d49a487df0a1945f28008d59c0b4ae43ea9))
+
 # 1.0.0-dev.1 (2025-10-28)
 
 
