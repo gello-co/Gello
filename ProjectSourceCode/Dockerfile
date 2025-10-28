@@ -10,7 +10,7 @@ COPY bun.lock* ./
 ## No sub-package manifest; single root package.json is the source of truth
 
 # Install all dependencies for the workspace using the root lockfile
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy the rest of the source and build the app
 COPY . .
@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 # Copy only what is needed and install production dependencies
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/bun.lock* ./
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 # App artifacts and sources needed at runtime
 COPY --from=deps /app/ProjectSourceCode/dist ./ProjectSourceCode/dist
