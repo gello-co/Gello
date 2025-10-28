@@ -13,6 +13,7 @@
 ### Features
 
 * add cleanup script for orphaned dev prerelease tags and deduplication for changelog ([0af2643](https://github.com/gello-co/Gello/commit/0af2643c40389c98755ea01188675a835fdb2d77))
+* add version tag detection to skip semantic-release if tags exist ([6cac3d4](https://github.com/gello-co/Gello/commit/6cac3d47bbd6cb8e1b5d60382da7fdd2b0855771))
 
 # [1.0.0-dev.2](https://github.com/gello-co/Gello/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-10-28)
 
