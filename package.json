@@ -43,7 +43,7 @@
     "vitest": "^4.0.4",
     "@jno21/semantic-release-github-commit": "^1.0.0",
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^10.0.0",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@commitlint/cli": "^20.1.0",
