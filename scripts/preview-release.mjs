@@ -40,8 +40,8 @@ try {
 	if (enforceCheckout && current !== branch) {
 		console.error(
 			`\n[preview-release] Refusing to run: current branch is '${current}', expected '${branch}'.` +
-			`\nSwitch branches first: git fetch origin ${branch} --tags && git checkout ${branch}\n` +
-			`Or pass --allow-off-branch to override (preview only).`,
+				`\nSwitch branches first: git fetch origin ${branch} --tags && git checkout ${branch}\n` +
+				`Or pass --allow-off-branch to override (preview only).`,
 		);
 		process.exit(2);
 	}
@@ -109,7 +109,7 @@ try {
 		const existing = await fs.readFile(path.join(cwd, "CHANGELOG.md"), "utf8");
 		const previewCombined = `## ${version} — ${date}\n\n${notes}\n\n${existing}`;
 		await fs.writeFile(changelogPreviewPath, previewCombined, "utf8");
-	} catch (_) { }
+	} catch (_) {}
 
 	console.log("[preview-release] Wrote preview files:");
 	console.log("  -", path.relative(cwd, releaseNotesPath));
@@ -117,15 +117,15 @@ try {
 	try {
 		await fs.access(changelogPreviewPath);
 		console.log("  -", path.relative(cwd, changelogPreviewPath));
-	} catch { }
+	} catch {}
 	console.log(`[preview-release] Branch evaluated: ${branch}`);
 } catch (err) {
 	console.error("[preview-release] Failed to generate preview");
 	if (err && err.name === "AggregateError") {
 		console.error(
 			"Tip: Ensure your local repo has a remote and the release branches exist. Try:\n" +
-			"  git remote -v\n  git fetch origin --tags --prune\n  git fetch origin dev main --depth=1\n" +
-			"Or run the CI workflow_dispatch dry-run on dev/main for an authoritative preview.",
+				"  git remote -v\n  git fetch origin --tags --prune\n  git fetch origin dev main --depth=1\n" +
+				"Or run the CI workflow_dispatch dry-run on dev/main for an authoritative preview.",
 		);
 	}
 	console.error(err);
