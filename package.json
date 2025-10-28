@@ -41,6 +41,7 @@
     "supabase": "^2.53.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.4",
+    "@semantic-release/exec": "^6.0.3",
     "@jno21/semantic-release-github-commit": "^1.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
@@ -69,6 +70,12 @@
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/changelog",
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "bun scripts/dedupe-changelog.mjs"
+        }
+      ],
       [
         "@jno21/semantic-release-github-commit",
         {

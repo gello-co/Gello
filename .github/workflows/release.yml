@@ -82,6 +82,13 @@ jobs:
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests == 'true') }}
         run: bun run test:ci
 
+      - name: Prune orphaned dev prerelease tags
+        if: github.ref_name == 'dev'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash scripts/cleanup-dev-tags.sh
+
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@v2
         id: app-token
