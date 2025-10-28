@@ -89,6 +89,17 @@ jobs:
         run: |
           bash scripts/cleanup-dev-tags.sh
 
+      - name: Detect existing version tag on HEAD
+        id: tag-check
+        run: |
+          existing_tags=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-dev\.[0-9]+)?$' || true)
+          if [ -n "$existing_tags" ]; then
+            echo "Found existing version tag(s) on HEAD: $existing_tags; skipping semantic-release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@v2
         id: app-token
@@ -102,6 +113,7 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_PRD }}
 
         working-directory: .
+        if: steps.tag-check.outputs.skip != 'true'
         run: |
           echo "event=${{ github.event_name }} branch_input=${{ inputs.release_branch }} dry_run=${{ inputs.dry_run }}"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
