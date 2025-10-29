@@ -19,7 +19,7 @@ env:
 
 jobs:
   format:
-    name: Format, Lint, and Organize Imports
+    name: Format and Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
