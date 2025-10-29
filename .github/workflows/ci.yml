@@ -54,10 +54,10 @@ jobs:
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
       - name: Format
-        run: bunx --bun @biomejs/biome@2.3.1 format . --write
+        run: bunx biome format --write
 
       - name: Lint
-        run: bunx --bun @biomejs/biome@2.3.1 lint . --write
+        run: bunx biome lint --write
 
   commitlint:
     name: Commit message lint
