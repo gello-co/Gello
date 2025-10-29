@@ -7,7 +7,14 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!!**/node_modules/",
+			"!!**/dist/",
+			"!!**/build/",
+			"!!**/.bun/"
+		]
 	},
 	"formatter": {
 		"enabled": true,
