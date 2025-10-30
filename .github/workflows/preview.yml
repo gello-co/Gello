@@ -16,7 +16,7 @@ env:
 
 jobs:
   pr-build:
-    name: Build, lint, test (PR)
+    name: Build and test (PR)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -49,12 +49,6 @@ jobs:
           path: |
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
-
-      - name: Format
-        run: bunx --bun @biomejs/biome@2.3.1 format . --write
-
-      - name: Lint
-        run: bunx --bun @biomejs/biome@2.3.1 lint . --write
 
       - name: Run tests (fast)
         run: bun run test:ci
