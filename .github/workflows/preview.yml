@@ -186,7 +186,7 @@ jobs:
           body-includes: "<!-- release-preview -->"
 
       - name: Create or update PR comment
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ steps.find_comment.outputs.comment-id == '' && github.event.pull_request.number || '' }}
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
