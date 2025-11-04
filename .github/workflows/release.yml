@@ -1,4 +1,4 @@
-name: Release and publish
+name: Gello Release and publish
 on:
   # Manual dry-run or backfill
   workflow_dispatch:

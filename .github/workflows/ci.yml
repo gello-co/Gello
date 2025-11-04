@@ -1,4 +1,4 @@
-name: CI
+name: Gello CI
 on:
   push:
     branches: [main, dev]

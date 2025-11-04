@@ -1,4 +1,4 @@
-name: Pull Request Preview
+name: Gello Pull Request Preview
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, review_requested]

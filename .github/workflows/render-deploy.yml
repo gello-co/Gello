@@ -1,4 +1,4 @@
-name: Render deploy (production)
+name: Gello Render deploy
 on:
   push:
     branches: [main]
