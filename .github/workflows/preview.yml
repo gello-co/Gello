@@ -154,10 +154,28 @@ jobs:
       - name: Authenticate git remote (HTTPS)
         run: git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/gello-co/Gello.git
 
+      - name: Fetch target branch, PR head, and tags
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=50
+          git fetch origin ${{ github.event.pull_request.head.sha }} --depth=1
+          git fetch origin --tags --prune
+
+      - name: Simulate merge into target branch
+        run: |
+          # Checkout target branch (detached HEAD)
+          git checkout origin/${{ github.event.pull_request.base.ref }}
+          # Merge PR head into target branch
+          git merge --no-edit --no-ff ${{ github.event.pull_request.head.sha }} || {
+            echo "Merge simulation had issues, using PR commits directly"
+            git reset --hard ${{ github.event.pull_request.head.sha }}
+          }
+
       - name: Generate release preview
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_DEV }}
-        run: bun scripts/preview-release.mjs --branch dev --allow-off-branch
+          GITHUB_REF: refs/heads/${{ github.event.pull_request.base.ref }}
+          CI_COMMIT_REF_NAME: ${{ github.event.pull_request.base.ref }}
+        run: bun scripts/preview-release.mjs --branch ${{ github.event.pull_request.base.ref }} --allow-off-branch
 
       - name: Upload release preview artifacts
         uses: actions/upload-artifact@v5
