@@ -40,7 +40,7 @@
 		"semantic-release": "^25.0.1",
 		"supabase": "^2.53.6",
 		"typescript": "^5.9.3",
-		"vitest": "^4.0.4",
+		"vitest": "^4.0.6",
 		"@semantic-release/exec": "^6.0.3",
 		"@jno21/semantic-release-github-commit": "^1.0.0",
 		"@semantic-release/changelog": "^6.0.3",
