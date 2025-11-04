@@ -5,7 +5,7 @@ body {
 }
 
 .navbar {
-    background-color: rgba(255, 255, 255, 0.95) !important;
+    background-color: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
@@ -13,7 +13,7 @@ body {
 .navbar-brand {
     font-size: 2rem;
     font-weight: bold;
-    color: #742E10 !important;
+    color: #742E10;
     transition: transform 0.3s ease;
 }
 
@@ -22,14 +22,14 @@ body {
 }
 
 .nav-link {
-    color: #742E10 !important;
+    color: #742E10;
     font-weight: 500;
     margin: 0 10px;
     transition: all 0.3s ease;
 }
 
 .nav-link:hover {
-    color: #F3D18D !important;
+    color: #F3D18D;
     transform: translateY(-2px);
 }
 
