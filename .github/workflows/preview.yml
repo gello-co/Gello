@@ -170,14 +170,12 @@ jobs:
         shell: bash
         run: |
           if [ -f .release-preview/RELEASE_NOTES.md ]; then
-            # Escape EOF block correctly for multi-line output
-            {
-              echo 'notes<<\nEOF'
-              cat .release-preview/RELEASE_NOTES.md
-              echo '\nEOF'
-            } >> "$GITHUB_OUTPUT"
+            echo 'notes<<EOF' >> "$GITHUB_OUTPUT"
+            cat .release-preview/RELEASE_NOTES.md >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
           else
             echo 'notes=No release notes produced.' >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Find existing release preview comment
         id: find_comment
