@@ -54,6 +54,24 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
         </div>
     </nav>
 
+<h2 style="margin-left: 30%; margin-top: 10px">Login as Team Member</h2>
+<form id="loginForm" action="/login" method="POST" style="margin: 0 auto; width: 40%;">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" style="width: 100%;">
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" style="width: 100%;">
+    </div>
+    <div class="mb-3">
+        <label for="teamID" class="form-label">Team ID</label>
+        <input type="text" class="form-control" id="teamID" name="teamID" style="width: 100%;">
+    </div>
+</form>
+<button style="margin-left: 30%; width: fit-content;" type="submit" form="eventForm" class="btn btn-primary" onclick="document.getElementById('loginForm').submit();">Login</button>
+<p style="margin-left: 30%;">Don't have an account? <a href="registert.html">Register</a></p>
+
 
     <!-- FOOTER -->
     <footer class="footer">
