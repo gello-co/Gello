@@ -54,7 +54,7 @@
 		"supabase": "^2.54.11",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.6",
-		"@semantic-release/exec": "^6.0.3",
+		"@semantic-release/exec": "^7.1.0",
 		"@jno21/semantic-release-github-commit": "^1.0.0",
 		"@semantic-release/changelog": "^6.0.3",
 		"@semantic-release/commit-analyzer": "^13.0.1",
