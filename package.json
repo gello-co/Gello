@@ -20,25 +20,36 @@
 		"release:preview:dev": "bun scripts/preview-release.mjs --branch dev",
 		"release:preview:main": "bun scripts/preview-release.mjs --branch main",
 		"release:dry:dev": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches dev",
-		"release:dry:main": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches main"
+		"release:dry:main": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches main",
+		"workflow:validate": "yamllint --no-warnings .github/workflows/*.yml 2>&1 || echo 'yamllint not installed or found errors (install with: pip install yamllint)'",
+		"workflow:test:ci": "./bin/act pull_request -W .github/workflows/ci.yml --list",
+		"workflow:test:release": "./bin/act workflow_dispatch -W .github/workflows/release.yml --list",
+		"workflow:test:preview": "./bin/act pull_request -W .github/workflows/preview.yml --list",
+		"workflow:test:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot] --list",
+		"workflow:test:all": "bun run workflow:validate && ./bin/act --list",
+		"workflow:run:ci": "./bin/act pull_request -W .github/workflows/ci.yml",
+		"workflow:run:release": "./bin/act workflow_dispatch -W .github/workflows/release.yml",
+		"workflow:run:preview": "./bin/act pull_request -W .github/workflows/preview.yml",
+		"workflow:run:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot]",
+		"workflow:run:lint": "./bin/act pull_request -W .github/workflows/ci.yml -j lint"
 	},
 	"dependencies": {
 		"@hono/bun-transpiler": "^0.2.1",
 		"@supabase/supabase-js": "^2.78.0",
 		"bootstrap": "^5.3.8",
 		"hono": "^4.10.4",
-		"react": "^19",
+		"react": "^19.2.0",
 		"react-bootstrap": "^2.10.10",
-		"react-dom": "^19"
+		"react-dom": "^19.2.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.2",
 		"@playwright/test": "^1.56.1",
 		"@types/bun": "latest",
-		"@types/react": "^19",
-		"@types/react-dom": "^19",
+		"@types/react": "^19.2.2",
+		"@types/react-dom": "^19.2.2",
 		"semantic-release": "^25.0.1",
-		"supabase": "^2.53.6",
+		"supabase": "^2.54.11",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.6",
 		"@semantic-release/exec": "^6.0.3",
@@ -50,7 +61,8 @@
 		"@commitlint/cli": "^20.1.0",
 		"@commitlint/config-conventional": "^20.0.0",
 		"@commitlint/prompt-cli": "^20.1.0",
-		"husky": "^9.1.7"
+		"husky": "^9.1.7",
+		"@semantic-release/git": "^10.0.1"
 	},
 	"commitlint": {
 		"extends": [
@@ -65,7 +77,7 @@
 				"prerelease": "dev"
 			}
 		],
-		"repositoryUrl": "git@github.com:gello-co/Gello.git",
+		"repositoryUrl": "https://github.com/gello-co/Gello.git",
 		"plugins": [
 			"@semantic-release/commit-analyzer",
 			"@semantic-release/release-notes-generator",
@@ -79,6 +91,15 @@
 				"@semantic-release/exec",
 				{
 					"prepareCmd": "bun scripts/dedupe-changelog.mjs"
+				}
+			],
+			[
+				"@semantic-release/git",
+				{
+					"assets": [
+						"CHANGELOG.md"
+					],
+					"message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
 				}
 			],
 			[

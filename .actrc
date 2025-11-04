@@ -1,0 +1,9 @@
+# act configuration for local GitHub Actions testing
+
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+--container-architecture linux/amd64
+
+--secret-file .secrets
+
+-v
