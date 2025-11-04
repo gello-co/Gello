@@ -5,3 +5,5 @@ docs
 .vscode
 .venv
 *.lock
+.devOps
+bin

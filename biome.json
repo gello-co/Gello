@@ -4,27 +4,21 @@
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
-		"useIgnoreFile": true
+		"useIgnoreFile": true,
+		"defaultBranch": "dev"
 	},
 	"files": {
-		"ignoreUnknown": false,
+		"ignoreUnknown": true,
 		"includes": [
 			"**",
 			"!!**/node_modules/",
 			"!!**/dist/",
 			"!!**/build/",
-			"!!**/.bun",
-			"!/.bun"
+			"!!**/.bun"
 		]
 	},
 	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
-		"formatWithErrors": false,
-		"attributePosition": "auto",
-		"indentWidth": 2,
-		"lineWidth": 80,
-		"lineEnding": "lf"
+		"enabled": true
 	},
 	"linter": {
 		"enabled": true,
@@ -36,18 +30,11 @@
 		"formatter": {
 			"arrowParentheses": "always",
 			"bracketSameLine": false,
-			"bracketSpacing": true,
-			"jsxQuoteStyle": "double",
-			"quoteProperties": "asNeeded",
-			"semicolons": "always",
-			"trailingCommas": "all",
-			"quoteStyle": "double"
+			"semicolons": "always"
 		}
 	},
 	"json": {
 		"formatter": {
-			"indentWidth": 2,
-			"lineWidth": 80,
 			"trailingCommas": "none"
 		}
 	},

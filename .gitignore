@@ -156,3 +156,4 @@ RELEASE_NOTES*.md
 
 # act binary
 bin/
+.agents/
