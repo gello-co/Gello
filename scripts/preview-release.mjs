@@ -52,30 +52,47 @@ try {
 }
 
 try {
-	let branchesConfig = branch;
+	try {
+		await execFileAsync("git", ["fetch", "origin", branch, "--depth=50"], {
+			cwd,
+			stdio: "ignore",
+		});
+		await execFileAsync("git", ["fetch", "origin", "--tags", "--prune"], {
+			cwd,
+			stdio: "ignore",
+		});
+	} catch (_) {
+		console.warn(`[preview-release] Warning: unable to fetch origin/${branch}`);
+	}
+
 	if (!enforceCheckout && currentBranch && currentBranch !== branch) {
-		// Include the target branch plus current feature branch as a dev channel
-		const targetBranch =
-			branch === "main" ? { name: "main" } : { name: "dev", prerelease: "dev" };
-		const featureAsDev = {
-			name: currentBranch,
-			channel: "dev",
-			prerelease: "dev",
-		};
-		branchesConfig = [targetBranch, featureAsDev];
 		console.log(
-			`[preview-release] Off-branch preview: treating '${currentBranch}' as a dev prerelease channel (with base '${targetBranch.name}')`,
+			`[preview-release] Evaluating merged state for '${branch}' branch (current: '${currentBranch}')`,
 		);
 	}
+
+	// Run semantic-release on current state (which should be the merged state from workflow)
+	// Override branches config to treat current detached HEAD as the target branch
+	// Set environment variables to help semantic-release recognize the branch
+	const env = {
+		...process.env,
+		GITHUB_REF: process.env.GITHUB_REF || `refs/heads/${branch}`,
+		CI_COMMIT_REF_NAME: process.env.CI_COMMIT_REF_NAME || branch,
+	};
+
 	const result = await semanticRelease(
 		{
 			dryRun: true,
 			ci: false,
-			branches: branchesConfig,
+			// Override branches to match target branch format from package.json
+			branches:
+				branch === "dev"
+					? ["main", { name: branch, prerelease: "dev" }]
+					: ["main", branch],
 		},
 		{
 			cwd,
-			env: process.env,
+			env,
 			stdout: process.stdout,
 			stderr: process.stderr,
 		},
