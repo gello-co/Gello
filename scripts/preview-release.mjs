@@ -52,26 +52,26 @@ try {
 }
 
 try {
-	let branchesConfig = branch;
+	try {
+		await execFileAsync("git", ["fetch", "origin", branch, "--depth=1"], {
+			cwd,
+			stdio: "ignore",
+		});
+	} catch (_) {
+		console.warn(`[preview-release] Warning: unable to fetch origin/${branch}`);
+	}
+
 	if (!enforceCheckout && currentBranch && currentBranch !== branch) {
-		// Include the target branch plus current feature branch as a dev channel
-		const targetBranch =
-			branch === "main" ? { name: "main" } : { name: "dev", prerelease: "dev" };
-		const featureAsDev = {
-			name: currentBranch,
-			channel: "dev",
-			prerelease: "dev",
-		};
-		branchesConfig = [targetBranch, featureAsDev];
 		console.log(
-			`[preview-release] Off-branch preview: treating '${currentBranch}' as a dev prerelease channel (with base '${targetBranch.name}')`,
+			`[preview-release] Off-branch preview: evaluating release for '${branch}' branch (current: '${currentBranch}')`,
 		);
 	}
+
+	// Don't override branches - let semantic-release use package.json config
 	const result = await semanticRelease(
 		{
 			dryRun: true,
 			ci: false,
-			branches: branchesConfig,
 		},
 		{
 			cwd,
