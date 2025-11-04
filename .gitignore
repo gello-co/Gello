@@ -153,3 +153,6 @@ ProjectSourceCode/dist
 # Local release preview outputs (ephemeral)
 .release-preview/
 RELEASE_NOTES*.md
+
+# act binary
+bin/
