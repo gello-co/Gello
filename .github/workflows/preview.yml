@@ -1,10 +1,12 @@
-name: PR Preview CI
+name: Pull Request Preview
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, review_requested]
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: write
 
 concurrency:
   group: preview-${{ github.ref }}
@@ -103,7 +105,7 @@ jobs:
         run: |
           git --no-pager log --format=%B origin/main..HEAD > /tmp/commits.txt || true
           if [ -s /tmp/commits.txt ]; then
-            bunx commitlint --file /tmp/commits.txt
+            bunx commitlint < /tmp/commits.txt
           else
             echo "No commits to lint"
           fi
@@ -115,6 +117,7 @@ jobs:
     if: ${{ github.event.pull_request.base.ref == 'dev' }}
     permissions:
       contents: read
+      issues: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v5
@@ -148,7 +151,12 @@ jobs:
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
+      - name: Authenticate git remote (HTTPS)
+        run: git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/gello-co/Gello.git
+
       - name: Generate release preview
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_DEV }}
         run: bun scripts/preview-release.mjs --branch dev --allow-off-branch
 
       - name: Upload release preview artifacts
@@ -202,19 +210,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: false
-  # badgetizr:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v5
-
-  #     - name: Run Badgetizr
-  #       uses: aiKrice/homebrew-badgetizr@2.3.0
-  #       with:
-  #         pr_id: ${{ github.event.pull_request.number }}
-  #         configuration: .badgetizr.yml
-  #         pr_destination_branch: ${{ github.event.pull_request.base.ref }}
-  #         pr_build_number: ${{ github.run_id }}
-  #         pr_build_url: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  #       env:
-  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
