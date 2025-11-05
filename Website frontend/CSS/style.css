@@ -248,3 +248,14 @@ body {
 	font-weight: 600;
 	margin-bottom: 8px;
 }
+
+/* css additions for registration page */
+
+.required {
+    color: #c62828;
+    margin-left: 3px;
+}
+
+#registerForm .login-input {
+    width: 100%;
+}
