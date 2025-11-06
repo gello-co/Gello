@@ -193,7 +193,7 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_DEV }}
           GITHUB_REF: refs/heads/${{ github.event.pull_request.base.ref }}
           CI_COMMIT_REF_NAME: ${{ github.event.pull_request.base.ref }}
-        working-directory: ProjectSourceCode
+        working-directory: .
         run: bun scripts/preview-release.mjs --branch ${{ github.event.pull_request.base.ref }} --allow-off-branch
 
       - name: Upload release preview artifacts
