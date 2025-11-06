@@ -193,6 +193,7 @@ body {
 		opacity: 0;
 		transform: translateY(30px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -204,11 +205,174 @@ body {
 }
 
 @keyframes floating {
+
 	0%,
 	100% {
 		transform: translateY(0px);
 	}
+
 	50% {
 		transform: translateY(-20px);
 	}
+}
+
+/* here are some of the login form styles */
+
+.login-form-card {
+	background: white;
+	padding: 40px;
+	border-radius: 20px;
+	box-shadow: 0 10px 30px rgba(116, 46, 16, 0.15);
+	animation: fadeInUp 0.6s ease;
+}
+
+.login-form-title {
+	color: #742e10;
+	font-weight: bold;
+	font-size: 2rem;
+	margin-bottom: 10px;
+}
+
+.login-input {
+	border: 2px solid #fae1b8;
+	border-radius: 10px;
+	padding: 12px 15px;
+	transition: all 0.3s ease;
+}
+
+.login-input:focus {
+	border-color: #742e10;
+	box-shadow: 0 0 0 0.2rem rgba(116, 46, 16, 0.15);
+	outline: none;
+}
+
+.form-label {
+	color: #742e10;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+/* css additions for registration page */
+
+.required {
+	color: #c62828;
+	margin-left: 3px;
+}
+
+#registerForm .login-input {
+	width: 100%;
+}
+
+/*  css additions for profile page  */
+
+.dropbtn {
+	background-color: #742e10;
+	color: white;
+	border: none;
+	padding: 10px 30px;
+	border-radius: 25px;
+	font-weight: 600;
+	font-size: 16px;
+	transition: all 0.3s ease;
+	cursor: pointer;
+}
+
+.dropdown {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.dropdown-content {
+	display: none;
+	position: absolute;
+	background-color: #ffffff;
+	min-width: 100%;
+	border-radius: 10px;
+	box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
+	z-index: 1;
+	overflow: hidden;
+	white-space: nowrap;
+	width: max-content;
+}
+
+.dropdown-content a {
+	color: #742e10;
+	padding: 6px;
+	text-decoration: none;
+	display: block;
+	font-weight: 500;
+	transition: background-color 0.3s ease;
+}
+
+.dropdown-content a:hover {
+	background-color: #f2e4de;
+}
+
+.dropdown:hover .dropdown-content {
+	display: block;
+}
+
+.dropdown:hover .dropbtn {
+	background-color: #5e240d;
+}
+
+
+.profile {
+  padding: 60px 0 0 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.profile-options h2 {
+	color: #742e10;
+	font-weight: bold;
+	margin-bottom: 50px;
+	font-size: 2.5rem;
+}
+
+.profile-card {
+	border-radius: 20px;
+	overflow: hidden;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	background: white;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+	height: 100%;
+}
+
+
+.profile-card-body {
+	padding: 30px;
+}
+
+.profile-card h3 {
+	color: #742e10;
+	font-weight: bold;
+	margin-bottom: 15px;
+}
+
+.profile-card p {
+	color: #5a2410;
+	font-size: 1.1rem;
+}
+
+.prof-link {
+	color: #742e10;
+	font-weight: 500;
+	margin: 0 10px;
+	transition: all 0.3s ease;
+}
+
+.prof-link:hover {
+	color: #f3d18d;
+	transform: translateY(-2px);
+}
+
+.tasks div {
+  margin-bottom: 8px;
+}
+
+.profile + footer {
+  margin-top: 0;
 }

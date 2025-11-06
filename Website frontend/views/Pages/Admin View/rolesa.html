@@ -18,7 +18,7 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
       rel="stylesheet"
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
       crossorigin="anonymous"/>
-    <link rel="stylesheet" href="../../CSS/style.css">
+    <link rel="stylesheet" href="../../../CSS/style.css">
 </head>
 <body>
     <script
@@ -31,7 +31,7 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid px-4">
             <!-- we can probabaly add the icon here like we did in our personal websites - the picture that Wren made? -->
-            <a class="navbar-brand" href="../home.html">GELLO</a>
+            <a class="navbar-brand" href="../../General_layouts/home.html">GELLO</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -53,6 +53,39 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
             </div>
         </div>
     </nav>
+
+    <!-- LOGIN FORM SECTION -->
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="login-form-card">
+                <div class="text-center mb-4">
+                    <h2 class = "login-form-title">Login as Team Member</h2>
+                    <p class="text-muted">Access your tasks and earn points</p>
+                </div>
+                <form id="loginForm" action="/login" method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control login-input" id="username" name="username" style="width: 100%;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control login-input" id="password" name="password" style="width: 100%;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="teamID" class="form-label">Team ID</label>
+                        <input type="text" class="form-control login-input" id="teamID" name="teamID" style="width: 100%;">
+                    </div>
+                    <button type="submit" form="eventForm" class="btn btn-signin w-100"" onclick="document.getElementById('loginForm').submit();">Login</button>
+                </form>
+                <div class="text-center mt-4">
+                    <p class="mb-0">Don't have an account? <a href="registert.html" class="register-link">Register</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
     <!-- FOOTER -->
