@@ -44,6 +44,10 @@ jobs:
       - name: Install dependencies
         run: bun install --no-progress
 
+      - name: Install ProjectSourceCode dependencies
+        run: bun install --no-progress
+        working-directory: ProjectSourceCode
+
       - name: Save Bun cache
         if: steps.bun-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4

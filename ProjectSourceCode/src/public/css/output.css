@@ -1,0 +1,31 @@
+/*! tailwindcss v4.1.16 | MIT License | https://tailwindcss.com */
+.collapse {
+  visibility: collapse;
+}
+.relative {
+  position: relative;
+}
+.static {
+  position: static;
+}
+.container {
+  width: 100%;
+}
+.mx-auto {
+  margin-inline: auto;
+}
+.block {
+  display: block;
+}
+.text-center {
+  text-align: center;
+}
+.capitalize {
+  text-transform: capitalize;
+}
+.lowercase {
+  text-transform: lowercase;
+}
+.uppercase {
+  text-transform: uppercase;
+}
