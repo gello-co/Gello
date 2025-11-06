@@ -1,263 +1,265 @@
 /* some of the styles for Gello */
 body {
-	background: linear-gradient(135deg, #fae1b8 0%, #f3d18d 100%);
-	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #fae1b8 0%, #f3d18d 100%);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .navbar {
-	background-color: rgba(255, 255, 255, 0.95);
-	backdrop-filter: blur(10px);
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
-	font-size: 2rem;
-	font-weight: bold;
-	color: #742e10;
-	transition: transform 0.3s ease;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #742e10;
+  transition: transform 0.3s ease;
 }
 
 .navbar-brand:hover {
-	transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 .nav-link {
-	color: #742e10;
-	font-weight: 500;
-	margin: 0 10px;
-	transition: all 0.3s ease;
+  color: #742e10;
+  font-weight: 500;
+  margin: 0 10px;
+  transition: all 0.3s ease;
 }
 
 .nav-link:hover {
-	color: #f3d18d;
-	transform: translateY(-2px);
+  color: #f3d18d;
+  transform: translateY(-2px);
 }
 
 .btn-login {
-	background-color: #742e10;
-	color: white;
-	border: none;
-	padding: 10px 30px;
-	border-radius: 25px;
-	font-weight: 600;
-	transition: all 0.3s ease;
+  background-color: #742e10;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .btn-login:hover {
-	background-color: #5a2410;
-	transform: translateY(-3px);
-	box-shadow: 0 5px 15px rgba(116, 46, 16, 0.3);
+  background-color: #5a2410;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(116, 46, 16, 0.3);
 }
 
 .hero-section {
-	padding: 80px 0;
-	text-align: center;
+  padding: 80px 0;
+  text-align: center;
 }
 
 .hero-title {
-	font-size: 4rem;
-	font-weight: bold;
-	color: #742e10;
-	margin-bottom: 30px;
-	animation: fadeInUp 1s ease;
+  font-size: 4rem;
+  font-weight: bold;
+  color: #742e10;
+  margin-bottom: 30px;
+  animation: fadeInUp 1s ease;
 }
 
 .hero-subtitle {
-	font-size: 1.3rem;
-	color: #5a2410;
-	max-width: 800px;
-	margin: 0 auto 40px;
-	line-height: 1.8;
-	animation: fadeInUp 1s ease 0.2s backwards;
+  font-size: 1.3rem;
+  color: #5a2410;
+  max-width: 800px;
+  margin: 0 auto 40px;
+  line-height: 1.8;
+  animation: fadeInUp 1s ease 0.2s backwards;
 }
 
 .btn-signin {
-	background-color: #742e10;
-	color: white;
-	border: none;
-	padding: 15px 50px;
-	font-size: 1.2rem;
-	border-radius: 30px;
-	font-weight: 600;
-	margin: 10px;
-	transition: all 0.3s ease;
-	animation: fadeInUp 1s ease 0.4s backwards;
+  background-color: #742e10;
+  color: white;
+  border: none;
+  padding: 15px 50px;
+  font-size: 1.2rem;
+  border-radius: 30px;
+  font-weight: 600;
+  margin: 10px;
+  transition: all 0.3s ease;
+  animation: fadeInUp 1s ease 0.4s backwards;
 }
 
 .btn-signin:hover {
-	background-color: #5a2410;
-	transform: translateY(-5px);
-	box-shadow: 0 10px 25px rgba(116, 46, 16, 0.3);
+  background-color: #5a2410;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(116, 46, 16, 0.3);
 }
 
 .register-link {
-	color: #742e10;
-	text-decoration: underline;
-	font-size: 1.1rem;
-	font-weight: 500;
-	cursor: pointer;
-	transition: all 0.3s ease;
+  color: #742e10;
+  text-decoration: underline;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .register-link:hover {
-	color: #5a2410;
-	text-decoration: none;
+  color: #5a2410;
+  text-decoration: none;
 }
 
 .login-options {
-	padding: 60px 0;
-	background-color: rgba(255, 255, 255, 0.7);
-	margin: 40px 0;
+  padding: 60px 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  margin: 40px 0;
 }
 
 .login-options h2 {
-	color: #742e10;
-	font-weight: bold;
-	margin-bottom: 50px;
-	font-size: 2.5rem;
+  color: #742e10;
+  font-weight: bold;
+  margin-bottom: 50px;
+  font-size: 2.5rem;
 }
 
 .login-card {
-	border-radius: 20px;
-	overflow: hidden;
-	transition: all 0.3s ease;
-	cursor: pointer;
-	background: white;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-	height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
 .login-card:hover {
-	transform: translateY(-10px);
-	box-shadow: 0 15px 35px rgba(116, 46, 16, 0.2);
+  transform: translateY(-10px);
+  box-shadow: 0 15px 35px rgba(116, 46, 16, 0.2);
 }
 
 .login-card img {
-	width: 100%;
-	height: 300px;
-	object-fit: cover;
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
 }
 
 .login-card-body {
-	padding: 30px;
+  padding: 30px;
 }
 
 .login-card h3 {
-	color: #742e10;
-	font-weight: bold;
-	margin-bottom: 15px;
+  color: #742e10;
+  font-weight: bold;
+  margin-bottom: 15px;
 }
 
 .login-card p {
-	color: #5a2410;
-	font-size: 1.1rem;
+  color: #5a2410;
+  font-size: 1.1rem;
 }
 
 .footer {
-	background-color: rgba(116, 46, 16, 0.95);
-	color: white;
-	padding: 40px 0 20px;
-	margin-top: 60px;
+  background-color: rgba(116, 46, 16, 0.95);
+  color: white;
+  padding: 40px 0 20px;
+  margin-top: 60px;
 }
 
 .footer h4 {
-	font-weight: bold;
-	margin-bottom: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 
 .footer p {
-	font-size: 1rem;
-	line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .social-btn {
-	display: inline-block;
-	width: 50px;
-	height: 50px;
-	line-height: 50px;
-	text-align: center;
-	border-radius: 50%;
-	margin: 5px;
-	transition: all 0.3s ease;
-	color: white;
-	font-size: 1.2rem;
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  border-radius: 50%;
+  margin: 5px;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 1.2rem;
 }
 
 .social-btn:hover {
-	transform: translateY(-5px) scale(1.1);
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes fadeInUp {
-	from {
-		opacity: 0;
-		transform: translateY(30px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .floating {
-	animation: floating 3s ease-in-out infinite;
+  animation: floating 3s ease-in-out infinite;
 }
 
 @keyframes floating {
-	0%,
-	100% {
-		transform: translateY(0px);
-	}
-	50% {
-		transform: translateY(-20px);
-	}
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 /* here are some of the login form styles */
 
 .login-form-card {
-	background: white;
-	padding: 40px;
-	border-radius: 20px;
-	box-shadow: 0 10px 30px rgba(116, 46, 16, 0.15);
-	animation: fadeInUp 0.6s ease;
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(116, 46, 16, 0.15);
+  animation: fadeInUp 0.6s ease;
 }
 
 .login-form-title {
-	color: #742e10;
-	font-weight: bold;
-	font-size: 2rem;
-	margin-bottom: 10px;
+  color: #742e10;
+  font-weight: bold;
+  font-size: 2rem;
+  margin-bottom: 10px;
 }
 
 .login-input {
-	border: 2px solid #fae1b8;
-	border-radius: 10px;
-	padding: 12px 15px;
-	transition: all 0.3s ease;
+  border: 2px solid #fae1b8;
+  border-radius: 10px;
+  padding: 12px 15px;
+  transition: all 0.3s ease;
 }
 
 .login-input:focus {
-	border-color: #742e10;
-	box-shadow: 0 0 0 0.2rem rgba(116, 46, 16, 0.15);
-	outline: none;
+  border-color: #742e10;
+  box-shadow: 0 0 0 0.2rem rgba(116, 46, 16, 0.15);
+  outline: none;
 }
 
 .form-label {
-	color: #742e10;
-	font-weight: 600;
-	margin-bottom: 8px;
+  color: #742e10;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 /* css additions for registration page */
 
 .required {
-    color: #c62828;
-    margin-left: 3px;
+  color: #c62828;
+  margin-left: 3px;
 }
 
 #registerForm .login-input {
-    width: 100%;
+  width: 100%;
 }
 
 /*  css additions for profile page  */

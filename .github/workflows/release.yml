@@ -74,6 +74,10 @@ jobs:
       - name: Install dependencies
         run: bun install --no-progress
 
+      - name: Install ProjectSourceCode dependencies
+        run: bun install --no-progress
+        working-directory: ProjectSourceCode
+
       - name: Biome check (dry)
         run: bun run check:dry
 
@@ -95,15 +99,6 @@ jobs:
       - name: Run tests (CI)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests == 'true') }}
         run: bun run test:ci
-
-      - name: Prune orphaned dev prerelease tags
-        if: >-
-          ${{ (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev')
-              || (github.event_name != 'pull_request' && github.ref_name == 'dev') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bash scripts/cleanup-dev-tags.sh
 
       - name: Detect existing version tag on HEAD
         id: tag-check

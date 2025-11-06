@@ -14,15 +14,15 @@ let enforceCheckout = true;
 let currentBranch;
 
 for (let i = 0; i < args.length; i++) {
-	const a = args[i];
-	if (a === "--branch" || a === "-b") {
-		branch = args[i + 1] || branch;
-		i++;
-	} else if (a.startsWith("--branch=")) {
-		branch = a.split("=")[1];
-	} else if (a === "--allow-off-branch") {
-		enforceCheckout = false;
-	}
+  const a = args[i];
+  if (a === "--branch" || a === "-b") {
+    branch = args[i + 1] || branch;
+    i++;
+  } else if (a.startsWith("--branch=")) {
+    branch = a.split("=")[1];
+  } else if (a === "--allow-off-branch") {
+    enforceCheckout = false;
+  }
 }
 
 const cwd = process.cwd();
@@ -30,121 +30,121 @@ const outDir = path.join(cwd, ".release-preview");
 await fs.mkdir(outDir, { recursive: true });
 
 try {
-	const { stdout } = await execFileAsync("git", [
-		"rev-parse",
-		"--abbrev-ref",
-		"HEAD",
-	]);
-	const current = stdout.trim();
-	currentBranch = current;
-	if (enforceCheckout && current !== branch) {
-		console.error(
-			`\n[preview-release] Refusing to run: current branch is '${current}', expected '${branch}'.` +
-				`\nSwitch branches first: git fetch origin ${branch} --tags && git checkout ${branch}\n` +
-				`Or pass --allow-off-branch to override (preview only).`,
-		);
-		process.exit(2);
-	}
+  const { stdout } = await execFileAsync("git", [
+    "rev-parse",
+    "--abbrev-ref",
+    "HEAD",
+  ]);
+  const current = stdout.trim();
+  currentBranch = current;
+  if (enforceCheckout && current !== branch) {
+    console.error(
+      `\n[preview-release] Refusing to run: current branch is '${current}', expected '${branch}'.` +
+        `\nSwitch branches first: git fetch origin ${branch} --tags && git checkout ${branch}\n` +
+        `Or pass --allow-off-branch to override (preview only).`,
+    );
+    process.exit(2);
+  }
 } catch (_e) {
-	console.warn(
-		"[preview-release] Warning: unable to determine current branch.",
-	);
+  console.warn(
+    "[preview-release] Warning: unable to determine current branch.",
+  );
 }
 
 try {
-	try {
-		await execFileAsync("git", ["fetch", "origin", branch, "--depth=50"], {
-			cwd,
-			stdio: "ignore",
-		});
-		await execFileAsync("git", ["fetch", "origin", "--tags", "--prune"], {
-			cwd,
-			stdio: "ignore",
-		});
-	} catch (_) {
-		console.warn(`[preview-release] Warning: unable to fetch origin/${branch}`);
-	}
+  try {
+    await execFileAsync("git", ["fetch", "origin", branch, "--depth=50"], {
+      cwd,
+      stdio: "ignore",
+    });
+    await execFileAsync("git", ["fetch", "origin", "--tags", "--prune"], {
+      cwd,
+      stdio: "ignore",
+    });
+  } catch (_) {
+    console.warn(`[preview-release] Warning: unable to fetch origin/${branch}`);
+  }
 
-	if (!enforceCheckout && currentBranch && currentBranch !== branch) {
-		console.log(
-			`[preview-release] Evaluating merged state for '${branch}' branch (current: '${currentBranch}')`,
-		);
-	}
+  if (!enforceCheckout && currentBranch && currentBranch !== branch) {
+    console.log(
+      `[preview-release] Evaluating merged state for '${branch}' branch (current: '${currentBranch}')`,
+    );
+  }
 
-	// Run semantic-release on current state (which should be the merged state from workflow)
-	// Override branches config to treat current detached HEAD as the target branch
-	// Set environment variables to help semantic-release recognize the branch
-	const env = {
-		...process.env,
-		GITHUB_REF: process.env.GITHUB_REF || `refs/heads/${branch}`,
-		CI_COMMIT_REF_NAME: process.env.CI_COMMIT_REF_NAME || branch,
-	};
+  // Run semantic-release on current state (which should be the merged state from workflow)
+  // Override branches config to treat current detached HEAD as the target branch
+  // Set environment variables to help semantic-release recognize the branch
+  const env = {
+    ...process.env,
+    GITHUB_REF: process.env.GITHUB_REF || `refs/heads/${branch}`,
+    CI_COMMIT_REF_NAME: process.env.CI_COMMIT_REF_NAME || branch,
+  };
 
-	const result = await semanticRelease(
-		{
-			dryRun: true,
-			ci: false,
-			// Override branches to match target branch format from package.json
-			branches:
-				branch === "dev"
-					? ["main", { name: branch, prerelease: "dev" }]
-					: ["main", branch],
-		},
-		{
-			cwd,
-			env,
-			stdout: process.stdout,
-			stderr: process.stderr,
-		},
-	);
+  const result = await semanticRelease(
+    {
+      dryRun: true,
+      ci: false,
+      // Override branches to match target branch format from package.json
+      branches:
+        branch === "dev"
+          ? ["main", { name: branch, prerelease: "dev" }]
+          : ["main", branch],
+    },
+    {
+      cwd,
+      env,
+      stdout: process.stdout,
+      stderr: process.stderr,
+    },
+  );
 
-	if (!result || !result.nextRelease) {
-		console.log(
-			"[preview-release] No next release determined (no relevant changes?)",
-		);
-		process.exit(0);
-	}
+  if (!result || !result.nextRelease) {
+    console.log(
+      "[preview-release] No next release determined (no relevant changes?)",
+    );
+    process.exit(0);
+  }
 
-	const { version, notes } = result.nextRelease;
-	const date = new Date().toISOString().split("T")[0];
+  const { version, notes } = result.nextRelease;
+  const date = new Date().toISOString().split("T")[0];
 
-	const releaseNotesPath = path.join(outDir, "RELEASE_NOTES.md");
-	const changelogPath = path.join(outDir, "CHANGELOG.md");
-	const changelogPreviewPath = path.join(outDir, "CHANGELOG.preview.md");
+  const releaseNotesPath = path.join(outDir, "RELEASE_NOTES.md");
+  const changelogPath = path.join(outDir, "CHANGELOG.md");
+  const changelogPreviewPath = path.join(outDir, "CHANGELOG.preview.md");
 
-	await fs.writeFile(
-		releaseNotesPath,
-		`# Release notes (preview)\n\n## ${version} — ${date}\n\n${notes}\n`,
-		"utf8",
-	);
+  await fs.writeFile(
+    releaseNotesPath,
+    `# Release notes (preview)\n\n## ${version} — ${date}\n\n${notes}\n`,
+    "utf8",
+  );
 
-	const changelogContent = `# Changelog (preview)\n\nAll notable changes to this project will appear here when released.\n\n## ${version} — ${date}\n\n${notes}\n`;
-	await fs.writeFile(changelogPath, changelogContent, "utf8");
+  const changelogContent = `# Changelog (preview)\n\nAll notable changes to this project will appear here when released.\n\n## ${version} — ${date}\n\n${notes}\n`;
+  await fs.writeFile(changelogPath, changelogContent, "utf8");
 
-	// If real CHANGELOG.md exists, prepend preview
-	try {
-		const existing = await fs.readFile(path.join(cwd, "CHANGELOG.md"), "utf8");
-		const previewCombined = `## ${version} — ${date}\n\n${notes}\n\n${existing}`;
-		await fs.writeFile(changelogPreviewPath, previewCombined, "utf8");
-	} catch (_) {}
+  // If real CHANGELOG.md exists, prepend preview
+  try {
+    const existing = await fs.readFile(path.join(cwd, "CHANGELOG.md"), "utf8");
+    const previewCombined = `## ${version} — ${date}\n\n${notes}\n\n${existing}`;
+    await fs.writeFile(changelogPreviewPath, previewCombined, "utf8");
+  } catch (_) {}
 
-	console.log("[preview-release] Wrote preview files:");
-	console.log("  -", path.relative(cwd, releaseNotesPath));
-	console.log("  -", path.relative(cwd, changelogPath));
-	try {
-		await fs.access(changelogPreviewPath);
-		console.log("  -", path.relative(cwd, changelogPreviewPath));
-	} catch {}
-	console.log(`[preview-release] Branch evaluated: ${branch}`);
+  console.log("[preview-release] Wrote preview files:");
+  console.log("  -", path.relative(cwd, releaseNotesPath));
+  console.log("  -", path.relative(cwd, changelogPath));
+  try {
+    await fs.access(changelogPreviewPath);
+    console.log("  -", path.relative(cwd, changelogPreviewPath));
+  } catch {}
+  console.log(`[preview-release] Branch evaluated: ${branch}`);
 } catch (err) {
-	console.error("[preview-release] Failed to generate preview");
-	if (err && err.name === "AggregateError") {
-		console.error(
-			"Tip: Ensure your local repo has a remote and the release branches exist. Try:\n" +
-				"  git remote -v\n  git fetch origin --tags --prune\n  git fetch origin dev main --depth=1\n" +
-				"Or run the CI workflow_dispatch dry-run on dev/main for an authoritative preview.",
-		);
-	}
-	console.error(err);
-	process.exit(1);
+  console.error("[preview-release] Failed to generate preview");
+  if (err && err.name === "AggregateError") {
+    console.error(
+      "Tip: Ensure your local repo has a remote and the release branches exist. Try:\n" +
+        "  git remote -v\n  git fetch origin --tags --prune\n  git fetch origin dev main --depth=1\n" +
+        "Or run the CI workflow_dispatch dry-run on dev/main for an authoritative preview.",
+    );
+  }
+  console.error(err);
+  process.exit(1);
 }
