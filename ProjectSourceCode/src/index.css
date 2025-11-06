@@ -63,12 +63,6 @@ body::before {
 .bun-logo:hover {
 	filter: drop-shadow(0 0 2em #fbf0dfaa);
 }
-.react-logo {
-	animation: spin 20s linear infinite;
-}
-.react-logo:hover {
-	filter: drop-shadow(0 0 2em #61dafbaa);
-}
 @keyframes spin {
 	from {
 		transform: rotate(0);
