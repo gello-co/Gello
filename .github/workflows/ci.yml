@@ -184,6 +184,10 @@ jobs:
       - name: Install dependencies
         run: bun install --no-progress
 
+      - name: Install ProjectSourceCode dependencies
+        run: bun install --no-progress
+        working-directory: ProjectSourceCode
+
       - name: Ensure Bun cache dir exists
         run: mkdir -p ~/.bun/install/cache
 
