@@ -1,17 +1,15 @@
-import { type FormEvent, useRef } from "react";
-
 export function APITester() {
-  const responseInputRef = useRef<HTMLTextAreaElement>(null);
+  const responseInputRef = useRef < HTMLTextAreaElement > null;
 
-  const testEndpoint = async (e: FormEvent<HTMLFormElement>) => {
+  const testEndpoint = async (e) => {
     e.preventDefault();
 
     try {
       const form = e.currentTarget;
       const formData = new FormData(form);
-      const endpoint = formData.get("endpoint") as string;
+      const endpoint = formData.get("endpoint");
       const url = new URL(endpoint, location.href);
-      const method = formData.get("method") as string;
+      const method = formData.get("method");
       const res = await fetch(url, { method });
 
       const data = await res.json();
