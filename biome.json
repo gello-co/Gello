@@ -40,8 +40,6 @@
 	},
 	"css": {
 		"formatter": {
-			"indentWidth": 2,
-			"lineWidth": 80,
 			"enabled": true,
 			"lineEnding": "auto"
 		}
@@ -53,5 +51,13 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.ts", "**/*.tsx"],
+			"linter": {
+				"enabled": false
+			}
+		}
+	]
 }

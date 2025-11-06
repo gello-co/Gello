@@ -1,9 +1,9 @@
-import express from "express";
-import { engine } from "express-handlebars";
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import express from "express";
+import { engine } from "express-handlebars";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import { helpers } from "./helpers/handlebars.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,21 +15,21 @@ const app = express();
 app.use(helmet());
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // limit each IP to 100 requests per windowMs
 });
 app.use("/api/", limiter);
 
 // Handlebars configuration
 app.engine(
-  "hbs",
-  engine({
-    extname: ".hbs",
-    defaultLayout: "main",
-    layoutsDir: path.join(__dirname, "../views/layouts"),
-    partialsDir: path.join(__dirname, "../views/partials"),
-    helpers,
-  })
+	"hbs",
+	engine({
+		extname: ".hbs",
+		defaultLayout: "main",
+		layoutsDir: path.join(__dirname, "../views/layouts"),
+		partialsDir: path.join(__dirname, "../views/partials"),
+		helpers,
+	}),
 );
 
 app.set("view engine", "hbs");
