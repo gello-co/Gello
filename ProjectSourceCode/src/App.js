@@ -2,29 +2,29 @@ import { APITester } from "./APITester";
 import "./index.css";
 
 export function App() {
-	const app = document.createElement("div");
-	app.className = "app";
+  const app = document.createElement("div");
+  app.className = "app";
 
-    const logoContainer = document.createElement("div");
-	logoContainer.className = "logo-container";
+  const logoContainer = document.createElement("div");
+  logoContainer.className = "logo-container";
 
-    app.appendChild(logoContainer);
+  app.appendChild(logoContainer);
 
-    // Heading
-	const heading = document.createElement("h1");
-	heading.textContent = "Bun + JavaScript";
-	app.appendChild(heading);
+  // Heading
+  const heading = document.createElement("h1");
+  heading.textContent = "Bun + JavaScript";
+  app.appendChild(heading);
 
-	// Paragraph
-	const p = document.createElement("p");
-	p.innerHTML = `Edit <code>src/App.js</code> and save to test HMR`;
-	app.appendChild(p);
+  // Paragraph
+  const p = document.createElement("p");
+  p.innerHTML = `Edit <code>src/App.js</code> and save to test HMR`;
+  app.appendChild(p);
 
-	// APITester
-	const apiTesterElem = APITester();
-	app.appendChild(apiTesterElem);
+  // APITester
+  const apiTesterElem = APITester();
+  app.appendChild(apiTesterElem);
 
-	return app;
+  return app;
 }
 
 export default App;
