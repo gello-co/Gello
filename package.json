@@ -5,7 +5,9 @@
 	"scripts": {
 		"dev:env": "bash .devOps/scripts/sync.sh || echo 'Failed to sync'",
 		"dev": "bun --hot ProjectSourceCode/src/index.ts",
-		"build": "bun build ProjectSourceCode/src/index.html --outdir=ProjectSourceCode/dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
+		"build": "bun run build:css && bun run build:server",
+		"build:css": "cd ProjectSourceCode && bun run build:css",
+		"build:server": "bun build ProjectSourceCode/src/index.ts --outdir=ProjectSourceCode/dist --target=node --sourcemap",
 		"start": "NODE_ENV=production bun ProjectSourceCode/src/index.ts",
 		"test": "vitest --config ProjectSourceCode/vitest.config.ts",
 		"test:ci": "vitest --run --config ProjectSourceCode/vitest.config.ts",
@@ -36,7 +38,7 @@
 		"workflow:run:lint": "./bin/act pull_request -W .github/workflows/ci.yml -j lint"
 	},
 	"dependencies": {
-		"@supabase/supabase-js": "^2.79.0",
+		"@supabase/supabase-js": "^2.80.0",
 		"alpinejs": "^3.15.1",
 		"bootstrap": "^5.3.8",
 		"express": "^5.1.0",
