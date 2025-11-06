@@ -1,42 +1,52 @@
-import { bunTranspiler } from "@hono/bun-transpiler";
-import { Hono } from "hono";
-import { serveStatic } from "hono/bun";
+import express from "express";
+import { engine } from "express-handlebars";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { helpers } from "./helpers/handlebars.js";
 
-const app = new Hono();
-const isProd = process.env.NODE_ENV === "production";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// API routes placeholder for examples (same as lab routes)
-app.get("/api/health", (c) => c.json({ ok: true }));
+const app = express();
 
-app.get("/api/hello", (c) =>
-	c.json({ message: "Hello, world!", method: "GET" }),
+// Security middleware
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+app.use("/api/", limiter);
+
+// Handlebars configuration
+app.engine(
+  "hbs",
+  engine({
+    extname: ".hbs",
+    defaultLayout: "main",
+    layoutsDir: path.join(__dirname, "../views/layouts"),
+    partialsDir: path.join(__dirname, "../views/partials"),
+    helpers,
+  })
 );
 
-app.put("/api/hello", async (c) =>
-	c.json({ message: "Hello, world!", method: "PUT" }),
-);
+app.set("view engine", "hbs");
+app.set("views", path.join(__dirname, "../views"));
 
-app.get("/api/hello/:name", (c) =>
-	c.json({ message: `Hello, ${c.req.param("name")}!` }),
-);
+// Static files
+app.use("/public", express.static(path.join(__dirname, "../public")));
+app.use("/css", express.static(path.join(__dirname, "../public/css")));
+app.use("/js", express.static(path.join(__dirname, "../public/js")));
 
-// Transpile TS/TSX modules on the fly in dev (Bun)
-// Allows <script type="module" src="/frontend.tsx"> in index.html
-if (!isProd) {
-	app.get("/:script{.+\\.(ts|tsx)}", bunTranspiler());
-}
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static assets and SPA fallback
-if (isProd) {
-	// In production, serve built assets from dist
-	app.use("/assets/*", serveStatic({ root: "./dist" }));
-	app.get("/", serveStatic({ path: "./dist/index.html" }));
-	app.get("/*", serveStatic({ path: "./dist/index.html" }));
-} else {
-	// In development, serve source files and enable TS/TSX transpile
-	app.use("/public/*", serveStatic({ root: "./" }));
-	app.get("/", serveStatic({ path: "./src/index.html" }));
-	app.get("/*", serveStatic({ path: "./src/index.html" }));
-}
+import apiRoutes from "./routes/api.js";
+import pageRoutes from "./routes/pages.js";
+
+app.use("/api", apiRoutes);
+app.use("/", pageRoutes);
 
 export { app };

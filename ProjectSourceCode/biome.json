@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.2/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
 	"root": false,
 	"vcs": {
 		"enabled": true,
@@ -44,6 +44,14 @@
 			"lineWidth": 80,
 			"enabled": true,
 			"lineEnding": "auto"
+		},
+		"linter": {
+			"enabled": true,
+			"rules": {
+				"suspicious": {
+					"noUnknownAtRules": "off"
+				}
+			}
 		}
 	},
 	"assist": {
