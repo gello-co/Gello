@@ -1,23 +1,23 @@
 {
-	"pull_request": {
-		"number": 42,
-		"head": {
-			"ref": "dependabot/npm_and_yarn/some-package-1.2.3",
-			"sha": "dependabot123"
-		},
-		"base": {
-			"ref": "dev",
-			"sha": "dev123"
-		},
-		"merged": false,
-		"state": "open",
-		"labels": []
-	},
-	"repository": {
-		"name": "Gello",
-		"owner": {
-			"login": "gello-co"
-		}
-	},
-	"action": "opened"
+  "pull_request": {
+    "number": 42,
+    "head": {
+      "ref": "dependabot/npm_and_yarn/some-package-1.2.3",
+      "sha": "dependabot123"
+    },
+    "base": {
+      "ref": "dev",
+      "sha": "dev123"
+    },
+    "merged": false,
+    "state": "open",
+    "labels": []
+  },
+  "repository": {
+    "name": "Gello",
+    "owner": {
+      "login": "gello-co"
+    }
+  },
+  "action": "opened"
 }

@@ -35,10 +35,12 @@ jobs:
         with:
           path: |
             ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
+          # scope cache to the ProjectSourceCode package files
+          key: ${{ runner.os }}-bun-${{ hashFiles('ProjectSourceCode/**/bun.lock*', 'ProjectSourceCode/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
+        working-directory: ProjectSourceCode
         run: bun install --no-progress
 
       - name: Ensure Bun cache dir exists
@@ -52,10 +54,23 @@ jobs:
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
+      - name: Verify install (debug)
+        working-directory: ProjectSourceCode
+        run: |
+          echo "PWD: $(pwd)"
+          bun -v || true
+          node -v || true
+          echo "List node_modules/.bin"
+          ls -la node_modules/.bin || true
+          echo "which postcss:"
+          which postcss || echo "postcss not found"
+
       - name: Run tests (fast)
+        working-directory: ProjectSourceCode
         run: bun run test:ci
 
       - name: Build artifacts
+        working-directory: ProjectSourceCode
         run: bun run build
 
       - name: Upload build artifacts
@@ -81,10 +96,11 @@ jobs:
         with:
           path: |
             ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('ProjectSourceCode/**/bun.lock*', 'ProjectSourceCode/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
+        working-directory: ProjectSourceCode
         run: bun install --no-progress
 
       - name: Ensure Bun cache dir exists
@@ -102,6 +118,7 @@ jobs:
         run: git fetch origin main --depth=1
 
       - name: Run commitlint
+        working-directory: ProjectSourceCode
         run: |
           git --no-pager log --format=%B origin/main..HEAD > /tmp/commits.txt || true
           if [ -s /tmp/commits.txt ]; then
@@ -134,10 +151,11 @@ jobs:
         with:
           path: |
             ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('ProjectSourceCode/**/bun.lock*', 'ProjectSourceCode/package.json') }}
           restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
+        working-directory: ProjectSourceCode
         run: bun install --no-progress
 
       - name: Ensure Bun cache dir exists
@@ -175,6 +193,7 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_DEV }}
           GITHUB_REF: refs/heads/${{ github.event.pull_request.base.ref }}
           CI_COMMIT_REF_NAME: ${{ github.event.pull_request.base.ref }}
+        working-directory: ProjectSourceCode
         run: bun scripts/preview-release.mjs --branch ${{ github.event.pull_request.base.ref }} --allow-off-branch
 
       - name: Upload release preview artifacts
