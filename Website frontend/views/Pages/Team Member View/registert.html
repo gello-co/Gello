@@ -1,5 +1,8 @@
 <!-- add home page here. Nav bar, descriptions of what gello is, footer, and a button to login and register -->
 
+
+
+
 <!--
 Reference: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 Source: https://react.dev/docs/getting-started
@@ -27,6 +30,9 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
         crossorigin="anonymous"
     ></script>
 
+
+
+
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid px-4">
@@ -47,25 +53,34 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
                         <a class="nav-link" href="#">Tracker</a>
                     </li>
                 </ul>
-                <a href = "#"> 
+                <a href = "#">
                     <button class="btn btn-login">Login</button>
                 </a>
             </div>
         </div>
     </nav>
 
+
+
+
     <!-- REGISTER AS TEAM MEMBER - ALL I ADDED HERE WERE THE TEAM IDS-->
 <div class="container my-5">
   <div class="row justify-content-center">
     <div class="col-lg-6 col-md-8">
       <div class="login-form-card">
-        
+       
         <div class="text-center mb-4">
           <h2 class="login-form-title">Register as Team Member</h2>
           <p class="text-muted">Join your team and start completing tasks</p>
         </div>
 
+
+
+
         <form id="memberRegisterForm" action="/register-member" method="POST">
+
+
+
 
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -73,11 +88,17 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
               <input type="text" class="form-control login-input" id="firstName" name="firstName" required>
             </div>
 
+
+
+
             <div class="col-md-6 mb-3">
               <label class="form-label" for="lastName">Last name<span class="required">*</span></label>
               <input type="text" class="form-control login-input" id="lastName" name="lastName" required>
             </div>
           </div>
+
+
+
 
           <div class="mb-3">
             <label class="form-label" for="username">Username<span class="required">*</span></label>
@@ -90,28 +111,49 @@ React Documentation. (2025). Getting Started. https://react.dev/docs/getting-sta
             <small class="text-muted">Ask your admin/team lead for this code.</small>
           </div>
 
+
+
+
           <div class="mb-3">
             <label class="form-label" for="password">Password<span class="required">*</span></label>
             <input type="password" class="form-control login-input" id="password" name="password" required>
           </div>
+
+
+
 
           <div class="mb-4">
             <label class="form-label" for="confirmPassword">Confirm Password<span class="required">*</span></label>
             <input type="password" class="form-control login-input" id="confirmPassword" name="confirmPassword" required>
           </div>
 
+
+
+
           <button type="submit" class="btn btn-signin w-100">Join Team</button>
 
+
+
+
         </form>
+
+
+
 
         <div class="text-center mt-4">
           <p class="mb-0">Already a member? <a href="loginteammember.html" class="register-link">Login</a></p>
         </div>
 
+
+
+
       </div>
     </div>
   </div>
 </div>
+
+
+
 
     <!-- FOOTER -->
     <footer class="footer">
