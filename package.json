@@ -75,7 +75,7 @@
     "supabase": "^2.54.11",
     "supertest": "^7.1.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.8"
   },
   "commitlint": {
     "extends": [
