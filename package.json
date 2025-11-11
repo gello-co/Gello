@@ -21,19 +21,12 @@
     "validate": "bun run format && bun run lint && bun run check:dry",
     "validate:all": "bun run validate && bun run test:ci",
     "e2e": "playwright test",
-    "release:preview": "bun scripts/preview-release.mjs",
-    "release:preview:dev": "bun scripts/preview-release.mjs --branch dev",
-    "release:preview:main": "bun scripts/preview-release.mjs --branch main",
-    "release:dry:dev": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches dev",
-    "release:dry:main": "DEBUG=semantic-release:* bunx semantic-release --no-ci --dry-run --branches main",
     "workflow:validate": "yamllint --no-warnings .github/workflows/*.yml 2>&1 || echo 'yamllint not installed or found errors (install with: pip install yamllint)'",
     "workflow:test:ci": "./bin/act pull_request -W .github/workflows/ci.yml --list",
-    "workflow:test:release": "./bin/act workflow_dispatch -W .github/workflows/release.yml --list",
     "workflow:test:preview": "./bin/act pull_request -W .github/workflows/preview.yml --list",
     "workflow:test:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot] --list",
     "workflow:test:all": "bun run workflow:validate && ./bin/act --list",
     "workflow:run:ci": "./bin/act pull_request -W .github/workflows/ci.yml",
-    "workflow:run:release": "./bin/act workflow_dispatch -W .github/workflows/release.yml",
     "workflow:run:preview": "./bin/act pull_request -W .github/workflows/preview.yml",
     "workflow:run:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot]",
     "workflow:run:lint": "./bin/act pull_request -W .github/workflows/ci.yml -j lint"
@@ -55,14 +48,7 @@
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@commitlint/prompt-cli": "^20.1.0",
-    "@jno21/semantic-release-github-commit": "^1.0.0",
     "@playwright/test": "^1.56.1",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.2",
-    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/bun": "^1.3.2",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.0",
@@ -70,7 +56,6 @@
     "autoprefixer": "^10.4.22",
     "husky": "^9.1.7",
     "postcss": "^8.5.6",
-    "semantic-release": "^25.0.2",
     "supabase": "^2.58.5",
     "supertest": "^7.1.4",
     "typescript": "^5.9.3",
@@ -82,49 +67,6 @@
     ]
   },
   "release": {
-    "branches": [
-      "main",
-      {
-        "name": "dev",
-        "prerelease": "dev"
-      }
-    ],
-    "repositoryUrl": "https://github.com/gello-co/Gello.git",
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/changelog",
-        {
-          "changelogFile": "CHANGELOG.md"
-        }
-      ],
-      [
-        "@semantic-release/exec",
-        {
-          "prepareCmd": "bun scripts/dedupe-changelog.mjs"
-        }
-      ],
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "CHANGELOG.md"
-          ],
-          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-        }
-      ],
-      [
-        "@semantic-release/github",
-        {
-          "assets": [
-            {
-              "path": "CHANGELOG.md",
-              "label": "Changelog"
-            }
-          ]
-        }
-      ]
-    ]
+    "note": "Release automation is temporarily disabled."
   }
 }
