@@ -2,7 +2,7 @@
   "name": "gello-app",
   "private": true,
   "type": "module",
-    "scripts": {
+  "scripts": {
     "dev": "bun run dev:css & bun --hot src/index.ts",
     "dev:css": "postcss src/public/css/input.css -o src/public/css/output.css --watch",
     "dev:env": "bash ../.devOps/scripts/sync.sh || echo 'Failed to sync'",
@@ -27,14 +27,16 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.79.0",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/bcrypt": "^6.0.0",
     "alpinejs": "^3.15.1",
+    "bcrypt": "^6.0.0",
     "bootstrap": "^5.3.8",
     "express": "^5.1.0",
     "express-handlebars": "^8.0.3",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "htmx.org": "^2.0.8",
-    "@tailwindcss/postcss": "^4.1.16",
     "tailwindcss": "^4.1.16",
     "zod": "^4.1.12"
   },

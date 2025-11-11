@@ -48,6 +48,7 @@ import pageRoutes from "./routes/pages.js";
 import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import tasksRouter from "./routes/tasks.js";
+import usersRouter from "./routes/users.js";
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);
