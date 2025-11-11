@@ -32,3 +32,5 @@ router.delete("/:id", async (req, res) => {
   await supabase.from("users").delete().eq("id", req.params.id);
   res.json({ ok: true });
 });
+
+export default router;
