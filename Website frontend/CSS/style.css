@@ -515,3 +515,17 @@ body {
 .priority-list {
   margin-left: 20px;
 }
+
+.btn-new-task {
+    background-color: #742e10;
+    color: white;
+    border: none;
+    padding: 15px 50px;
+    font-size: 1.2rem;
+    border-radius: 30px;
+    font-weight: 600;
+    margin-left: 40px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+    animation: fadeInUp 1s ease 0.4s backwards;
+}
