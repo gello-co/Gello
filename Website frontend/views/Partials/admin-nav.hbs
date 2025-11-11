@@ -1,0 +1,30 @@
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid px-4">
+            <!-- we can probabaly add the icon here like we did in our personal websites - the picture that Wren made? -->
+            <a class="navbar-brand" href="../General_layouts/home.html">GELLO</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Tasks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Roles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Tracker</a>
+                    </li>
+                </ul>
+                <div class="dropdown">
+                    <button class="dropbtn">Profile</button>
+                    <div class="dropdown-content">
+                        <a href="../Pages/Admin View/admin-profile.hbs">View profile</a>
+                        <!-- need to impliment the logout button being clicked actually ending their session-->
+                        <a href="../General_layouts/home.html">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
