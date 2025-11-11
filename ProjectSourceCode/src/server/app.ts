@@ -47,9 +47,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 import apiRoutes from "./routes/api.js";
+import boardsRouter from "./routes/boards.js";
+import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
+import tasksRouter from "./routes/tasks.js";
+import usersRouter from "./routes/users.js";
 
 app.use("/api", apiRoutes);
+app.use("/api/boards", boardsRouter);
+app.use("/api/lists", listsRouter);
+app.use("/api/tasks", tasksRouter);
 app.use("/", pageRoutes);
 
 export { app };
