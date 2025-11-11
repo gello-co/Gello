@@ -1,0 +1,22 @@
+<div class="container-fluid my-4">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h1>{{board.name}}</h1>
+		{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+			<button class="btn btn-primary" onclick="createList('{{board.id}}')">
+				<i class="fas fa-plus"></i> Add List
+			</button>
+		{{/if}}
+	</div>
+	{{#if board.description}}
+		<p class="text-muted mb-4">{{board.description}}</p>
+	{{/if}}
+	<div class="board-container" data-board-id="{{board.id}}">
+		<div class="lists-container d-flex">
+			{{#each lists}}
+				{{> list-column list=this tasks=this.tasks user=../user}}
+			{{/each}}
+		</div>
+	</div>
+</div>
+{{> task-modal users=users}}
+

@@ -1,0 +1,36 @@
+<div class="task-card" data-task-id="{{task.id}}" draggable="true">
+	<div class="task-header">
+		<h4>{{task.title}}</h4>
+		{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+			<button class="btn btn-sm btn-link" onclick="editTask('{{task.id}}')">
+				<i class="fas fa-edit"></i>
+			</button>
+		{{/if}}
+	</div>
+	{{#if task.description}}
+		<p class="task-description">{{task.description}}</p>
+	{{/if}}
+	<div class="task-meta">
+		<span class="story-points">{{task.story_points}} pts</span>
+		{{#if task.assigned_to}}
+			{{> user-avatar user=task.assigned_user}}
+		{{/if}}
+	</div>
+	{{#if task.due_date}}
+		<div class="task-due-date">
+			<i class="fas fa-calendar"></i> {{formatDate task.due_date}}
+		</div>
+	{{/if}}
+	{{#unless task.completed_at}}
+		{{#if (or (eq user.role "admin") (eq user.role "manager") (eq task.assigned_to user.id))}}
+			<button class="btn btn-sm btn-success mt-2" onclick="completeTask('{{task.id}}')">
+				Complete
+			</button>
+		{{/if}}
+	{{else}}
+		<div class="task-completed">
+			<i class="fas fa-check-circle"></i> Completed
+		</div>
+	{{/unless}}
+</div>
+

@@ -1,0 +1,24 @@
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Teams</h1>
+    {{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+      <button class="btn btn-primary" onclick="createTeam()">
+        <i class="fas fa-plus"></i>
+        Create Team
+      </button>
+    {{/if}}
+  </div>
+  <div class="row">
+    {{#each teams}}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{name}}</h5>
+            <p class="card-text">Created: {{formatDate created_at}}</p>
+            <a href="/teams/{{id}}" class="btn btn-primary">View Team</a>
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>
