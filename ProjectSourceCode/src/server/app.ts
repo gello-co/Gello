@@ -45,8 +45,14 @@ app.use(express.urlencoded({ extended: true }));
 
 import apiRoutes from "./routes/api.js";
 import pageRoutes from "./routes/pages.js";
+import boardsRouter from "./routes/boards.js";
+import listsRouter from "./routes/lists.js";
+import tasksRouter from "./routes/tasks.js";
 
 app.use("/api", apiRoutes);
+app.use("/api/boards", boardsRouter);
+app.use("/api/lists", listsRouter);
+app.use("/api/tasks", tasksRouter);
 app.use("/", pageRoutes);
 
 export { app };
