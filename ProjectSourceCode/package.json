@@ -28,6 +28,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.79.0",
     "@tailwindcss/postcss": "^4.1.16",
+    "@types/bcrypt": "^6.0.0",
     "alpinejs": "^3.15.1",
     "bcrypt": "^6.0.0",
     "bootstrap": "^5.3.8",

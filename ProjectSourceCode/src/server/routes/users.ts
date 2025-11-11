@@ -1,7 +1,8 @@
 import express from "express";
+import bcrypt from "bcrypt";
 import { getSupabaseClient } from "../../lib/supabase.js";
 import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient.js";
-import bcrypt from "bcrypt";
+
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get("/",async (req,res)=>{
 router.post("/", async (req, res) => {
   const supabase = getSupabaseClient();
 
-  const hash = await bcrypt.hash(req.body.password);
+  const hash = await bcrypt.hash(req.body.password,10);//TODO: change to a different number of salting.
   req.body.password_hash = hash;
 
   const { data } = await supabase.from("users").insert(req.body).select().single();
