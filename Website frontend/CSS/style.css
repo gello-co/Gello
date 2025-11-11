@@ -483,3 +483,52 @@ body {
 .profile + footer {
   margin-top: 0;
 }
+
+.tasks-page {
+  padding: 60px 0 60px 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+
+.tasks-card {
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+
+.tasks-card h3 {
+  color: #742e10;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+
+.tasks-card p {
+  color: #5a2410;
+  font-size: 1.1rem;
+}
+
+
+.priority-list {
+  margin-left: 20px;
+}
+
+
+.btn-new-task {
+    background-color: #742e10;
+    color: white;
+    border: none;
+    padding: 15px 50px;
+    font-size: 1.2rem;
+    border-radius: 30px;
+    font-weight: 600;
+    margin-left: 40px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+    animation: fadeInUp 1s ease 0.4s backwards;
+}
