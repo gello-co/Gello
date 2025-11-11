@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import cookieParser from "cookie-parser";
 import express from "express";
 import { engine } from "express-handlebars";
 import rateLimit from "express-rate-limit";
@@ -42,6 +43,8 @@ app.use("/js", express.static(path.join(__dirname, "../public/js")));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Cookie parser for Supabase Auth sessions (httpOnly, secure cookies)
+app.use(cookieParser());
 
 import apiRoutes from "./routes/api.js";
 import pageRoutes from "./routes/pages.js";

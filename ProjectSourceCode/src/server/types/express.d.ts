@@ -5,9 +5,12 @@ declare global {
     interface Request {
       user?: {
         id: string;
-        username: string;
         email: string;
-        role: "admin" | "team_member";
+        display_name: string;
+        role: "admin" | "manager" | "member";
+        team_id: string | null;
+        total_points: number;
+        avatar_url: string | null;
       } | null;
     }
   }

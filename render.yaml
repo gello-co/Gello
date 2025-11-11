@@ -15,7 +15,7 @@ projects:
             domains:
               - www.gello.co
               - gello.co
-            autoDeployTrigger: commit
+            autoDeployTrigger: off
             rootDir: .
             previews:
               generation: manual

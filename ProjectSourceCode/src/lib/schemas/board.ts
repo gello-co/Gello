@@ -1,21 +1,27 @@
 import { z } from "zod";
 
 export const boardSchema = z.object({
-  id: z.uuid().optional(),
-  title: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
-  ownerId: z.uuid(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
+  id: z.uuid(),
+  name: z.string().min(1),
+  description: z.string().nullable(),
+  team_id: z.uuid(),
+  created_by: z.uuid().nullable(),
+  created_at: z.string(),
 });
 
-export const createBoardSchema = boardSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const createBoardSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().nullable().optional(),
+  team_id: z.uuid(),
+  created_by: z.uuid().nullable().optional(),
 });
 
-export const updateBoardSchema = boardSchema.partial().required({ id: true });
+export const updateBoardSchema = z.object({
+  id: z.uuid(),
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  team_id: z.uuid().optional(),
+});
 
 export type Board = z.infer<typeof boardSchema>;
 export type CreateBoardInput = z.infer<typeof createBoardSchema>;

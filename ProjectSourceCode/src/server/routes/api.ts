@@ -1,22 +1,27 @@
 import express from "express";
+import { errorHandler } from "../middleware/errorHandler.js";
+import authRoutes from "./api/auth.js";
+import boardsRoutes from "./api/boards.js";
+import listsRoutes from "./api/lists.js";
+import pointsRoutes from "./api/points.js";
+import tasksRoutes from "./api/tasks.js";
+import teamsRoutes from "./api/teams.js";
+import sseRoutes from "./sse.js";
 
 const router = express.Router();
 
-// API routes
 router.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-router.get("/hello", (_req, res) => {
-  res.json({ message: "Hello, world!", method: "GET" });
-});
+router.use("/auth", authRoutes);
+router.use("/teams", teamsRoutes);
+router.use("/boards", boardsRoutes);
+router.use("/lists", listsRoutes);
+router.use("/tasks", tasksRoutes);
+router.use("/points", pointsRoutes);
+router.use("/sse", sseRoutes);
 
-router.put("/hello", (_req, res) => {
-  res.json({ message: "Hello, world!", method: "PUT" });
-});
-
-router.get("/hello/:name", (req, res) => {
-  res.json({ message: `Hello, ${req.params.name}!` });
-});
+router.use(errorHandler);
 
 export default router;
