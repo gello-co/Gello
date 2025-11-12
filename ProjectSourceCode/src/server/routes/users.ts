@@ -1,30 +1,38 @@
-import express from "express";
-import bcrypt from "bcrypt";
-import { getSupabaseClient } from "../../lib/supabase.js";
 import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient.js";
-
+import bcrypt from "bcrypt";
+import express from "express";
+import { getSupabaseClient } from "../../lib/supabase.js";
 
 const router = express.Router();
 
-router.get("/",async (req,res)=>{
+router.get("/", async (req, res) => {
   const supabase = getSupabaseClient();
-  const {data} = await supabase.from("users").select("*");
-    res.json(data);
+  const { data } = await supabase.from("users").select("*");
+  res.json(data);
 });
 
 router.post("/", async (req, res) => {
   const supabase = getSupabaseClient();
 
-  const hash = await bcrypt.hash(req.body.password,10);//TODO: change to a different number of salting.
+  const hash = await bcrypt.hash(req.body.password, 10); //TODO: change to a different number of salting.
   req.body.password_hash = hash;
 
-  const { data } = await supabase.from("users").insert(req.body).select().single();
+  const { data } = await supabase
+    .from("users")
+    .insert(req.body)
+    .select()
+    .single();
   res.json(data);
 });
 
 router.put("/:id", async (req, res) => {
   const supabase = getSupabaseClient();
-  const { data } = await supabase.from("users").update(req.body).eq("id", req.params.id).select().single();
+  const { data } = await supabase
+    .from("users")
+    .update(req.body)
+    .eq("id", req.params.id)
+    .select()
+    .single();
   res.json(data);
 });
 

@@ -11,13 +11,22 @@ router.get("/", async (_req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
-  const { data } = await supabase.from("boards").insert(req.body).select().single();
+  const { data } = await supabase
+    .from("boards")
+    .insert(req.body)
+    .select()
+    .single();
   res.json(data);
 });
 
 router.put("/:id", async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
-  const { data } = await supabase.from("boards").update(req.body).eq("id", req.params.id).select().single();
+  const { data } = await supabase
+    .from("boards")
+    .update(req.body)
+    .eq("id", req.params.id)
+    .select()
+    .single();
   res.json(data);
 });
 

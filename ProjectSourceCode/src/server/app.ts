@@ -44,9 +44,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 import apiRoutes from "./routes/api.js";
-import pageRoutes from "./routes/pages.js";
 import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
+import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
 import usersRouter from "./routes/users.js";
 

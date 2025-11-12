@@ -22,32 +22,24 @@ router.get("/hello/:name", (req, res) => {
 //CRUD user routes
 
 //"Create" user
-router.post("/register",(req,res)=>{
+router.post("/register", (req, res) => {
   const username = req.body.username;
   const email = req.body.email;
-  try{
+  try {
     res.status(200).send("Success");
-  }catch(err){
+  } catch (err) {
     console.log(err);
   }
-})
+});
 
 //CRUD board routes
 
-router.get("/viewBoards", async (req, res) => {
+router.get("/viewBoards", async (req, res) => {});
 
-});
+router.post("/createBoard", async (req, res) => {});
 
-router.post("/createBoard", async (req, res) => {
-  
-});
+router.put("/updateBoard", async (req, res) => {});
 
-router.put("/updateBoard", async (req, res) => {
-  
-});
-
-router.delete("/deleteBoard", async (req, res) =>{
-
-});
+router.delete("/deleteBoard", async (req, res) => {});
 
 export default router;
