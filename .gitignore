@@ -158,3 +158,5 @@ RELEASE_NOTES*.md
 bin/
 .agents/
 playwright-report/
+test-results/
+gello-worktrees/
