@@ -277,8 +277,9 @@ export async function createTestUser(
   }
 
   // If register returned the user, use it directly (faster and more reliable)
-    // Note: registerResult.user is Omit<User, "password_hash">, but User type requires it
-    // We'll add password_hash: "" to satisfy the type (not used with Supabase Auth)
+  // Note: registerResult.user is Omit<User, "password_hash">, but User type requires it
+  // We'll add password_hash: "" to satisfy the type (not used with Supabase Auth)
+  if (registerResult?.user) {
     return {
       user: { ...registerResult.user, password_hash: "" } as User,
       email,
