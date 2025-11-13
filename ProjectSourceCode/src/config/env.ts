@@ -41,12 +41,14 @@ export const env: AppEnv = {
   ),
   SUPABASE_SERVICE_ROLE_KEY: pick(
     // Local Supabase (for testing) takes priority
-    // New API key format (sb_secret_...) from supabase status -o env
-    process.env.SECRET_KEY,
-    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY,
-    // Legacy format (JWT) from supabase status -o env
+    // Legacy format (JWT) from supabase status -o env (REQUIRED for service role operations)
+    // NOTE: Supabase JS client requires JWT format for service role operations
+    // New API key format (sb_secret_...) does not work for admin operations
     process.env.SERVICE_ROLE_KEY,
+    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
+    // New API key format (sb_secret_...) - fallback only (may not work)
+    process.env.SECRET_KEY,
     // Production/remote Supabase
     process.env.APP_SUPABASE_SERVICE_ROLE_KEY,
     process.env.SB_SERVICE_ROLE_KEY,

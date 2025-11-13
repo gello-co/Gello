@@ -51,12 +51,15 @@ import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
-import usersRouter from "./routes/users.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);
 app.use("/api/lists", listsRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/", pageRoutes);
+
+// Error handler must be last
+app.use(errorHandler);
 
 export { app };

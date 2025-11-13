@@ -13,10 +13,17 @@ export async function requireAuth(
   next: NextFunction,
 ) {
   try {
-    // Get Supabase client with session from cookies
-    const supabase = getSupabaseClientForRequest(req);
-    const authService = new AuthService(supabase);
+    // Get Supabase client with session from cookies (awaits session setting)
+    const supabase = await getSupabaseClientForRequest(req);
+    
+    // Verify session is valid by checking auth state
+    const { data: { session: authSession }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !authSession) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
+    const authService = new AuthService(supabase);
     // Get session from Supabase Auth
     const session = await authService.getSession();
     if (!session) {

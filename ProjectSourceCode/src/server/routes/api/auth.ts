@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.post("/register", validate(createUserSchema), async (req, res, next) => {
   try {
-    const supabase = getSupabaseClientForRequest(req);
+    const supabase = await getSupabaseClientForRequest(req);
     const authService = new AuthService(supabase);
 
     const result = await authService.register(req.body);
@@ -43,7 +43,7 @@ router.post("/register", validate(createUserSchema), async (req, res, next) => {
 
 router.post("/login", validate(loginSchema), async (req, res, next) => {
   try {
-    const supabase = getSupabaseClientForRequest(req);
+    const supabase = await getSupabaseClientForRequest(req);
     const authService = new AuthService(supabase);
 
     const result = await authService.login(req.body);
@@ -76,7 +76,7 @@ router.get("/session", requireAuth, async (req, res) => {
 
 router.post("/logout", requireAuth, async (req, res, next) => {
   try {
-    const supabase = getSupabaseClientForRequest(req);
+    const supabase = await getSupabaseClientForRequest(req);
     const authService = new AuthService(supabase);
 
     await authService.logout();

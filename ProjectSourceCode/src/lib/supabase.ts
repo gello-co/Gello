@@ -38,9 +38,9 @@ export function getSupabaseClient() {
 /**
  * Get Supabase client for a specific request with cookie-based session
  */
-export function getSupabaseClientForRequest(req: {
+export async function getSupabaseClientForRequest(req: {
   cookies?: Record<string, string>;
-}): SupabaseClient {
+}): Promise<SupabaseClient> {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
     throw new Error(
       "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
@@ -59,15 +59,15 @@ export function getSupabaseClientForRequest(req: {
   const refreshToken = req.cookies?.["sb-refresh-token"];
 
   if (accessToken && refreshToken) {
-    // Set the session on the client
-    client.auth
-      .setSession({
+    // Set the session on the client and await it
+    try {
+      await client.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
-      })
-      .catch(() => {
-        // Ignore errors - session may be invalid
       });
+    } catch {
+      // Ignore errors - session may be invalid, will be caught on first API call
+    }
   }
 
   return client;

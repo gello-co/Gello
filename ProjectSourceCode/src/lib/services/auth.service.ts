@@ -6,6 +6,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../../config/env.js";
 import { getUserById, type User } from "../database/users.db.js";
+import {
+	DuplicateUserError,
+	InvalidCredentialsError,
+} from "../errors/app.errors.js";
 import type { CreateUserInput, LoginInput } from "../schemas/user.js";
 
 export type AuthResult = {
@@ -59,7 +63,7 @@ export class AuthService {
       .single();
 
     if (existingUser) {
-      throw new Error("User with this email already exists");
+      throw new DuplicateUserError("User with this email already exists");
     }
 
     // Create user in Supabase Auth
@@ -75,6 +79,14 @@ export class AuthService {
     });
 
     if (authError) {
+      // Map Supabase Auth errors to custom error classes
+      if (
+        authError.message.includes("already registered") ||
+        authError.message.includes("already exists") ||
+        authError.message.includes("User already registered")
+      ) {
+        throw new DuplicateUserError("User with this email already exists");
+      }
       throw new Error(`Registration failed: ${authError.message}`);
     }
 
@@ -134,13 +146,38 @@ export class AuthService {
       });
 
     if (authError || !authData.user) {
-      throw new Error("Invalid email or password");
+      throw new InvalidCredentialsError("Invalid email or password");
     }
 
     // Get user from public.users table
-    const user = await getUserById(this.client, authData.user.id);
+    let user = await getUserById(this.client, authData.user.id);
     if (!user) {
-      throw new Error("User profile not found");
+      // User exists in auth but not in public.users - create profile
+      // This can happen if user was created directly in auth or profile was deleted
+      const serviceClient = this.getServiceRoleClient();
+      const { data: newUser, error: userError } = await serviceClient
+        .from("users")
+        .insert({
+          id: authData.user.id,
+          email: authData.user.email ?? input.email,
+          password_hash: "", // Not used with Supabase Auth
+          display_name:
+            authData.user.user_metadata?.display_name ??
+            authData.user.email?.split("@")[0] ??
+            "User",
+          role: (authData.user.user_metadata?.role as User["role"]) ?? "member",
+          team_id: authData.user.user_metadata?.team_id ?? null,
+          avatar_url: authData.user.user_metadata?.avatar_url ?? null,
+        })
+        .select()
+        .single();
+
+      if (userError || !newUser) {
+        throw new Error(
+          `User profile not found and failed to create: ${userError?.message}`,
+        );
+      }
+      user = newUser as User;
     }
 
     const { password_hash: _, ...userWithoutPassword } = user;

@@ -22,7 +22,7 @@ router.use("/tasks", tasksRoutes);
 router.use("/points", pointsRoutes);
 router.use("/sse", sseRoutes);
 
-router.use(errorHandler);
+// Note: Error handler is registered at app level in app.ts
 
 //CRUD user routes
 
