@@ -5,23 +5,15 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { User } from "../../ProjectSourceCode/src/lib/database/users.db.js";
+import { DuplicateUserError } from "../../ProjectSourceCode/src/lib/errors/app.errors.js";
 import { AuthService } from "../../ProjectSourceCode/src/lib/services/auth.service.js";
 
-// All tests use local Supabase by default (no rate limits, faster, isolated)
-// Default local Supabase values (from `supabase start`, edit if needed)
-// Use 127.0.0.1 to match what supabase status outputs (more reliable in WSL2)
-const DEFAULT_LOCAL_URL = "http://127.0.0.1:54321";
-const DEFAULT_LOCAL_SERVICE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
-const DEFAULT_LOCAL_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-
-// Use local Supabase environment variables if set, otherwise use defaults
-// This allows `supabase status -o env` to override defaults
+// All tests use local Supabase (no rate limits, faster, isolated)
+// Credentials must be loaded from `supabase status -o env` via vitest-setup.ts
+// No hardcoded defaults - all values must come from CLI output
 const SUPABASE_URL =
   process.env.SUPABASE_LOCAL_URL ||
-  process.env.SUPABASE_URL ||
-  DEFAULT_LOCAL_URL;
+  process.env.SUPABASE_URL;
 
 // Support both new API key format (sb_secret_...) and legacy JWT format
 // NOTE: Supabase JS client (v2.81.1) does not fully support new format for service role operations
@@ -30,8 +22,7 @@ const SUPABASE_SERVICE_KEY =
   process.env.SERVICE_ROLE_KEY || // JWT format from supabase status -o env (required for service role)
   process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SECRET_KEY || // New format from supabase status -o env (fallback, may not work for all operations)
-  DEFAULT_LOCAL_SERVICE_KEY;
+  process.env.SECRET_KEY; // New format from supabase status -o env (fallback, may not work for all operations)
 
 // Support both new API key format (sb_publishable_...) and legacy JWT format
 const SUPABASE_ANON_KEY =
@@ -39,8 +30,7 @@ const SUPABASE_ANON_KEY =
   process.env.SUPABASE_LOCAL_ANON_KEY ||
   process.env.ANON_KEY || // Legacy format from supabase status -o env
   process.env.SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_PUBLISHABLE_KEY ||
-  DEFAULT_LOCAL_ANON_KEY;
+  process.env.SUPABASE_PUBLISHABLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   throw new Error(
@@ -50,22 +40,138 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 
 /**
  * Get a Supabase client with service role key for test operations
+ * Configured for test stability with connection management
  */
 export function getTestSupabaseClient(): SupabaseClient {
+  // Runtime checks to satisfy TypeScript (values already validated at module load)
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    throw new Error(
+      "Missing Supabase test credentials: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required",
+    );
+  }
+
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { persistSession: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    db: {
+      schema: "public",
+    },
+    global: {
+      // Add fetch timeout to prevent hanging connections
+      fetch: ((url: RequestInfo | URL, options?: RequestInit) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        // Merge signals if one already exists
+        const existingSignal = options?.signal;
+        const signal = existingSignal
+          ? (() => {
+              const merged = new AbortController();
+              existingSignal.addEventListener("abort", () => merged.abort());
+              controller.signal.addEventListener("abort", () => merged.abort());
+              return merged.signal;
+            })()
+          : controller.signal;
+
+        return fetch(url, {
+          ...options,
+          signal,
+        }).finally(() => {
+          clearTimeout(timeoutId);
+        });
+      }) as typeof fetch,
+    },
   });
 }
 
 /**
+ * Mutex to prevent concurrent database resets
+ * Even with fileParallelism disabled, this provides extra safety
+ */
+let resetMutex: Promise<void> = Promise.resolve();
+
+/**
+ * Certify connection to Supabase before operations
+ * Verifies connectivity and retries if needed
+ * Returns true if connection is certified, false if connection issues detected
+ */
+async function certifyConnection(
+  client: ReturnType<typeof getTestSupabaseClient>,
+  maxRetries = 5,
+): Promise<boolean> {
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Simple query to verify connection
+      const { error } = await client.from("users").select("id").limit(1);
+      if (!error) {
+        return true; // Connection certified
+      }
+      // Check if it's a connection error vs business logic error
+      if (
+        error.message.includes("fetch failed") ||
+        error.message.includes("ECONNRESET")
+      ) {
+        lastError = new Error(`Connection error: ${error.message}`);
+      } else {
+        // Business logic error (e.g., RLS policy) - connection is working
+        return true;
+      }
+    } catch (error) {
+      const err = error as Error;
+      if (
+        err.message.includes("fetch failed") ||
+        err.message.includes("ECONNRESET") ||
+        (err.cause &&
+          typeof err.cause === "object" &&
+          "code" in err.cause &&
+          err.cause.code === "ECONNRESET")
+      ) {
+        lastError = err;
+      } else {
+        // Other errors - connection might be working, just retry
+        lastError = err;
+      }
+    }
+
+    // Retry with exponential backoff
+    if (attempt < maxRetries - 1) {
+      const delay = 300 * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  // Connection failed after retries - log warning but don't throw
+  // The actual operation will fail with a clearer error
+  console.warn(
+    `⚠️  Connection certification failed after ${maxRetries} attempts: ${lastError?.message}`,
+  );
+  return false;
+}
+
+/**
  * Retry helper with exponential backoff for network operations
+ * Includes connection certification before first attempt
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries = 3,
   initialDelay = 100,
+  certifyFirst = false,
 ): Promise<T> {
   let lastError: Error | undefined;
+
+  // Certify connection before first attempt if requested
+  if (certifyFirst) {
+    const certified = await certifyConnection(getTestSupabaseClient());
+    if (!certified) {
+      // Connection not certified, but proceed anyway - operation will fail with clearer error
+      // This prevents blocking tests when Supabase is temporarily unavailable
+    }
+  }
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
@@ -96,95 +202,137 @@ async function retryWithBackoff<T>(
  * Reset test database by clearing all tables
  * Also clears Supabase Auth users
  * Includes retry logic for network connection issues
+ * Uses mutex to prevent concurrent resets
  */
 export async function resetTestDb(): Promise<void> {
-  const client = getTestSupabaseClient();
+  // Wait for any ongoing reset to complete, then acquire the mutex
+  const previousReset = resetMutex;
+  let releaseMutex: () => void;
+  resetMutex = new Promise((resolve) => {
+    releaseMutex = resolve;
+  });
 
-  // Clear tables in reverse dependency order first (faster)
-  const tables = [
-    "points_history",
-    "tasks",
-    "lists",
-    "boards",
-    "users",
-    "teams",
-  ];
+  // Wait for previous reset to complete
+  await previousReset;
 
-  for (const table of tables) {
-    await retryWithBackoff(async () => {
-      const { error } = await client
-        .from(table)
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-      if (error) {
-        console.warn(`Failed to clear table ${table}:`, error.message);
-      }
-    }).catch((err) => {
-      // Log but don't fail - table might already be empty
+  // Add recovery delay to let Supabase stabilize after previous reset
+  // Longer delay to ensure connection pool recovers
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  try {
+    const client = getTestSupabaseClient();
+
+    // Certify connection before starting reset (non-blocking)
+    const certified = await certifyConnection(client);
+    if (!certified) {
       console.warn(
-        `Failed to clear table ${table} after retries:`,
-        err.message,
+        "⚠️  Connection not certified before reset - proceeding anyway (will retry on failure)",
       );
-    });
-  }
-
-  // Clear auth users (requires service role)
-  // Use pagination to handle large numbers of users
-  let hasMore = true;
-  let page = 0;
-  const pageSize = 100;
-
-  while (hasMore) {
-    const result = await retryWithBackoff(async () => {
-      return await client.auth.admin.listUsers({
-        page,
-        perPage: pageSize,
-      });
-    }).catch((err) => {
-      console.warn("Failed to list auth users after retries:", err.message);
-      return { data: null, error: err };
-    });
-
-    const { data: authUsers, error } = result;
-
-    if (error) {
-      console.warn("Failed to list auth users:", error.message);
-      break;
     }
 
-    if (!authUsers?.users || authUsers.users.length === 0) {
-      hasMore = false;
-      break;
-    }
+    // Clear tables in reverse dependency order first (faster)
+    const tables = [
+      "points_history",
+      "tasks",
+      "lists",
+      "boards",
+      "users",
+      "teams",
+    ];
 
-    // Delete users in parallel batches with retry
-    const deletePromises = authUsers.users.map((authUser) =>
-      retryWithBackoff(
-        () => client.auth.admin.deleteUser(authUser.id),
-        2, // Fewer retries for individual deletes
+    for (const table of tables) {
+      await retryWithBackoff(
+        async () => {
+          const { error } = await client
+            .from(table)
+            .delete()
+            .neq("id", "00000000-0000-0000-0000-000000000000");
+          if (error) {
+            console.warn(`Failed to clear table ${table}:`, error.message);
+          }
+        },
+        5, // More retries for table operations
+        300, // Longer initial delay
       ).catch((err) => {
-        // Ignore errors during cleanup (user might already be deleted)
-        if (!err.message?.includes("User not found")) {
-          console.warn(
-            `Failed to delete auth user ${authUser.id}:`,
-            err.message,
-          );
-        }
-      }),
-    );
-
-    await Promise.all(deletePromises);
-
-    if (authUsers.users.length < pageSize) {
-      // Check if there are more users
-      hasMore = false;
-    } else {
-      page++;
+        // Log but don't fail - table might already be empty
+        console.warn(
+          `Failed to clear table ${table} after retries:`,
+          err.message,
+        );
+      });
+      // Longer delay between table clears to prevent overwhelming Supabase
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-  }
 
-  // Small delay to ensure cleanup completes
-  await new Promise((resolve) => setTimeout(resolve, 100));
+    // Clear auth users (requires service role)
+    // Use pagination to handle large numbers of users
+    let hasMore = true;
+    let page = 0;
+    const pageSize = 50; // Smaller page size to reduce load
+
+    while (hasMore) {
+      const result = await retryWithBackoff(
+        async () => {
+          return await client.auth.admin.listUsers({
+            page,
+            perPage: pageSize,
+          });
+        },
+        5, // More retries
+        300, // Longer initial delay
+      ).catch((err) => {
+        console.warn("Failed to list auth users after retries:", err.message);
+        return { data: null, error: err };
+      });
+
+      const { data: authUsers, error } = result;
+
+      if (error) {
+        console.warn("Failed to list auth users:", error.message);
+        break;
+      }
+
+      if (!authUsers?.users || authUsers.users.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      // Delete users sequentially to prevent overwhelming Supabase
+      for (const authUser of authUsers.users) {
+        await retryWithBackoff(
+          () => client.auth.admin.deleteUser(authUser.id),
+          3, // More retries for individual deletes
+          200, // Longer initial delay
+        ).catch((err) => {
+          // Ignore errors during cleanup (user might already be deleted)
+          if (!err.message?.includes("User not found")) {
+            console.warn(
+              `Failed to delete auth user ${authUser.id}:`,
+              err.message,
+            );
+          }
+        });
+        // Longer delay between user deletions
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
+      if (authUsers.users.length < pageSize) {
+        // Check if there are more users
+        hasMore = false;
+      } else {
+        page++;
+        // Delay between pages
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+
+    // Longer delay to ensure cleanup completes and Supabase recovers
+    // This helps prevent connection pool exhaustion
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  } finally {
+    // Release the mutex
+    releaseMutex!();
+  }
 }
 
 /**
@@ -201,7 +349,7 @@ export async function createTestUser(
   const client = getTestSupabaseClient();
   const authService = new AuthService(client);
 
-  // Check if user already exists
+  // Check if user already exists in public.users table
   const { data: existingUser } = await client
     .from("users")
     .select("id, email")
@@ -225,6 +373,9 @@ export async function createTestUser(
     }
   }
 
+  // Also check Supabase Auth (user might exist in auth but not in public.users)
+  // This will be caught below if registration fails with DuplicateUserError
+
   // Retry logic for rate limiting and network errors
   // Add timeout to prevent hanging (3 seconds max per attempt)
   const REGISTER_TIMEOUT = 3000;
@@ -245,8 +396,9 @@ export async function createTestUser(
               display_name: displayName ?? email.split("@")[0] ?? "Test User",
               role,
             }),
-          2, // 2 retries with backoff for network errors
-          200, // 200ms initial delay
+          3, // 3 retries with backoff for network errors
+          300, // 300ms initial delay
+          true, // Certify connection first
         ),
         new Promise<never>((_, reject) =>
           setTimeout(
@@ -258,17 +410,71 @@ export async function createTestUser(
       registerResult = result;
       break; // Success
     } catch (error) {
-      lastError = error as Error;
-      // Retry on rate limiting, timeout, or persistent network errors
-        retries--;
+      // If user already exists, try to fetch from database and verify login works
+      if (DuplicateUserError.isDuplicateUserError(error)) {
+        // User exists in auth, try to get from public.users table
+        const { data: userData } = await client
+          .from("users")
+          .select("*")
+          .eq("email", email)
+          .single();
+
+        if (userData) {
+          // Verify the user can actually log in (password might be wrong)
+          try {
+            const testLogin = await authService.login({ email, password });
+            if (testLogin.user) {
+              return {
+                user: userData as User,
+                email,
+                password,
+              };
+            }
+          } catch (loginError) {
+            // Password might be wrong, delete and recreate
+            console.warn(
+              `User ${email} exists but password doesn't match, recreating...`,
+            );
+            // Delete auth user and retry registration
+            try {
+              const serviceClient = getTestSupabaseClient();
+              const { data: authUsers } = await serviceClient.auth.admin.listUsers();
+              const authUser = authUsers?.users.find((u) => u.email === email);
+              if (authUser) {
+                await serviceClient.auth.admin.deleteUser(authUser.id);
+              }
+              // Also delete from public.users
+              await client.from("users").delete().eq("email", email);
+            } catch (deleteError) {
+              // Ignore delete errors
+            }
+            // Retry registration
+            if (retries > 0) {
+              retries--;
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              continue;
+            }
+          }
+        }
+        // If not in public.users, wait a bit and retry (might be syncing)
         if (retries > 0) {
-          // Exponential backoff: 500ms, 1s, 2s (reduced from 1s, 2s, 4s)
-          const delay = Math.pow(2, 3 - retries) * 500;
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          retries--;
           continue;
         }
       }
-      throw error; // Re-throw if not rate limit, timeout, or network error
+
+      lastError = error as Error;
+      // Retry on rate limiting, timeout, or persistent network errors
+      retries--;
+      if (retries > 0) {
+        // Exponential backoff: 500ms, 1s, 2s (reduced from 1s, 2s, 4s)
+        const delay = Math.pow(2, 3 - retries) * 500;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      // If no retries left, break and let lastError be thrown below
+      break;
     }
   }
 

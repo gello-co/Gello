@@ -48,7 +48,9 @@ describe("Auth API", () => {
         display_name: "Duplicate User",
       });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(409);
+      expect(response.body).toHaveProperty("error", "User already exists");
+      expect(response.body).toHaveProperty("message");
     });
 
     it("should validate required fields", async () => {
@@ -98,7 +100,9 @@ describe("Auth API", () => {
         password: "password123",
       });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "Invalid credentials");
+      expect(response.body).toHaveProperty("message");
     });
 
     it("should reject invalid password", async () => {
@@ -107,7 +111,9 @@ describe("Auth API", () => {
         password: "wrongpassword",
       });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("error", "Invalid credentials");
+      expect(response.body).toHaveProperty("message");
     });
 
     it("should validate required fields", async () => {
@@ -138,15 +144,21 @@ describe("Auth API", () => {
       });
 
       expect(loginResponse.status).toBe(200);
-      const cookies = loginResponse.headers["set-cookie"];
-      if (!cookies || !Array.isArray(cookies)) {
+      const setCookies = loginResponse.headers["set-cookie"];
+      if (!setCookies || !Array.isArray(setCookies)) {
         throw new Error("No cookies returned from login");
       }
+
+      // Extract cookie name=value pairs from Set-Cookie headers
+      // Format: "name=value; Path=/; HttpOnly" -> "name=value"
+      const cookieString = setCookies
+        .map((cookie: string) => cookie.split(";")[0])
+        .join("; ");
 
       // Use cookies for session request
       const response = await request(app)
         .get("/api/auth/session")
-        .set("Cookie", cookies);
+        .set("Cookie", cookieString);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("user");
@@ -179,22 +191,27 @@ describe("Auth API", () => {
         password: "password123",
       });
 
-      const cookies = loginResponse.headers["set-cookie"];
-      if (!cookies || !Array.isArray(cookies)) {
+      const setCookies = loginResponse.headers["set-cookie"];
+      if (!setCookies || !Array.isArray(setCookies)) {
         throw new Error("No cookies returned from login");
       }
 
+      // Extract cookie name=value pairs from Set-Cookie headers
+      const cookieString = setCookies
+        .map((cookie: string) => cookie.split(";")[0])
+        .join("; ");
+
       const response = await request(app)
         .post("/api/auth/logout")
-        .set("Cookie", cookies);
+        .set("Cookie", cookieString);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("message");
       // Check that cookies are cleared
-      const setCookies = response.headers["set-cookie"];
-      if (setCookies && Array.isArray(setCookies)) {
+      const clearedCookies = response.headers["set-cookie"];
+      if (clearedCookies && Array.isArray(clearedCookies)) {
         expect(
-          setCookies.some((c: string) => c.includes("sb-access-token=;")),
+          clearedCookies.some((c: string) => c.includes("sb-access-token=;")),
         ).toBe(true);
       }
     });
@@ -222,13 +239,15 @@ describe("Auth API", () => {
       const registerCookies = registerResponse.headers["set-cookie"];
 
       // Login (if register didn't create session)
-      let cookies: string[] = [];
+      let cookieString = "";
       if (
         registerCookies &&
         Array.isArray(registerCookies) &&
         registerCookies.length > 0
       ) {
-        cookies = registerCookies;
+        cookieString = registerCookies
+          .map((cookie: string) => cookie.split(";")[0])
+          .join("; ");
       } else {
         const loginResponse = await request(app).post("/api/auth/login").send({
           email: "flow@example.com",
@@ -238,14 +257,16 @@ describe("Auth API", () => {
         expect(loginResponse.status).toBe(200);
         const loginCookies = loginResponse.headers["set-cookie"];
         if (loginCookies && Array.isArray(loginCookies)) {
-          cookies = loginCookies;
+          cookieString = loginCookies
+            .map((cookie: string) => cookie.split(";")[0])
+            .join("; ");
         }
       }
 
       // Get Session
       const sessionResponse = await request(app)
         .get("/api/auth/session")
-        .set("Cookie", cookies);
+        .set("Cookie", cookieString);
 
       expect(sessionResponse.status).toBe(200);
       expect(sessionResponse.body.user.id).toBe(userId);
@@ -253,7 +274,7 @@ describe("Auth API", () => {
       // Logout
       const logoutResponse = await request(app)
         .post("/api/auth/logout")
-        .set("Cookie", cookies);
+        .set("Cookie", cookieString);
 
       expect(logoutResponse.status).toBe(200);
     });
