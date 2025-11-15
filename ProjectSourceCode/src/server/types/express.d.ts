@@ -9,6 +9,11 @@ declare global {
         email: string;
         role: "admin" | "team_member";
       } | null;
+      /**
+       * CSRF token method added by csurf middleware
+       * Available when csrfProtection middleware is applied
+       */
+      csrfToken?: () => string;
     }
   }
 }
