@@ -25,11 +25,16 @@ RUN curl -fsSL https://bun.sh/install | bash && \
     [ -f /usr/local/bin/bunx ] && chmod +x /usr/local/bin/bunx || true && \
     bun --version
 
-# Install oh-my-zsh and mise for vscode user
+# Install mise system-wide via official installation script
+# Note: mise does not have an official apt/PPA package, so using official install script
+# Errors will surface if installation fails (no || true)
+RUN curl https://mise.run | sh && \
+    /root/.local/bin/mise --version
+
+# Install oh-my-zsh for vscode user (optional - fails gracefully if network issues occur)
 RUN mkdir -p /home/vscode && \
     chown -R vscode:vscode /home/vscode && \
-    su vscode -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' || true && \
-    su vscode -c 'curl https://mise.run | bash' || true
+    su vscode -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' || echo "Warning: oh-my-zsh installation failed (optional, continuing...)"
 
 # Install Doppler CLI (using official method from https://docs.doppler.com/docs/dockerfile)
 RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg && \
