@@ -21,7 +21,13 @@ import { $ } from "bun";
 // Don't import services or env here - load them after setting local env vars in main()
 // This ensures env.ts picks up the correct values
 
-// Load local Supabase environment variables if not already set
+/**
+ * Loads local Supabase environment variables from `supabase status -o env`.
+ * Always loads local vars first (they take priority over doppler/remote config).
+ * Maps Supabase CLI output to expected environment variable names.
+ *
+ * @throws {Error} Logs warning if Supabase is not running, but does not throw
+ */
 async function loadLocalEnv() {
   // Always load local Supabase env vars first (they take priority over doppler)
   // This ensures we use local Supabase even if doppler has remote Supabase config
@@ -78,6 +84,16 @@ async function loadLocalEnv() {
 
 // Services imported dynamically in main() after setting env vars
 
+/**
+ * Seed user data structure for database seeding.
+ *
+ * @property email - User email address (used for authentication)
+ * @property password - User password (plain text, will be hashed)
+ * @property display_name - User's display name
+ * @property role - User role: admin, manager, or member
+ * @property teamName - Optional team name to assign user to
+ * @property total_points - Optional initial points total for the user
+ */
 type SeedUser = {
   email: string;
   password: string;
@@ -87,10 +103,23 @@ type SeedUser = {
   total_points?: number;
 };
 
+/**
+ * Seed team data structure for database seeding.
+ *
+ * @property name - Team name (must be unique)
+ */
 type SeedTeam = {
   name: string;
 };
 
+/**
+ * Seed board data structure for database seeding.
+ *
+ * @property name - Board name
+ * @property description - Board description
+ * @property teamName - Name of the team that owns this board
+ * @property createdByEmail - Email of the user who created this board
+ */
 type SeedBoard = {
   name: string;
   description: string;
@@ -98,6 +127,14 @@ type SeedBoard = {
   createdByEmail: string;
 };
 
+/**
+ * Seed list data structure for database seeding.
+ *
+ * @property name - List name
+ * @property position - List position within the board (1-based)
+ * @property boardName - Name of the board this list belongs to
+ * @property teamName - Name of the team that owns the board
+ */
 type SeedList = {
   name: string;
   position: number;
@@ -105,6 +142,19 @@ type SeedList = {
   teamName: string;
 };
 
+/**
+ * Seed task data structure for database seeding.
+ *
+ * @property title - Task title
+ * @property description - Task description
+ * @property story_points - Story points assigned to the task
+ * @property listName - Name of the list this task belongs to
+ * @property boardName - Name of the board containing the list
+ * @property teamName - Name of the team that owns the board
+ * @property assignedToEmail - Optional email of user assigned to the task
+ * @property due_date - Optional due date for the task
+ * @property completed_at - Optional completion date (if task is already completed)
+ */
 type SeedTask = {
   title: string;
   description: string;
@@ -117,6 +167,16 @@ type SeedTask = {
   completed_at?: Date;
 };
 
+/**
+ * Seed points history data structure for database seeding.
+ *
+ * @property userEmail - Email of the user receiving points
+ * @property points_earned - Number of points awarded
+ * @property reason - Reason for points: "task_complete" or "manual_award"
+ * @property taskTitle - Optional task title (required if reason is "task_complete")
+ * @property awardedByEmail - Email of the user/admin who awarded the points
+ * @property notes - Optional notes about the points award
+ */
 type SeedPoints = {
   userEmail: string;
   points_earned: number;
@@ -373,6 +433,13 @@ const SEED_POINTS: SeedPoints[] = [
 
 // Helper functions (getServiceRoleClient removed - using direct createClient in main)
 
+/**
+ * Finds a user in the users table by email address.
+ *
+ * @param client - Supabase client instance
+ * @param email - User email address to search for
+ * @returns User object with id and email, or null if not found
+ */
 async function findUserByEmail(
   client: SupabaseClient,
   email: string,
@@ -385,6 +452,13 @@ async function findUserByEmail(
   return data || null;
 }
 
+/**
+ * Finds a team in the teams table by name.
+ *
+ * @param client - Supabase client instance
+ * @param name - Team name to search for
+ * @returns Team object with id and name, or null if not found
+ */
 async function findTeamByName(
   client: SupabaseClient,
   name: string,
@@ -397,6 +471,14 @@ async function findTeamByName(
   return data || null;
 }
 
+/**
+ * Finds a board in the boards table by name and team ID.
+ *
+ * @param client - Supabase client instance
+ * @param name - Board name to search for
+ * @param teamId - Team ID that owns the board
+ * @returns Board object with id and name, or null if not found
+ */
 async function findBoardByName(
   client: SupabaseClient,
   name: string,
@@ -411,6 +493,14 @@ async function findBoardByName(
   return data || null;
 }
 
+/**
+ * Finds a list in the lists table by name and board ID.
+ *
+ * @param client - Supabase client instance
+ * @param name - List name to search for
+ * @param boardId - Board ID that contains the list
+ * @returns List object with id and name, or null if not found
+ */
 async function findListByName(
   client: SupabaseClient,
   name: string,
@@ -425,6 +515,14 @@ async function findListByName(
   return data || null;
 }
 
+/**
+ * Finds a task in the tasks table by title and list ID.
+ *
+ * @param client - Supabase client instance
+ * @param title - Task title to search for
+ * @param listId - List ID that contains the task
+ * @returns Task object with id and title, or null if not found
+ */
 async function findTaskByTitle(
   client: SupabaseClient,
   title: string,
@@ -439,6 +537,15 @@ async function findTaskByTitle(
   return data || null;
 }
 
+/**
+ * Main seeding function that orchestrates database population.
+ * Loads local environment variables, validates configuration, creates service instances,
+ * and seeds the database with teams, users, boards, lists, tasks, and points history.
+ * Handles duplicate detection and syncs users from auth.users if needed.
+ *
+ * @throws {Error} If Supabase URL is invalid or service role key is missing
+ * @throws {Error} If required entities (teams, users) are not found during seeding
+ */
 async function main() {
   // Load local environment variables first (before importing env)
   // This ensures local Supabase vars take priority over doppler
@@ -490,24 +597,33 @@ async function main() {
   process.env.SUPABASE_SERVICE_ROLE_KEY = supabaseServiceRoleKey; // Also set for compatibility
 
   // NOW import services after setting env vars (so env.ts picks up correct values)
+  // Dynamic imports are used to ensure env.ts picks up the correct values
+  // TypeScript can't resolve these paths statically, but they work at runtime
+  // Using `any` type for dynamic imports since TypeScript can't statically resolve them
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const { AuthService } = await import(
     "../ProjectSourceCode/src/lib/services/auth.service.js"
-  );
+  ) as any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const { BoardService } = await import(
     "../ProjectSourceCode/src/lib/services/board.service.js"
-  );
+  ) as any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const { ListService } = await import(
     "../ProjectSourceCode/src/lib/services/list.service.js"
-  );
+  ) as any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const { PointsService } = await import(
     "../ProjectSourceCode/src/lib/services/points.service.js"
-  );
+  ) as any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const { TaskService } = await import(
     "../ProjectSourceCode/src/lib/services/task.service.js"
-  );
+  ) as any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const { TeamService } = await import(
     "../ProjectSourceCode/src/lib/services/team.service.js"
-  );
+  ) as any;
 
   // Create service client directly with verified values
   const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -591,14 +707,26 @@ async function main() {
             );
             try {
               // Use Supabase auth admin API to safely get user by email (no SQL injection risk)
-              const { data: authUser, error: authError } = await serviceClient.auth.admin.getUserByEmail(seedUser.email);
+              // listUsers with filter is the correct method for service role client
+              const { data: authUsers, error: authError } = await serviceClient.auth.admin.listUsers();
               
-              if (authError || !authUser) {
+              if (authError) {
+                console.warn(
+                  `  ⚠️  Could not query auth.users: ${authError.message} - skipping`,
+                );
+                continue;
+              }
+              
+              // Find user by email in the list
+              const authUser = authUsers?.users?.find((u) => u.email === seedUser.email);
+              
+              if (!authUser) {
                 console.warn(
                   `  ⚠️  Could not find user ${seedUser.email} in auth.users - skipping`,
                 );
                 continue;
               }
+              
               const team = seedUser.teamName
                 ? teamMap.get(seedUser.teamName)
                 : undefined;
@@ -607,8 +735,8 @@ async function main() {
               const { data: newUser, error: insertError } = await serviceClient
                 .from("users")
                 .insert({
-                  id: authUser.user.id,
-                  email: authUser.user.email,
+                  id: authUser.id,
+                  email: authUser.email || seedUser.email,
                   password_hash: "",
                   display_name: seedUser.display_name,
                   role: seedUser.role,
@@ -657,7 +785,11 @@ async function main() {
         .update({ total_points: seedUser.total_points })
         .eq("id", user.id);
     }
-    userMap.set(seedUser.email, user);
+    
+    // Only add to map if user was successfully found/created
+    if (user) {
+      userMap.set(seedUser.email, user);
+    }
   }
 
   // 3. Create boards
