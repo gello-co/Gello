@@ -1,6 +1,11 @@
 import express from "express";
+import { csrfProtection, getCsrfToken } from "../middleware/csrf.js";
 
 const router = express.Router();
+
+// CSRF token endpoint (must be before csrfProtection middleware)
+// This endpoint needs csrfProtection to generate the token
+router.get("/csrf-token", csrfProtection, getCsrfToken);
 
 // API routes
 router.get("/health", (_req, res) => {

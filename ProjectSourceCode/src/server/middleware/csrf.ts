@@ -8,7 +8,14 @@ import type { NextFunction, Request, Response } from "express";
 
 // CSRF protection middleware
 // Uses cookies to store the secret (more secure than session)
-export const csrfProtection = csurf({ cookie: true });
+// Hardened cookie options for security
+export const csrfProtection = csurf({
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  },
+});
 
 /**
  * Middleware to make CSRF token available to all views via res.locals
