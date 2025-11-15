@@ -26,13 +26,16 @@ display_metrics_summary() {
   while IFS= read -r line; do
     # Extract phase name and duration from JSON lines
     if echo "$line" | grep -q '"phase"'; then
-      local phase=$(echo "$line" | sed -n 's/.*"phase":"\([^"]*\)".*/\1/p')
-      local phase_duration=$(echo "$line" | sed -n 's/.*"phase_duration_seconds":\([0-9]*\).*/\1/p')
+      local phase
+      phase=$(echo "$line" | sed -n 's/.*"phase":"\([^"]*\)".*/\1/p')
+      local phase_duration
+      phase_duration=$(echo "$line" | sed -n 's/.*"phase_duration_seconds":\([0-9]*\).*/\1/p')
 
       if [ -n "$phase" ] && [ -n "$phase_duration" ] && [ "$phase" != "total_full_setup" ]; then
         has_metrics=true
         # Format phase name for display (convert snake_case to Title Case)
-        local display_name=$(echo "$phase" | sed 's/_/ /g' | sed 's/\b\(.\)/\u\1/g')
+        local display_name
+        display_name=$(echo "$phase" | sed 's/_/ /g' | sed 's/\b\(.\)/\u\1/g')
 
         # Format duration (show seconds if < 60, otherwise minutes and seconds)
         if [ "$phase_duration" -lt 60 ]; then
@@ -73,12 +76,14 @@ display_metrics_summary() {
 record_time() {
   local phase=$1
   local phase_duration=$2
-  local end_time=$(date +%s)
+  local end_time
+  end_time=$(date +%s)
   local cumulative_duration=$((end_time - START_TIME))
 
   if [ "$FULL_SETUP_METRICS" = "true" ]; then
     # Create JSON entry for this phase with both individual and cumulative times
-    local json_entry="{\"phase\":\"$phase\",\"phase_duration_seconds\":$phase_duration,\"cumulative_duration_seconds\":$cumulative_duration,\"timestamp\":\"$(date -Iseconds)\"}"
+    local json_entry
+    json_entry="{\"phase\":\"$phase\",\"phase_duration_seconds\":$phase_duration,\"cumulative_duration_seconds\":$cumulative_duration,\"timestamp\":\"$(date -Iseconds)\"}"
 
     # Append to metrics file (create array if first entry)
     if [ ! -f "$METRICS_FILE" ]; then
