@@ -15,10 +15,13 @@ export async function requireAuth(
   try {
     // Get Supabase client with session from cookies (awaits session setting)
     const supabase = await getSupabaseClientForRequest(req);
-    
+
     // Verify session is valid by checking auth state
-    const { data: { session: authSession }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session: authSession },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError || !authSession) {
       return res.status(401).json({ error: "Unauthorized" });
     }
