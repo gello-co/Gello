@@ -23,9 +23,9 @@ load_test_credentials() {
   fi
 
   # Set defaults from seed file if not provided
-  ADMIN_EMAIL="${ADMIN_EMAIL:-ada.admin@example.com}"
-  MANAGER_EMAIL="${MANAGER_EMAIL:-alice.manager@example.com}"
-  MEMBER_EMAIL="${MEMBER_EMAIL:-ivy.member@example.com}"
+  ADMIN_EMAIL="${ADMIN_EMAIL:-admin@example.com}"
+  MANAGER_EMAIL="${MANAGER_EMAIL:-manager@example.com}"
+  MEMBER_EMAIL="${MEMBER_EMAIL:-member@example.com}"
   DEV_PASSWORD="${DEV_PASSWORD:-password123}"
 
   # Use individual passwords if set, otherwise use DEV_PASSWORD
