@@ -36,7 +36,7 @@ This devcontainer provides a fully self-contained development environment for th
    - Make Playwright browsers available for MCP tools
 
 4. **Access the Application**:
-   - Open http://localhost:3000
+   - Open `http://localhost:3000`
    - Login with test users (see credentials below)
 
 ## Configuration Flags
@@ -81,7 +81,7 @@ export FULL_SETUP_METRICS=true  # Metrics enabled by default
 1. **Open Container**: Use "Reopen in Container"
 2. **Wait for Setup**: Fast setup completes in ~30-60 seconds
 3. **Run Single Command**: `bun run start`
-4. **Access App**: http://localhost:3000
+4. **Access App**: `http://localhost:3000`
 5. **Login**: Use test user credentials (see below)
 
 That's it! The single command brings up the full environment.
@@ -137,7 +137,7 @@ Playwright browsers are installed and available for:
 **Example workflow:**
 1. Run `bun run start` (ensures Playwright browsers are available)
 2. Use Browser MCP tools to:
-   - Open http://localhost:3000
+   - Open `http://localhost:3000`
    - Login with test credentials
    - Navigate through boards, teams, leaderboard
    - Verify interactive features work correctly
@@ -191,7 +191,7 @@ The following ports are forwarded automatically:
    ```
 
 2. **Login and Navigate**:
-   - Open http://localhost:3000
+   - Open `http://localhost:3000`
    - Login with test user (see credentials above)
    - Navigate all pages to test features
 
