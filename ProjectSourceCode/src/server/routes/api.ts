@@ -1,5 +1,5 @@
 import express from "express";
-import { errorHandler } from "../middleware/errorHandler.js";
+import { csrfProtection, getCsrfToken } from "../middleware/csrf.js";
 import authRoutes from "./api/auth.js";
 import boardsRoutes from "./api/boards.js";
 import listsRoutes from "./api/lists.js";
@@ -10,6 +10,11 @@ import sseRoutes from "./sse.js";
 
 const router = express.Router();
 
+// CSRF token endpoint (must be before csrfProtection middleware)
+// This endpoint needs csrfProtection to generate the token
+router.get("/csrf-token", csrfProtection, getCsrfToken);
+
+// API routes
 router.get("/health", (_req, res) => {
   res.json({ ok: true });
 });

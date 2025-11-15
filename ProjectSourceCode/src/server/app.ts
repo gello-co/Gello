@@ -12,8 +12,36 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware with CSP configured to allow external scripts
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "https://cdn.jsdelivr.net",
+          "https://unpkg.com",
+          "https://kit.fontawesome.com",
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdn.jsdelivr.net",
+          "https://ka-f.fontawesome.com",
+        ],
+        fontSrc: [
+          "'self'",
+          "https://kit.fontawesome.com",
+          "https://cdn.jsdelivr.net",
+          "https://ka-f.fontawesome.com",
+        ],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "https://ka-f.fontawesome.com"],
+      },
+    },
+  }),
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -46,12 +74,20 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie parser for Supabase Auth sessions (httpOnly, secure cookies)
 app.use(cookieParser());
 
+// CSRF protection using csurf
+import { csrfProtection, csrfTokenToLocals } from "./middleware/csrf.js";
+
+// Apply CSRF protection to all routes (except GET requests which are safe)
+app.use(csrfProtection);
+// Make CSRF token available to all views
+app.use(csrfTokenToLocals);
+
+import { errorHandler } from "./middleware/error-handler.js";
 import apiRoutes from "./routes/api.js";
 import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
-import { errorHandler } from "./middleware/errorHandler.js";
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);

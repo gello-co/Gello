@@ -12,6 +12,11 @@ declare global {
         total_points: number;
         avatar_url: string | null;
       } | null;
+      /**
+       * CSRF token method added by csurf middleware
+       * Available when csrfProtection middleware is applied
+       */
+      csrfToken?: () => string;
     }
   }
 }

@@ -7,8 +7,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../../config/env.js";
 import { getUserById, type User } from "../database/users.db.js";
 import {
-	DuplicateUserError,
-	InvalidCredentialsError,
+  DuplicateUserError,
+  InvalidCredentialsError,
 } from "../errors/app.errors.js";
 import type { CreateUserInput, LoginInput } from "../schemas/user.js";
 
@@ -33,21 +33,43 @@ export type SessionUser = {
 export class AuthService {
   constructor(private client: SupabaseClient) {}
 
+<<<<<<< HEAD
   /**
    * Get service role client for admin operations
    */
+  // Cached service-role client (singleton pattern)
+  private static serviceRoleClient: SupabaseClient | null = null;
+
+  /**
+   * Get service role client for admin operations
+   * Returns a cached singleton instance to avoid recreating on every call
+   */
   private getServiceRoleClient(): SupabaseClient {
+    // Return cached client if it exists
+    if (AuthService.serviceRoleClient) {
+      return AuthService.serviceRoleClient;
+    }
+
+    // Validate environment variables
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error(
         "Service role key required for user management operations",
       );
     }
-    return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+
+    // Create and cache the service-role client
+    AuthService.serviceRoleClient = createClient(
+      env.SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
       },
-    });
+    );
+
+    return AuthService.serviceRoleClient;
   }
 
   /**
@@ -78,15 +100,19 @@ export class AuthService {
       },
     });
 
+    // Detect duplicate registration by checking response data structure
+    // When signUp resolves without error but data.user.identities is empty,
+    // it means the email is already registered
+    if (
+      !authError &&
+      authData.user &&
+      (!authData.user.identities || authData.user.identities.length === 0)
+    ) {
+      throw new DuplicateUserError("User with this email already exists");
+    }
+
     if (authError) {
-      // Map Supabase Auth errors to custom error classes
-      if (
-        authError.message.includes("already registered") ||
-        authError.message.includes("already exists") ||
-        authError.message.includes("User already registered")
-      ) {
-        throw new DuplicateUserError("User with this email already exists");
-      }
+      // Map other Supabase Auth errors
       throw new Error(`Registration failed: ${authError.message}`);
     }
 
