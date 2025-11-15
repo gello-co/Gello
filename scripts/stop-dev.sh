@@ -29,7 +29,7 @@ if check_port 3000; then
     if [ -n "$PID" ]; then
       kill $PID 2>/dev/null || true
       # Wait for process to stop
-      for i in {1..10}; do
+      for _ in {1..10}; do
         if ! check_port 3000; then
           break
         fi
