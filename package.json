@@ -9,7 +9,7 @@
     "build": "bun run build:css && bun run build:server",
     "build:css": "postcss ProjectSourceCode/src/public/css/input.css -o ProjectSourceCode/src/public/css/output.css",
     "build:server": "bun build ProjectSourceCode/src/index.ts --outdir=dist --target=node --sourcemap",
-    "start": "NODE_ENV=development bun ProjectSourceCode/src/index.ts",
+    "start": "bash scripts/start-dev.sh",
     "start:prd": "NODE_ENV=production bun ProjectSourceCode/src/index.ts",
     "test:server": "NODE_ENV=test bun ProjectSourceCode/src/index.ts",
     "test": "vitest",

@@ -33,10 +33,6 @@ export type SessionUser = {
 export class AuthService {
   constructor(private client: SupabaseClient) {}
 
-<<<<<<< HEAD
-  /**
-   * Get service role client for admin operations
-   */
   // Cached service-role client (singleton pattern)
   private static serviceRoleClient: SupabaseClient | null = null;
 
