@@ -6,6 +6,45 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Load test user credentials from .env.local (or .env) with fallbacks
+# Credentials match seeded users in scripts/seed-db.ts
+load_test_credentials() {
+  # Try .env.local first, then .env
+  local env_file=".env.local"
+  if [ ! -f "$env_file" ]; then
+    env_file=".env"
+  fi
+
+  # Source env file if it exists
+  if [ -f "$env_file" ]; then
+    set -a
+    source "$env_file" 2>/dev/null || true
+    set +a
+  fi
+
+  # Set defaults from seed file if not provided
+  ADMIN_EMAIL="${ADMIN_EMAIL:-ada.admin@example.com}"
+  MANAGER_EMAIL="${MANAGER_EMAIL:-alice.manager@example.com}"
+  MEMBER_EMAIL="${MEMBER_EMAIL:-ivy.member@example.com}"
+  DEV_PASSWORD="${DEV_PASSWORD:-password123}"
+
+  # Use individual passwords if set, otherwise use DEV_PASSWORD
+  ADMIN_PASSWORD="${ADMIN_PASSWORD:-$DEV_PASSWORD}"
+  MANAGER_PASSWORD="${MANAGER_PASSWORD:-$DEV_PASSWORD}"
+  MEMBER_PASSWORD="${MEMBER_PASSWORD:-$DEV_PASSWORD}"
+
+  # Validate required variables are set
+  if [ -z "$ADMIN_EMAIL" ] || [ -z "$MANAGER_EMAIL" ] || [ -z "$MEMBER_EMAIL" ] || [ -z "$DEV_PASSWORD" ]; then
+    echo "❌ Error: Missing required credential variables"
+    echo "   Required: ADMIN_EMAIL, MANAGER_EMAIL, MEMBER_EMAIL, DEV_PASSWORD"
+    echo "   Create .env.local from .env.example or set environment variables"
+    exit 1
+  fi
+}
+
+# Load credentials
+load_test_credentials
+
 echo "🚀 Starting Gello development environment..."
 
 # Check if Supabase CLI is available
@@ -157,9 +196,9 @@ echo "🚀 Starting development server..."
 echo "   Server will be available at: http://localhost:3000"
 echo ""
 echo "📋 Quick Login (test users):"
-echo "   • Admin:    admin@example.com / password123"
-echo "   • Manager:  manager@example.com / password123"
-echo "   • Member:   member@example.com / password123"
+echo "   • Admin:    $ADMIN_EMAIL / $ADMIN_PASSWORD"
+echo "   • Manager:  $MANAGER_EMAIL / $MANAGER_PASSWORD"
+echo "   • Member:   $MEMBER_EMAIL / $MEMBER_PASSWORD"
 echo ""
 echo "   Press Ctrl+C to stop"
 echo ""

@@ -72,7 +72,7 @@ if [ -f "scripts/stop-dev.sh" ]; then
 else
   # Fallback: manual stop
   echo "🛑 Stopping services..."
-  
+
   # Stop dev server on port 3000
   if command -v lsof &> /dev/null; then
     PID=$(lsof -ti:3000 2>/dev/null || true)
@@ -81,7 +81,7 @@ else
       sleep 1
     fi
   fi
-  
+
   # Stop Supabase
   if bunx supabase status > /dev/null 2>&1; then
     bunx supabase stop 2>/dev/null || true
