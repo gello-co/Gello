@@ -18,67 +18,65 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { $ } from "bun";
-import { env } from "../ProjectSourceCode/src/config/env.js";
+// Don't import services or env here - load them after setting local env vars in main()
+// This ensures env.ts picks up the correct values
 
 // Load local Supabase environment variables if not already set
 async function loadLocalEnv() {
-  // Only load if SUPABASE_URL is not set
-  if (!process.env.SUPABASE_URL && !process.env.SUPABASE_LOCAL_URL) {
-    try {
-      const result = await $`bunx supabase status -o env`.quiet();
-      const envOutput = result.stdout.toString();
+  // Always load local Supabase env vars first (they take priority over doppler)
+  // This ensures we use local Supabase even if doppler has remote Supabase config
+  try {
+    const result = await $`bunx supabase status -o env`.quiet();
+    const envOutput = result.stdout.toString();
 
-      for (const line of envOutput.split("\n")) {
-        // Handle both KEY="value" and KEY=value formats
-        const match = line.match(/^([A-Z_]+)=(?:"([^"]+)"|([^" \n]+))$/);
-        if (match) {
-          const [, key, quotedValue, unquotedValue] = match;
-          const value = quotedValue || unquotedValue;
-          if (key && value) {
-            // Map to expected environment variable names
-            if (key === "API_URL") {
-              process.env.SUPABASE_LOCAL_URL = value;
-              process.env.SUPABASE_URL = value;
-            } else if (key === "PUBLISHABLE_KEY") {
-              process.env.SUPABASE_LOCAL_ANON_KEY = value;
-              process.env.SUPABASE_PUBLISHABLE_KEY = value;
-            } else if (key === "SECRET_KEY") {
-              process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = value;
-              process.env.SUPABASE_SERVICE_ROLE_KEY = value;
-            } else if (
-              key === "ANON_KEY" &&
-              !process.env.SUPABASE_LOCAL_ANON_KEY
-            ) {
-              process.env.SUPABASE_LOCAL_ANON_KEY = value;
-              process.env.SUPABASE_PUBLISHABLE_KEY = value;
-            } else if (
-              key === "SERVICE_ROLE_KEY" &&
-              !process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY
-            ) {
-              process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = value;
-              process.env.SUPABASE_SERVICE_ROLE_KEY = value;
-            } else {
-              process.env[key] = value;
-            }
+    for (const line of envOutput.split("\n")) {
+      // Handle both KEY="value" and KEY=value formats
+      const match = line.match(/^([A-Z_]+)=(?:"([^"]+)"|([^" \n]+))$/);
+      if (match) {
+        const [, key, quotedValue, unquotedValue] = match;
+        const value = quotedValue || unquotedValue;
+        if (key && value) {
+          // Map to expected environment variable names
+          // Always set local vars (they take priority in env.ts)
+          if (key === "API_URL") {
+            // Always set SUPABASE_LOCAL_URL (takes priority in env.ts pick() function)
+            process.env.SUPABASE_LOCAL_URL = value;
+            // Force set SUPABASE_URL to local API URL (overrides doppler's postgres URL)
+            process.env.SUPABASE_URL = value;
+          } else if (key === "PUBLISHABLE_KEY") {
+            process.env.SUPABASE_LOCAL_ANON_KEY = value;
+            process.env.SUPABASE_PUBLISHABLE_KEY = value;
+          } else if (key === "SECRET_KEY") {
+            process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = value;
+            process.env.SUPABASE_SERVICE_ROLE_KEY = value;
+          } else if (
+            key === "ANON_KEY" &&
+            !process.env.SUPABASE_LOCAL_ANON_KEY
+          ) {
+            process.env.SUPABASE_LOCAL_ANON_KEY = value;
+            process.env.SUPABASE_PUBLISHABLE_KEY = value;
+          } else if (
+            key === "SERVICE_ROLE_KEY" &&
+            !process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY
+          ) {
+            process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = value;
+            process.env.SUPABASE_SERVICE_ROLE_KEY = value;
+          } else {
+            process.env[key] = value;
           }
         }
       }
-    } catch (error) {
-      console.warn(
-        "⚠️  Could not load local Supabase environment variables:",
-        error,
-      );
-      console.warn("   Make sure Supabase is running: bun run supabase:start");
     }
+  } catch (error) {
+    console.warn(
+      "⚠️  Could not load local Supabase environment variables:",
+      error,
+    );
+    console.warn("   Make sure Supabase is running: bun run supabase:start");
   }
 }
 
-import { AuthService } from "../ProjectSourceCode/src/lib/services/auth.service.js";
-import { BoardService } from "../ProjectSourceCode/src/lib/services/board.service.js";
-import { ListService } from "../ProjectSourceCode/src/lib/services/list.service.js";
-import { PointsService } from "../ProjectSourceCode/src/lib/services/points.service.js";
-import { TaskService } from "../ProjectSourceCode/src/lib/services/task.service.js";
-import { TeamService } from "../ProjectSourceCode/src/lib/services/team.service.js";
+// Services imported dynamically in main() after setting env vars
 
 type SeedUser = {
   email: string;
@@ -131,7 +129,7 @@ type SeedPoints = {
 // Seed data definitions
 const SEED_USERS: SeedUser[] = [
   {
-    email: "ada.admin@example.com",
+    email: "admin@example.com",
     password: "password123",
     display_name: "Ada Admin",
     role: "admin",
@@ -139,7 +137,7 @@ const SEED_USERS: SeedUser[] = [
     total_points: 25,
   },
   {
-    email: "alice.manager@example.com",
+    email: "manager@example.com",
     password: "password123",
     display_name: "Alice Manager",
     role: "manager",
@@ -155,7 +153,7 @@ const SEED_USERS: SeedUser[] = [
     total_points: 10,
   },
   {
-    email: "ivy.member@example.com",
+    email: "member@example.com",
     password: "password123",
     display_name: "Ivy Member",
     role: "member",
@@ -179,19 +177,19 @@ const SEED_BOARDS: SeedBoard[] = [
     name: "Product Roadmap",
     description: "High-level roadmap for the next two quarters.",
     teamName: "Alpha Team",
-    createdByEmail: "ada.admin@example.com",
+    createdByEmail: "admin@example.com",
   },
   {
     name: "Sprint 47",
     description: "Current sprint backlog and progress.",
     teamName: "Alpha Team",
-    createdByEmail: "alice.manager@example.com",
+    createdByEmail: "manager@example.com",
   },
   {
     name: "Growth Experiments",
     description: "Testing backlog for acquisition ideas.",
     teamName: "Alpha Team",
-    createdByEmail: "alice.manager@example.com",
+    createdByEmail: "manager@example.com",
   },
 ];
 
@@ -259,7 +257,7 @@ const SEED_TASKS: SeedTask[] = [
     listName: "Ideas",
     boardName: "Product Roadmap",
     teamName: "Alpha Team",
-    assignedToEmail: "alice.manager@example.com",
+    assignedToEmail: "manager@example.com",
     due_date: new Date(Date.now() + 21 * 86_400_000),
   },
   {
@@ -269,7 +267,7 @@ const SEED_TASKS: SeedTask[] = [
     listName: "In Build",
     boardName: "Product Roadmap",
     teamName: "Alpha Team",
-    assignedToEmail: "ivy.member@example.com",
+    assignedToEmail: "member@example.com",
     due_date: new Date(Date.now() + 28 * 86_400_000),
   },
   {
@@ -279,7 +277,7 @@ const SEED_TASKS: SeedTask[] = [
     listName: "Launch",
     boardName: "Product Roadmap",
     teamName: "Alpha Team",
-    assignedToEmail: "ada.admin@example.com",
+    assignedToEmail: "admin@example.com",
     completed_at: new Date(Date.now() - 2 * 86_400_000),
   },
   {
@@ -298,7 +296,7 @@ const SEED_TASKS: SeedTask[] = [
     listName: "In Progress",
     boardName: "Sprint 47",
     teamName: "Alpha Team",
-    assignedToEmail: "ivy.member@example.com",
+    assignedToEmail: "member@example.com",
   },
   {
     title: "Leaderboard SSE prototype",
@@ -307,7 +305,7 @@ const SEED_TASKS: SeedTask[] = [
     listName: "Done",
     boardName: "Sprint 47",
     teamName: "Alpha Team",
-    assignedToEmail: "alice.manager@example.com",
+    assignedToEmail: "manager@example.com",
     completed_at: new Date(Date.now() - 1 * 86_400_000),
   },
   {
@@ -326,7 +324,7 @@ const SEED_TASKS: SeedTask[] = [
     listName: "Running",
     boardName: "Growth Experiments",
     teamName: "Alpha Team",
-    assignedToEmail: "ivy.member@example.com",
+    assignedToEmail: "member@example.com",
   },
   {
     title: "Activation email experiment",
@@ -335,68 +333,45 @@ const SEED_TASKS: SeedTask[] = [
     listName: "Results",
     boardName: "Growth Experiments",
     teamName: "Alpha Team",
-    assignedToEmail: "alice.manager@example.com",
+    assignedToEmail: "manager@example.com",
     completed_at: new Date(Date.now() - 5 * 86_400_000),
   },
 ];
 
 const SEED_POINTS: SeedPoints[] = [
   {
-    userEmail: "alice.manager@example.com",
+    userEmail: "manager@example.com",
     points_earned: 8,
     reason: "task_complete",
     taskTitle: "Leaderboard SSE prototype",
-    awardedByEmail: "alice.manager@example.com",
+    awardedByEmail: "manager@example.com",
     notes: "Sprint 47 completed task",
   },
   {
-    userEmail: "alice.manager@example.com",
+    userEmail: "manager@example.com",
     points_earned: 1,
     reason: "manual_award",
-    awardedByEmail: "ada.admin@example.com",
+    awardedByEmail: "admin@example.com",
     notes: "Recognition for mentoring new members",
   },
   {
-    userEmail: "ivy.member@example.com",
+    userEmail: "member@example.com",
     points_earned: 5,
     reason: "task_complete",
     taskTitle: "Mobile offline mode",
-    awardedByEmail: "alice.manager@example.com",
+    awardedByEmail: "manager@example.com",
     notes: "Delivered ahead of schedule",
   },
   {
     userEmail: "noah.member@example.com",
     points_earned: 3,
     reason: "manual_award",
-    awardedByEmail: "alice.manager@example.com",
+    awardedByEmail: "manager@example.com",
     notes: "Great feedback",
   },
 ];
 
-// Helper functions
-function getServiceRoleClient(): SupabaseClient {
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error(
-      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. " +
-        "Ensure local Supabase is running: bun run supabase:start",
-    );
-  }
-  // Service role key should bypass RLS automatically
-  // But we configure it explicitly to ensure no auth session is used
-  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-    global: {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      },
-    },
-  });
-}
+// Helper functions (getServiceRoleClient removed - using direct createClient in main)
 
 async function findUserByEmail(
   client: SupabaseClient,
@@ -465,13 +440,91 @@ async function findTaskByTitle(
 }
 
 async function main() {
-  // Load local environment variables first
+  // Load local environment variables first (before importing env)
+  // This ensures local Supabase vars take priority over doppler
   await loadLocalEnv();
 
-  console.info("🌱 Starting database seeding...");
-  console.info(`📍 Supabase URL: ${env.SUPABASE_URL || "NOT SET"}`);
+  // Debug: Check what env vars are set
+  console.info("🔍 Environment check:");
+  console.info(
+    `  SUPABASE_LOCAL_URL: ${process.env.SUPABASE_LOCAL_URL || "NOT SET"}`,
+  );
+  console.info(`  SUPABASE_URL: ${process.env.SUPABASE_URL || "NOT SET"}`);
+  console.info(
+    `  SUPABASE_LOCAL_SERVICE_ROLE_KEY: ${process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ? "SET" : "NOT SET"}`,
+  );
 
-  const serviceClient = getServiceRoleClient();
+  // Use process.env directly to avoid env.ts module caching issues
+  // env.ts pick() function reads at module evaluation time, which may be before we set local vars
+  const supabaseUrl =
+    process.env.SUPABASE_LOCAL_URL || process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey =
+    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ||
+    process.env.SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  console.info("🌱 Starting database seeding...");
+  console.info(`📍 Supabase URL: ${supabaseUrl || "NOT SET"}`);
+
+  if (!supabaseUrl || !supabaseUrl.startsWith("http")) {
+    // Verify we're using the local HTTP URL (not postgres connection string)
+    throw new Error(
+      `Invalid Supabase URL: ${supabaseUrl}. Expected HTTP URL (http://...). ` +
+        `Make sure local Supabase is running: bun run supabase:start`,
+    );
+  }
+
+  if (!supabaseServiceRoleKey) {
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY. " +
+        "Ensure local Supabase is running: bun run supabase:start",
+    );
+  }
+
+  // Ensure env.ts will pick up the correct values by setting process.env
+  // env.ts checks SUPABASE_LOCAL_URL first, so set that (not just SUPABASE_URL)
+  // This must be done BEFORE importing services that use env.ts
+  process.env.SUPABASE_LOCAL_URL = supabaseUrl;
+  process.env.SUPABASE_URL = supabaseUrl; // Also set for compatibility
+  process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = supabaseServiceRoleKey;
+  process.env.SUPABASE_SERVICE_ROLE_KEY = supabaseServiceRoleKey; // Also set for compatibility
+
+  // NOW import services after setting env vars (so env.ts picks up correct values)
+  const { AuthService } = await import(
+    "../ProjectSourceCode/src/lib/services/auth.service.js"
+  );
+  const { BoardService } = await import(
+    "../ProjectSourceCode/src/lib/services/board.service.js"
+  );
+  const { ListService } = await import(
+    "../ProjectSourceCode/src/lib/services/list.service.js"
+  );
+  const { PointsService } = await import(
+    "../ProjectSourceCode/src/lib/services/points.service.js"
+  );
+  const { TaskService } = await import(
+    "../ProjectSourceCode/src/lib/services/task.service.js"
+  );
+  const { TeamService } = await import(
+    "../ProjectSourceCode/src/lib/services/team.service.js"
+  );
+
+  // Create service client directly with verified values
+  const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      headers: {
+        apikey: supabaseServiceRoleKey,
+        Authorization: `Bearer ${supabaseServiceRoleKey}`,
+      },
+    },
+  });
+
+  // Create service instances (AuthService.getServiceRoleClient() will now use correct env values)
   const authService = new AuthService(serviceClient);
   const teamService = new TeamService(serviceClient);
   const boardService = new BoardService(serviceClient);
@@ -518,20 +571,91 @@ async function main() {
         });
         user = { id: created.user.id, email: created.user.email };
         console.info(`  ✅ Created user: ${user.email} (${seedUser.role})`);
-
-        // Update total_points if specified
-        if (seedUser.total_points !== undefined) {
-          await serviceClient
-            .from("users")
-            .update({ total_points: seedUser.total_points })
-            .eq("id", user.id);
+      } catch (error: any) {
+        // User already exists in auth - find them in users table
+        if (
+          error.name === "DuplicateUserError" ||
+          error.message?.includes("already exists")
+        ) {
+          // Try to find user again (might have been created by another process)
+          const existing = await findUserByEmail(serviceClient, seedUser.email);
+          if (existing) {
+            user = existing;
+            console.info(
+              `  ⏭️  User already exists: ${user.email} (${seedUser.role})`,
+            );
+          } else {
+            // User exists in auth but not in users table - sync from auth.users
+            console.info(
+              `  🔄 User ${seedUser.email} exists in auth, syncing to users table...`,
+            );
+            try {
+              // Use Supabase auth admin API to safely get user by email (no SQL injection risk)
+              const { data: authUser, error: authError } = await serviceClient.auth.admin.getUserByEmail(seedUser.email);
+              
+              if (authError || !authUser) {
+                console.warn(
+                  `  ⚠️  Could not find user ${seedUser.email} in auth.users - skipping`,
+                );
+                continue;
+              }
+              const team = seedUser.teamName
+                ? teamMap.get(seedUser.teamName)
+                : undefined;
+              
+              // Create users table record with auth user's ID
+              const { data: newUser, error: insertError } = await serviceClient
+                .from("users")
+                .insert({
+                  id: authUser.user.id,
+                  email: authUser.user.email,
+                  password_hash: "",
+                  display_name: seedUser.display_name,
+                  role: seedUser.role,
+                  team_id: team?.id ?? null,
+                  avatar_url: null,
+                  total_points: seedUser.total_points ?? 0,
+                })
+                .select("id, email")
+                .single();
+              
+              if (insertError) {
+                console.error(
+                  `  ❌ Failed to create users table record: ${insertError.message}`,
+                );
+                continue;
+              }
+              
+              if (newUser) {
+                user = newUser;
+                console.info(
+                  `  ✅ Synced user from auth: ${user.email} (${seedUser.role})`,
+                );
+              }
+            } catch (syncError: any) {
+              console.error(
+                `  ❌ Failed to sync user ${seedUser.email}: ${syncError.message}`,
+              );
+              continue;
+            }
+          }
+        } else {
+          console.error(`  ❌ Failed to create user ${seedUser.email}:`, error);
+          throw error;
         }
-      } catch (error) {
-        console.error(`  ❌ Failed to create user ${seedUser.email}:`, error);
-        throw error;
       }
     } else {
-      console.info(`  ⏭️  User already exists: ${user.email}`);
+      console.info(
+        `  ⏭️  User already exists: ${user.email} (${seedUser.role})`,
+      );
+    }
+
+    if (seedUser.total_points !== undefined && user) {
+      // Update total_points if specified
+      await serviceClient
+        .from("users")
+        .update({ total_points: seedUser.total_points })
+        .eq("id", user.id);
     }
     userMap.set(seedUser.email, user);
   }
