@@ -344,6 +344,20 @@ else
   fi
 fi
 
+# Post-setup cleanup: ensure metrics JSON is always closed if file exists
+# This handles edge cases where metrics file exists but wasn't properly closed
+# (e.g., if FULL_SETUP_METRICS was changed mid-run or file exists from previous run)
+if [ -f "$METRICS_FILE" ]; then
+  # Check if JSON array is already closed (ends with ])
+  if ! tail -1 "$METRICS_FILE" 2>/dev/null | grep -q '^\]$'; then
+    # Check if it ends with ] at all (could be on same line as last entry)
+    if ! tail -1 "$METRICS_FILE" 2>/dev/null | grep -q '\]$'; then
+      # File exists but doesn't end with ], so close it
+      echo "]" >> "$METRICS_FILE"
+    fi
+  fi
+fi
+
 echo ""
 echo "✅ Development environment setup complete!"
 echo ""
