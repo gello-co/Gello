@@ -1,0 +1,27 @@
+# CodeRabbit Configuration
+# This file configures CodeRabbit AI code review settings
+# Reference: https://docs.coderabbit.ai/reference/configuration/
+
+# Language for reviews
+language: en-US
+
+# Path filters - specify which files to include/exclude from reviews
+path_filters:
+  # Exclude common build/dependency directories
+  - "!**/node_modules/**"
+  - "!**/.git/**"
+  - "!**/dist/**"
+  - "!**/build/**"
+  - "!**/.next/**"
+  - "!**/coverage/**"
+  - "!**/*.min.js"
+  - "!**/*.min.css"
+  # Include source files
+  - "**/src/**"
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.sh"
+  - "**/*.yml"
+  - "**/*.yaml"

@@ -5,7 +5,10 @@
     "context": "."
   },
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/dhoeric/features/act:1": {}
   },
   "customizations": {
     "vscode": {
@@ -23,6 +26,22 @@
         },
         "[javascript]": {
           "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "files.exclude": {
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/node_modules": false
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.devcontainer": true
         }
       }
     }
@@ -60,5 +79,8 @@
       "label": "Supabase Storage",
       "onAutoForward": "silent"
     }
+  },
+  "containerEnv": {
+    "SHELL": "/bin/zsh"
   }
 }
