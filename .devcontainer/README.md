@@ -36,7 +36,7 @@ This devcontainer provides a fully self-contained development environment for th
    - Make Playwright browsers available for MCP tools
 
 4. **Access the Application**:
-   - Open `http://localhost:3000`
+   - Open http://localhost:3000
    - Login with test users (see credentials below)
 
 ## Configuration Flags
@@ -81,7 +81,7 @@ export FULL_SETUP_METRICS=true  # Metrics enabled by default
 1. **Open Container**: Use "Reopen in Container"
 2. **Wait for Setup**: Fast setup completes in ~30-60 seconds
 3. **Run Single Command**: `bun run start`
-4. **Access App**: `http://localhost:3000`
+4. **Access App**: http://localhost:3000
 5. **Login**: Use test user credentials (see below)
 
 That's it! The single command brings up the full environment.
@@ -137,7 +137,7 @@ Playwright browsers are installed and available for:
 **Example workflow:**
 1. Run `bun run start` (ensures Playwright browsers are available)
 2. Use Browser MCP tools to:
-   - Open `http://localhost:3000`
+   - Open http://localhost:3000
    - Login with test credentials
    - Navigate through boards, teams, leaderboard
    - Verify interactive features work correctly
@@ -191,7 +191,7 @@ The following ports are forwarded automatically:
    ```
 
 2. **Login and Navigate**:
-   - Open `http://localhost:3000`
+   - Open http://localhost:3000
    - Login with test user (see credentials above)
    - Navigate all pages to test features
 
@@ -276,41 +276,3 @@ bunx playwright install --with-deps
 - **Single command start**: `bun run start` brings up full environment in ~30-60 seconds (if not already running)
 
 Fast setup is recommended for daily development. Use full setup for CI/CD or first-time verification.
-
-## Git Branch and Commit Conventions
-
-### Branch Strategy
-
-- **origin/dev**: Upstream baseline (read-only reference)
-- **fork/dev**: Your working trunk branch (ahead of origin/dev)
-- **Topic branches**: Created from fork/dev for focused changes
-
-### Branch Naming
-
-Branches follow the pattern: `type/scope-description`
-
-- `feat/dev-*`: Development tooling and environment changes (devcontainer, scripts, CI)
-- `fix/dev-*`: Development environment fixes (Supabase env, seeding)
-- `fix/auth-*`, `feat/api-*`: Application behavior changes
-- `docs/dev-*`: Development documentation updates
-
-### Commit Messages
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/) standard:
-
-- **Types**: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`
-- **Scope**: Use `dev` for development-only changes (devcontainer, scripts, CI, docs tooling)
-  - Example: `feat(dev): devcontainer metrics summary`
-  - Example: `chore(dev): optimize post-create script`
-- **Scope**: Use feature/area scopes for application changes
-  - Example: `fix(auth): handle EBADCSRFTOKEN in error handler`
-  - Example: `docs(setup): document devcontainer full setup and metrics`
-- **Subject**: Imperative, concise, no trailing period
-
-### Verification Commands
-
-When creating PRs, include verification commands in the description:
-- Dev tooling: `bun run setup` or `bash .devcontainer/post-create.sh`
-- Supabase env/seeding: `bun run seed` plus Supabase:local MCP checks
-- Auth/CSP: `bun run test:integration` focused on auth routes
-- Client interactivity: Integration tests and manual smoke via `bun run start`
