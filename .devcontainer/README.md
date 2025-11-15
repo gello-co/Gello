@@ -276,3 +276,41 @@ bunx playwright install --with-deps
 - **Single command start**: `bun run start` brings up full environment in ~30-60 seconds (if not already running)
 
 Fast setup is recommended for daily development. Use full setup for CI/CD or first-time verification.
+
+## Git Branch and Commit Conventions
+
+### Branch Strategy
+
+- **origin/dev**: Upstream baseline (read-only reference)
+- **fork/dev**: Your working trunk branch (ahead of origin/dev)
+- **Topic branches**: Created from fork/dev for focused changes
+
+### Branch Naming
+
+Branches follow the pattern: `type/scope-description`
+
+- `feat/dev-*`: Development tooling and environment changes (devcontainer, scripts, CI)
+- `fix/dev-*`: Development environment fixes (Supabase env, seeding)
+- `fix/auth-*`, `feat/api-*`: Application behavior changes
+- `docs/dev-*`: Development documentation updates
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/) standard:
+
+- **Types**: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`
+- **Scope**: Use `dev` for development-only changes (devcontainer, scripts, CI, docs tooling)
+  - Example: `feat(dev): devcontainer metrics summary`
+  - Example: `chore(dev): optimize post-create script`
+- **Scope**: Use feature/area scopes for application changes
+  - Example: `fix(auth): handle EBADCSRFTOKEN in error handler`
+  - Example: `docs(setup): document devcontainer full setup and metrics`
+- **Subject**: Imperative, concise, no trailing period
+
+### Verification Commands
+
+When creating PRs, include verification commands in the description:
+- Dev tooling: `bun run setup` or `bash .devcontainer/post-create.sh`
+- Supabase env/seeding: `bun run seed` plus Supabase:local MCP checks
+- Auth/CSP: `bun run test:integration` focused on auth routes
+- Client interactivity: Integration tests and manual smoke via `bun run start`
