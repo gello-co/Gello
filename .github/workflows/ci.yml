@@ -29,6 +29,16 @@ jobs:
         uses: biomejs/setup-biome@v2
       - name: Run Biome
         run: biome ci
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: Run ShellCheck
+        run: |
+          find .devcontainer scripts -name "*.sh" -type f | while read -r file; do
+            echo "Checking $file..."
+            shellcheck "$file" || exit 1
+          done
 
 
   cache:

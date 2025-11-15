@@ -271,7 +271,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
 
     # Run unit tests (excluding health tests - they're informational)
     UNIT_START_TIME=$(date +%s)
-    if bun run test:unit -- --run --exclude tests/health.test.ts > /tmp/test-output.log 2>&1; then
+    if timeout 180 bun run test:unit -- --run --exclude tests/health.test.ts > /tmp/test-output.log 2>&1; then
       UNIT_TEST_COUNT=$(grep -E "Test Files|Tests" /tmp/test-output.log | tail -2)
       echo "✅ Unit tests passed"
       echo "   $UNIT_TEST_COUNT"
@@ -333,6 +333,15 @@ else
   echo "⏭️  Skipping full setup (FULL_SETUP_ON_CREATE=false)"
   echo "   Fast setup is the default. To enable full setup, set FULL_SETUP_ON_CREATE=true"
   echo "   Metrics are enabled by default. To disable, set FULL_SETUP_METRICS=false"
+  
+  # Always close metrics JSON if it was created (even in fast setup)
+  if [ -f "$METRICS_FILE" ] && [ "$FULL_SETUP_METRICS" = "true" ]; then
+    # Check if JSON array is already closed
+    if ! grep -q '^\]' "$METRICS_FILE" 2>/dev/null; then
+      # Close the JSON array
+      echo "]" >> "$METRICS_FILE"
+    fi
+  fi
 fi
 
 echo ""

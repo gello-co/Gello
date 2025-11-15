@@ -27,7 +27,7 @@ if check_port 3000; then
   if command -v lsof &> /dev/null; then
     PID=$(lsof -ti:3000 2>/dev/null || true)
     if [ -n "$PID" ]; then
-      kill $PID 2>/dev/null || true
+      kill "$PID" 2>/dev/null || true
       # Wait for process to stop
       for _ in {1..10}; do
         if ! check_port 3000; then
@@ -37,7 +37,7 @@ if check_port 3000; then
       done
       # Force kill if still running
       if check_port 3000; then
-        kill -9 $PID 2>/dev/null || true
+        kill -9 "$PID" 2>/dev/null || true
       fi
     fi
   else
