@@ -16,9 +16,10 @@ fi
 
 echo "✅ Doppler token retrieved"
 
-# Authenticate Doppler with the token
+# Authenticate Doppler with the token (scoped to current directory, not global)
+# Note: For CI/CD, prefer OIDC (doppler oidc login) for short-lived credentials when supported
 echo "🔑 Authenticating Doppler..."
-if echo "$DOPPLER_TOKEN" | doppler configure set token --silent; then
+if echo "$DOPPLER_TOKEN" | doppler configure set token --scope . --silent; then
   echo "✅ Doppler authenticated successfully"
 else
   echo "❌ Failed to authenticate Doppler"
