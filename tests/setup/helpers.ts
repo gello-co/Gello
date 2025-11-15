@@ -11,9 +11,7 @@ import { AuthService } from "../../ProjectSourceCode/src/lib/services/auth.servi
 // All tests use local Supabase (no rate limits, faster, isolated)
 // Credentials must be loaded from `supabase status -o env` via vitest-setup.ts
 // No hardcoded defaults - all values must come from CLI output
-const SUPABASE_URL =
-  process.env.SUPABASE_LOCAL_URL ||
-  process.env.SUPABASE_URL;
+const SUPABASE_URL = process.env.SUPABASE_LOCAL_URL || process.env.SUPABASE_URL;
 
 // Support both new API key format (sb_secret_...) and legacy JWT format
 // NOTE: Supabase JS client (v2.81.1) does not fully support new format for service role operations
@@ -438,7 +436,8 @@ export async function createTestUser(
             // Delete auth user and retry registration
             try {
               const serviceClient = getTestSupabaseClient();
-              const { data: authUsers } = await serviceClient.auth.admin.listUsers();
+              const { data: authUsers } =
+                await serviceClient.auth.admin.listUsers();
               const authUser = authUsers?.users.find((u) => u.email === email);
               if (authUser) {
                 await serviceClient.auth.admin.deleteUser(authUser.id);

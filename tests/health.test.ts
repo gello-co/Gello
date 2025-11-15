@@ -13,14 +13,14 @@ describe("Test Environment Health", () => {
     // Simple connectivity test - if Supabase is running (verified by devcontainer),
     // this should work. If it fails, it's a real issue, not a timing problem.
     const { error } = await client.from("users").select("id").limit(1);
-    
+
     // Connection successful if no error OR if error is not a connection error
     // (RLS policy errors mean connection is working)
     if (!error) {
       expect(error).toBeNull();
       return;
     }
-    
+
     // If it's a connection error, fail immediately (Supabase should be ready)
     if (
       error.message.includes("fetch failed") ||
@@ -30,7 +30,7 @@ describe("Test Environment Health", () => {
         `Database connection failed: ${error.message}. Ensure Supabase is running: bun run supabase:start`,
       );
     }
-    
+
     // Other errors (e.g., RLS) mean connection is working
     expect(error).toBeDefined(); // Error exists but connection works
   });
@@ -51,7 +51,7 @@ describe("Test Environment Health", () => {
         expect(result.data).toBeDefined();
         return;
       }
-      
+
       // If it's a connection error, fail immediately
       if (
         result.error.message.includes("fetch failed") ||
@@ -61,7 +61,7 @@ describe("Test Environment Health", () => {
           `Service role authentication failed: ${result.error.message}. Ensure Supabase is running: bun run supabase:start`,
         );
       }
-      
+
       // Other errors mean connection is working (even if operation failed)
       expect(result).toBeDefined();
     } catch (error) {

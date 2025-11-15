@@ -20,9 +20,14 @@ for (let attempt = 0; attempt < 5; attempt++) {
       .filter(
         (line) => !line.includes("Stopped services") && line.trim().length > 0,
       );
-    
+
     // Check if we got valid environment variables
-    if (output.length > 0 && output.some((line) => line.includes("API_URL") || line.includes("SERVICE_ROLE_KEY"))) {
+    if (
+      output.length > 0 &&
+      output.some(
+        (line) => line.includes("API_URL") || line.includes("SERVICE_ROLE_KEY"),
+      )
+    ) {
       envOutput = output;
       supabaseReady = true;
       break;
@@ -42,7 +47,6 @@ for (let attempt = 0; attempt < 5; attempt++) {
 }
 
 if (supabaseReady) {
-
   for (const line of envOutput) {
     // Handle both KEY="value" and KEY=value formats
     const match = line.match(/^([A-Z_]+)=(?:"([^"]+)"|([^" \n]+))$/);
@@ -96,7 +100,5 @@ if (supabaseReady) {
   console.warn(
     "⚠️  Could not load Supabase environment variables from 'supabase status' after retries. Supabase may not be running or ready.",
   );
-  console.warn(
-    "   Ensure Supabase is started: bun run supabase:start",
-  );
+  console.warn("   Ensure Supabase is started: bun run supabase:start");
 }

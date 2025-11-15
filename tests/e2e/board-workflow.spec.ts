@@ -54,7 +54,7 @@ test.describe("Board Workflow", () => {
     // Step 2: Create a board
     await page.goto(`${BASE_URL}/teams/${team.id}/boards`);
     await expect(page.locator("text=Boards")).toBeVisible();
-    
+
     // Visual snapshot: Boards list page
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("boards-list.png");
@@ -86,7 +86,7 @@ test.describe("Board Workflow", () => {
 
     // Step 3: Add a list to the board
     await expect(page.locator("text=Test Board")).toBeVisible();
-    
+
     // Visual snapshot: Board detail page (empty)
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("board-detail-empty.png");
@@ -196,7 +196,7 @@ test.describe("Board Workflow", () => {
     // Check if user appears on leaderboard with points
     const userPoints = page.locator(`text=${testUser.user.display_name}`);
     await expect(userPoints).toBeVisible({ timeout: 3000 });
-    
+
     // Visual snapshot: Leaderboard
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("leaderboard.png");

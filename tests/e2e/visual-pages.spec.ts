@@ -69,4 +69,3 @@ test.describe("Visual Page Snapshots", () => {
     await expect(page).toHaveScreenshot("profile.png");
   });
 });
-

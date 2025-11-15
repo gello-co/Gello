@@ -13,7 +13,7 @@ test.describe("Auth Flow", () => {
     // Step 1: Register
     await page.goto(`${BASE_URL}/register`);
     await expect(page.locator('input[name="email"]')).toBeVisible();
-    
+
     // Visual snapshot: Register page
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("register-page.png");
@@ -34,7 +34,7 @@ test.describe("Auth Flow", () => {
       // Visual snapshot: Login page
       await page.waitForLoadState("networkidle");
       await expect(page).toHaveScreenshot("login-page.png");
-      
+
       await page.fill('input[name="email"]', testEmail);
       await page.fill('input[name="password"]', testPassword);
       await page.click('button[type="submit"]');
@@ -45,7 +45,7 @@ test.describe("Auth Flow", () => {
       timeout: 5000,
     });
     await expect(page.locator("text=Dashboard")).toBeVisible();
-    
+
     // Visual snapshot: Dashboard
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("dashboard.png");
@@ -73,7 +73,7 @@ test.describe("Auth Flow", () => {
 
   test("should handle invalid login credentials", async ({ page }) => {
     await page.goto(`${BASE_URL}/login`);
-    
+
     // Visual snapshot: Login page (before error)
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("login-page-error-state.png");
@@ -86,7 +86,7 @@ test.describe("Auth Flow", () => {
     await expect(
       page.locator("text=Invalid email or password, text=Error, text=Failed"),
     ).toBeVisible({ timeout: 3000 });
-    
+
     // Visual snapshot: Login page with error
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("login-page-with-error.png");
