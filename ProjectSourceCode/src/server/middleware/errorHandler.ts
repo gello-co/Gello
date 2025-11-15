@@ -1,8 +1,8 @@
 import type { ErrorRequestHandler, Request, Response } from "express";
 import {
-	DuplicateUserError,
-	InvalidCredentialsError,
-	UserNotFoundError,
+  DuplicateUserError,
+  InvalidCredentialsError,
+  UserNotFoundError,
 } from "../../lib/errors/app.errors.js";
 
 export const errorHandler: ErrorRequestHandler = (
