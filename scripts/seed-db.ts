@@ -18,6 +18,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { $ } from "bun";
+
 // Don't import services or env here - load them after setting local env vars in main()
 // This ensures env.ts picks up the correct values
 
@@ -601,29 +602,29 @@ async function main() {
   // TypeScript can't resolve these paths statically, but they work at runtime
   // Using `any` type for dynamic imports since TypeScript can't statically resolve them
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { AuthService } = await import(
+  const { AuthService } = (await import(
     "../ProjectSourceCode/src/lib/services/auth.service.js"
-  ) as any;
+  )) as any;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { BoardService } = await import(
+  const { BoardService } = (await import(
     "../ProjectSourceCode/src/lib/services/board.service.js"
-  ) as any;
+  )) as any;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { ListService } = await import(
+  const { ListService } = (await import(
     "../ProjectSourceCode/src/lib/services/list.service.js"
-  ) as any;
+  )) as any;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { PointsService } = await import(
+  const { PointsService } = (await import(
     "../ProjectSourceCode/src/lib/services/points.service.js"
-  ) as any;
+  )) as any;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { TaskService } = await import(
+  const { TaskService } = (await import(
     "../ProjectSourceCode/src/lib/services/task.service.js"
-  ) as any;
+  )) as any;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { TeamService } = await import(
+  const { TeamService } = (await import(
     "../ProjectSourceCode/src/lib/services/team.service.js"
-  ) as any;
+  )) as any;
 
   // Create service client directly with verified values
   const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -708,29 +709,32 @@ async function main() {
             try {
               // Use Supabase auth admin API to safely get user by email (no SQL injection risk)
               // listUsers with filter is the correct method for service role client
-              const { data: authUsers, error: authError } = await serviceClient.auth.admin.listUsers();
-              
+              const { data: authUsers, error: authError } =
+                await serviceClient.auth.admin.listUsers();
+
               if (authError) {
                 console.warn(
                   `  ⚠️  Could not query auth.users: ${authError.message} - skipping`,
                 );
                 continue;
               }
-              
+
               // Find user by email in the list
-              const authUser = authUsers?.users?.find((u) => u.email === seedUser.email);
-              
+              const authUser = authUsers?.users?.find(
+                (u) => u.email === seedUser.email,
+              );
+
               if (!authUser) {
                 console.warn(
                   `  ⚠️  Could not find user ${seedUser.email} in auth.users - skipping`,
                 );
                 continue;
               }
-              
+
               const team = seedUser.teamName
                 ? teamMap.get(seedUser.teamName)
                 : undefined;
-              
+
               // Create users table record with auth user's ID
               const { data: newUser, error: insertError } = await serviceClient
                 .from("users")
@@ -746,14 +750,14 @@ async function main() {
                 })
                 .select("id, email")
                 .single();
-              
+
               if (insertError) {
                 console.error(
                   `  ❌ Failed to create users table record: ${insertError.message}`,
                 );
                 continue;
               }
-              
+
               if (newUser) {
                 user = newUser;
                 console.info(
@@ -785,7 +789,7 @@ async function main() {
         .update({ total_points: seedUser.total_points })
         .eq("id", user.id);
     }
-    
+
     // Only add to map if user was successfully found/created
     if (user) {
       userMap.set(seedUser.email, user);
