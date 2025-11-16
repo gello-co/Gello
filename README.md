@@ -51,9 +51,12 @@ All seeded users have password `password123`:
 
 ## Documentation
 
-- **[Setup Guide](docs/dev/.devOps/setup.md)** - Detailed environment setup
-- **[Runbook](docs/dev/.devOps/RUNBOOK.md)** - Essential commands
-- **[Devcontainer Guide](.devcontainer/README.md)** - Devcontainer documentation
+**For New Collaborators:**
+1. **Start here**: [Setup Guide](docs/dev/.devOps/setup.md) - Complete environment setup and project structure
+2. **Quick reference**: [Runbook](docs/dev/.devOps/RUNBOOK.md) - Essential commands for daily development
+3. **Devcontainer**: [Devcontainer Guide](.devcontainer/README.md) - Self-contained development environment
+
+**Full Documentation**: See [docs/dev/.devOps/README.md](docs/dev/.devOps/README.md) for complete documentation index
 
 ## Technology Stack
 
