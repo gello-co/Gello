@@ -597,3 +597,111 @@ export async function loginAsUser(
 
   return result.session;
 }
+
+/**
+ * Get CSRF token for authenticated or unauthenticated requests
+ * Makes GET request to /api/csrf-token endpoint
+ * For authenticated requests, pass session cookies
+ * For unauthenticated requests, pass empty array or omit cookies
+ * Note: The CSRF cookie is automatically set by csrf-csrf middleware
+ */
+export async function getCsrfToken(
+  cookies?: string[] | string,
+): Promise<string> {
+  const app = (await import("../../ProjectSourceCode/src/server/app.js")).app;
+  const request = (await import("supertest")).default;
+
+  let req = request(app).get("/api/csrf-token");
+
+  // Only set cookies if provided (for authenticated requests)
+  // TypeScript needs explicit narrowing for union types
+  if (cookies) {
+    if (Array.isArray(cookies)) {
+      req = req.set("Cookie", cookies);
+    } else {
+      req = req.set("Cookie", cookies);
+    }
+  }
+
+  const response = await req;
+
+  if (response.status !== 200) {
+    throw new Error(
+      `Failed to get CSRF token: ${response.status} - ${response.text}`,
+    );
+  }
+
+  // Extract CSRF cookie from response and merge with provided cookies array
+  // This ensures subsequent requests include both session and CSRF cookies
+  const csrfCookieHeader = response.headers["set-cookie"]?.[0];
+  if (csrfCookieHeader && Array.isArray(cookies)) {
+    // Extract just the cookie name=value part (before the first semicolon)
+    const csrfCookie = csrfCookieHeader.split(";")[0];
+    if (csrfCookie) {
+      // Remove any existing CSRF cookies (csrf= or __Host-csrf=)
+      // to avoid having multiple CSRF cookies that don't match the token
+      const filteredCookies = cookies.filter(
+        (cookie) =>
+          !cookie.startsWith("csrf=") && !cookie.startsWith("__Host-csrf="),
+      );
+      // Add the new CSRF cookie
+      filteredCookies.push(csrfCookie);
+      // Replace the array contents (mutate in place for existing tests)
+      cookies.length = 0;
+      cookies.push(...filteredCookies);
+    }
+  }
+
+  return response.body.csrfToken;
+}
+
+/**
+ * Helper function to get CSRF token and merged cookies for API requests
+ * Returns both the token and cookies array (including CSRF cookie from response)
+ * Use this when you need to include the CSRF cookie in subsequent requests
+ */
+export async function getCsrfTokenWithCookies(
+  cookies?: string[] | string,
+): Promise<{ token: string; cookies: string[] }> {
+  const app = (await import("../../ProjectSourceCode/src/server/app.js")).app;
+  const request = (await import("supertest")).default;
+
+  let req = request(app).get("/api/csrf-token");
+
+  // Only set cookies if provided (for authenticated requests)
+  if (cookies) {
+    if (Array.isArray(cookies)) {
+      req = req.set("Cookie", cookies);
+    } else {
+      req = req.set("Cookie", cookies);
+    }
+  }
+
+  const response = await req;
+
+  if (response.status !== 200) {
+    throw new Error(
+      `Failed to get CSRF token: ${response.status} - ${response.text}`,
+    );
+  }
+
+  // Extract CSRF cookie from response
+  const csrfCookieHeader = response.headers["set-cookie"]?.[0];
+  const csrfCookie = csrfCookieHeader ? csrfCookieHeader.split(";")[0] : null;
+
+  // Merge CSRF cookie with provided cookies
+  const existingCookies = cookies
+    ? Array.isArray(cookies)
+      ? [...cookies]
+      : [cookies]
+    : [];
+
+  const allCookies = csrfCookie
+    ? [...existingCookies, csrfCookie]
+    : existingCookies;
+
+  return {
+    token: response.body.csrfToken,
+    cookies: allCookies,
+  };
+}

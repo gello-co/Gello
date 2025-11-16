@@ -11,13 +11,30 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next,
 ) => {
-  console.error("Error:", err);
-  console.error("Error stack:", err.stack);
-  console.error("Error name:", err.name);
-  console.error("Error code:", err.code);
+  // Structured error logging
+  const errorLog = {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    path: req.path,
+    error: {
+      name: err.name,
+      message: err.message,
+      code: err.code,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    },
+  };
 
-  if (err.code === "EBADCSRFTOKEN" || err.message?.includes("CSRF")) {
-    // CSRF errors (from csurf)
+  console.error("[ERROR]", JSON.stringify(errorLog, null, 2));
+
+  // CSRF errors (from csrf-csrf)
+  // csrf-csrf throws errors with status 403 and message containing "CSRF"
+  // Also check for status/statusCode in case error is wrapped
+  if (
+    err.status === 403 ||
+    err.statusCode === 403 ||
+    err.message?.includes("CSRF") ||
+    err.message?.includes("csrf")
+  ) {
     return res.status(403).json({
       error: "CSRF token validation failed",
       message: process.env.NODE_ENV === "development" ? err.message : undefined,

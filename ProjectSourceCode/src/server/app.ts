@@ -74,7 +74,12 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie parser for Supabase Auth sessions (httpOnly, secure cookies)
 app.use(cookieParser());
 
-// CSRF protection using csurf
+// Request logging middleware (structured logging)
+import { requestLogger } from "./middleware/request-logger.js";
+
+app.use(requestLogger);
+
+// CSRF protection using csrf-csrf (Double Submit Cookie Pattern)
 import { csrfProtection, csrfTokenToLocals } from "./middleware/csrf.js";
 
 // Apply CSRF protection to all routes (except GET requests which are safe)

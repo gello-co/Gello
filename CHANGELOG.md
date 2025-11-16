@@ -1,3 +1,41 @@
+# [0.1.0](https://github.com/gello-co/Gello/compare/v1.0.0-dev.2...v0.1.0) (2025-11-15)
+
+## Features
+
+* **Complete API Implementation**: All 8 API domains implemented (auth, teams, boards, lists, tasks, points, leaderboard, views)
+* **Development Environment**: One-command startup (`bun run start`) that starts Supabase, seeds database, and runs dev server
+* **Devcontainer Support**: Fully self-contained development environment with fast setup (< 60 seconds)
+* **Database Seeding**: Idempotent seed script creates test users and sample data
+* **CSRF Protection**: Migrated from deprecated csurf to csrf-csrf with Double Submit Cookie Pattern
+* **Comprehensive Testing**: 119 integration tests and 99 unit tests, all passing
+
+## Security
+
+* **CSRF Migration**: Upgraded from deprecated csurf to csrf-csrf library (security improvement)
+* **Double Submit Cookie Pattern**: Enhanced CSRF protection implementation
+* **Input Validation**: Zod schemas validate all API inputs
+* **Rate Limiting**: Applied to all `/api/*` routes
+* **Security Headers**: Helmet middleware configured with CSP
+
+## Testing
+
+* **Integration Tests**: 119/119 passing (100% pass rate)
+* **Unit Tests**: 99/99 passing (100% pass rate)
+* **CSRF Token Handling**: All state-changing requests properly include CSRF tokens
+* **Test Helpers**: Reusable helpers for authentication and CSRF token management
+
+## Documentation
+
+* **Setup Guide**: Complete environment setup documentation in `docs/dev/.devOps/setup.md`
+* **Runbook**: Essential commands documented in `docs/dev/.devOps/RUNBOOK.md`
+* **Devcontainer Guide**: Detailed devcontainer documentation with configuration options
+
+## Bug Fixes
+
+* Fixed CSRF token validation in integration tests
+* Fixed double token generation issue in CSRF middleware
+* Fixed CSRF cookie handling in test helpers
+
 # [1.0.0-dev.2](https://github.com/gello-co/Gello/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-10-28)
 
 

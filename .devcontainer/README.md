@@ -88,11 +88,13 @@ That's it! The single command brings up the full environment.
 
 ## Test User Credentials
 
-- **Admin**: `admin@example.com` / `password123`
-- **Manager**: `manager@example.com` / `password123`
-- **Manager**: `bob.manager@example.com` / `password123`
-- **Member**: `member@example.com` / `password123`
-- **Member**: `noah.member@example.com` / `password123`
+All seeded users have password `password123`:
+
+- **Admin**: `admin@example.com` (display name: Ada Admin)
+- **Manager**: `manager@example.com` (display name: Alice Manager)
+- **Manager**: `bob.manager@example.com` (display name: Bob Manager)
+- **Member**: `member@example.com` (display name: Ivy Member)
+- **Member**: `noah.member@example.com` (display name: Noah Member)
 
 ## Available Pages
 

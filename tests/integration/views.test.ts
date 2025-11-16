@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  getCsrfToken,
   loginAsAdmin,
   loginAsUser,
   resetTestDb,
@@ -87,12 +88,15 @@ describe("View Rendering", () => {
 
       // Create a team first
       const adminSession = await loginAsAdmin();
+      const adminCookies = [
+        `sb-access-token=${adminSession.access_token}`,
+        `sb-refresh-token=${adminSession.refresh_token}`,
+      ];
+      const csrfToken = await getCsrfToken(adminCookies);
       const teamResponse = await request(app)
         .post("/api/teams")
-        .set("Cookie", [
-          `sb-access-token=${adminSession.access_token}`,
-          `sb-refresh-token=${adminSession.refresh_token}`,
-        ])
+        .set("Cookie", adminCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({ name: "Test Team" });
 
       const teamId = teamResponse.body.id;
@@ -149,22 +153,24 @@ describe("View Rendering", () => {
 
       // Create a team and board first
       const adminSession = await loginAsAdmin();
+      const adminCookies = [
+        `sb-access-token=${adminSession.access_token}`,
+        `sb-refresh-token=${adminSession.refresh_token}`,
+      ];
+      const csrfToken = await getCsrfToken(adminCookies);
       const teamResponse = await request(app)
         .post("/api/teams")
-        .set("Cookie", [
-          `sb-access-token=${adminSession.access_token}`,
-          `sb-refresh-token=${adminSession.refresh_token}`,
-        ])
+        .set("Cookie", adminCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({ name: "Test Team" });
 
       const teamId = teamResponse.body.id;
 
+      const boardCsrfToken = await getCsrfToken(adminCookies);
       const boardResponse = await request(app)
         .post("/api/boards")
-        .set("Cookie", [
-          `sb-access-token=${adminSession.access_token}`,
-          `sb-refresh-token=${adminSession.refresh_token}`,
-        ])
+        .set("Cookie", adminCookies)
+        .set("X-CSRF-Token", boardCsrfToken)
         .send({
           name: "Test Board",
           description: "Test Description",

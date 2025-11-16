@@ -6,7 +6,12 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/helpers.js";
+import {
+  createTestUser,
+  getCsrfToken,
+  loginAsUser,
+  resetTestDb,
+} from "../setup/helpers.js";
 
 describe("Points API", () => {
   let adminCookies: string[] = [];
@@ -93,9 +98,11 @@ describe("Points API", () => {
 
   describe("POST /api/points/users/:id/points", () => {
     it("should award points manually as admin", async () => {
+      const csrfToken = await getCsrfToken(adminCookies);
       const response = await request(app)
         .post(`/api/points/users/${userId}/points`)
         .set("Cookie", adminCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           points_earned: 10,
           reason: "bonus",
@@ -109,9 +116,11 @@ describe("Points API", () => {
     });
 
     it("should reject manual award by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .post(`/api/points/users/${userId}/points`)
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           points_earned: 10,
           reason: "bonus",
@@ -121,9 +130,11 @@ describe("Points API", () => {
     });
 
     it("should validate required fields", async () => {
+      const csrfToken = await getCsrfToken(adminCookies);
       const response = await request(app)
         .post(`/api/points/users/${userId}/points`)
         .set("Cookie", adminCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({});
 
       expect(response.status).toBe(400);

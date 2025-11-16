@@ -708,7 +708,8 @@ async function main() {
             );
             try {
               // Use Supabase auth admin API to safely get user by email (no SQL injection risk)
-              // listUsers with filter is the correct method for service role client
+              // Note: listUsers() only supports pagination, not server-side filtering
+              // We fetch users and filter client-side by email as a workaround
               const { data: authUsers, error: authError } =
                 await serviceClient.auth.admin.listUsers();
 
@@ -719,7 +720,7 @@ async function main() {
                 continue;
               }
 
-              // Find user by email in the list
+              // Find user by email in the list (client-side filtering)
               const authUser = authUsers?.users?.find(
                 (u) => u.email === seedUser.email,
               );

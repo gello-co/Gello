@@ -1,7 +1,7 @@
 {
   "name": "team-1-gello",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev:env": "bash docs/dev/.devOps/scripts/sync.sh || echo 'Failed to sync'",
@@ -16,6 +16,11 @@
     "test:ci": "vitest --run",
     "test:integration": "vitest tests/integration",
     "test:unit": "vitest tests/unit",
+    "db:start": "bunx supabase start",
+    "db:stop": "bunx supabase stop",
+    "db:status": "bunx supabase status",
+    "db:reset": "bunx supabase db reset",
+    "db:env": "bunx supabase status -o env",
     "supabase:start": "bunx supabase start",
     "supabase:stop": "bunx supabase stop",
     "supabase:status": "bunx supabase status",
@@ -56,6 +61,7 @@
     "alpinejs": "^3.15.1",
     "bootstrap": "^5.3.8",
     "cookie-parser": "^1.4.7",
+    "csrf-csrf": "^4.0.3",
     "express": "^5.1.0",
     "express-handlebars": "^8.0.3",
     "express-rate-limit": "^8.2.1",

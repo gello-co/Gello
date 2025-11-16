@@ -13,7 +13,7 @@ declare global {
         avatar_url: string | null;
       } | null;
       /**
-       * CSRF token method added by csurf middleware
+       * CSRF token method added by csrf-csrf middleware
        * Available when csrfProtection middleware is applied
        */
       csrfToken?: () => string;

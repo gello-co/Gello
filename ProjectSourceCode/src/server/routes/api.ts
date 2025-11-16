@@ -10,9 +10,9 @@ import sseRoutes from "./sse.js";
 
 const router = express.Router();
 
-// CSRF token endpoint (must be before csrfProtection middleware)
-// This endpoint needs csrfProtection to generate the token
-router.get("/csrf-token", csrfProtection, getCsrfToken);
+// CSRF token endpoint (GET requests are safe, no protection needed)
+// Token generation doesn't require protection middleware
+router.get("/csrf-token", getCsrfToken);
 
 // API routes
 router.get("/health", (_req, res) => {

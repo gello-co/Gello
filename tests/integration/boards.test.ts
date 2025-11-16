@@ -6,7 +6,12 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/helpers.js";
+import {
+  createTestUser,
+  getCsrfToken,
+  loginAsUser,
+  resetTestDb,
+} from "../setup/helpers.js";
 
 describe("Boards API", () => {
   let managerCookies: string[] = [];
@@ -42,9 +47,11 @@ describe("Boards API", () => {
     ];
 
     // Create a team for boards
+    const csrfToken = await getCsrfToken(managerCookies);
     const teamResponse = await request(app)
       .post("/api/teams")
       .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", csrfToken)
       .send({ name: "Test Team" });
 
     teamId = teamResponse.body.id;
@@ -82,9 +89,11 @@ describe("Boards API", () => {
     let boardId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post("/api/boards")
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           name: "Test Board",
           description: "Test Description",
@@ -121,9 +130,11 @@ describe("Boards API", () => {
 
   describe("POST /api/boards", () => {
     it("should create board as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .post("/api/boards")
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           name: "New Board",
           description: "Board Description",
@@ -137,9 +148,11 @@ describe("Boards API", () => {
     });
 
     it("should reject board creation by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .post("/api/boards")
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           name: "Member Board",
           team_id: teamId,
@@ -149,9 +162,11 @@ describe("Boards API", () => {
     });
 
     it("should validate required fields", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .post("/api/boards")
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({});
 
       expect(response.status).toBe(400);
@@ -170,9 +185,11 @@ describe("Boards API", () => {
     let boardId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post("/api/boards")
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           name: "Original Board",
           team_id: teamId,
@@ -182,9 +199,11 @@ describe("Boards API", () => {
     });
 
     it("should update board as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .put(`/api/boards/${boardId}`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           name: "Updated Board",
           description: "Updated Description",
@@ -195,9 +214,11 @@ describe("Boards API", () => {
     });
 
     it("should reject update by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .put(`/api/boards/${boardId}`)
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({ name: "Hacked Board" });
 
       expect(response.status).toBe(403);
@@ -216,9 +237,11 @@ describe("Boards API", () => {
     let boardId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post("/api/boards")
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           name: "Board to Delete",
           team_id: teamId,
@@ -228,17 +251,21 @@ describe("Boards API", () => {
     });
 
     it("should delete board as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .delete(`/api/boards/${boardId}`)
-        .set("Cookie", managerCookies);
+        .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken);
 
       expect(response.status).toBe(204);
     });
 
     it("should reject delete by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .delete(`/api/boards/${boardId}`)
-        .set("Cookie", memberCookies);
+        .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken);
 
       expect(response.status).toBe(403);
     });

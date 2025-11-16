@@ -57,9 +57,10 @@ describe("AuthService", () => {
 
   describe("register", () => {
     it("should register a new user successfully", async () => {
+      const uniqueEmail = `test-${Date.now()}@example.com`;
       const mockAuthUser = {
         id: "auth-user-id",
-        email: "test@example.com",
+        email: uniqueEmail,
       };
       const mockSession = {
         access_token: "access-token",
@@ -67,7 +68,7 @@ describe("AuthService", () => {
       };
       const mockUser = {
         id: "auth-user-id",
-        email: "test@example.com",
+        email: uniqueEmail,
         display_name: "Test User",
         role: "member" as const,
         password_hash: "",
@@ -112,14 +113,14 @@ describe("AuthService", () => {
       vi.mocked(usersDb.getUserById).mockResolvedValue(mockUser as any);
 
       const result = await service.register({
-        email: "test@example.com",
+        email: uniqueEmail,
         password: "password123",
         display_name: "Test User",
         role: "member",
       });
 
       expect(mockAuth.signUp).toHaveBeenCalledWith({
-        email: "test@example.com",
+        email: uniqueEmail,
         password: "password123",
         options: {
           data: {
@@ -128,7 +129,7 @@ describe("AuthService", () => {
           },
         },
       });
-      expect(result.user.email).toBe("test@example.com");
+      expect(result.user.email).toBe(uniqueEmail);
       expect(result.session).toEqual({
         access_token: "access-token",
         refresh_token: "refresh-token",
@@ -136,18 +137,19 @@ describe("AuthService", () => {
     });
 
     it("should throw error if user already exists", async () => {
+      const uniqueEmail = `test-${Date.now()}@example.com`;
       vi.mocked(mockClient.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
-          data: { id: "existing-id", email: "test@example.com" },
+          data: { id: "existing-id", email: uniqueEmail },
           error: null,
         }),
       } as any);
 
       await expect(
         service.register({
-          email: "test@example.com",
+          email: uniqueEmail,
           password: "password123",
           display_name: "Test User",
         }),

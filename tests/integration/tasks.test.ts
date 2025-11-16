@@ -6,7 +6,12 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/helpers.js";
+import {
+  createTestUser,
+  getCsrfToken,
+  loginAsUser,
+  resetTestDb,
+} from "../setup/helpers.js";
 
 describe("Tasks API", () => {
   let managerCookies: string[] = [];
@@ -47,16 +52,20 @@ describe("Tasks API", () => {
     ];
 
     // Create team, board, and list for tasks
+    const csrfToken = await getCsrfToken(managerCookies);
     const teamResponse = await request(app)
       .post("/api/teams")
       .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", csrfToken)
       .send({ name: "Test Team" });
 
     teamId = teamResponse.body.id;
 
+    const boardCsrfToken = await getCsrfToken(managerCookies);
     const boardResponse = await request(app)
       .post("/api/boards")
       .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", boardCsrfToken)
       .send({
         name: "Test Board",
         team_id: teamId,
@@ -64,9 +73,11 @@ describe("Tasks API", () => {
 
     boardId = boardResponse.body.id;
 
+    const listCsrfToken = await getCsrfToken(managerCookies);
     const listResponse = await request(app)
       .post(`/api/lists/boards/${boardId}/lists`)
       .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", listCsrfToken)
       .send({
         name: "Test List",
       });
@@ -95,9 +106,11 @@ describe("Tasks API", () => {
 
   describe("POST /api/tasks/lists/:listId/tasks", () => {
     it("should create task as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "New Task",
           description: "Task Description",
@@ -111,9 +124,11 @@ describe("Tasks API", () => {
     });
 
     it("should reject task creation by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Member Task",
         });
@@ -122,9 +137,11 @@ describe("Tasks API", () => {
     });
 
     it("should validate required fields", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({});
 
       expect(response.status).toBe(400);
@@ -143,9 +160,11 @@ describe("Tasks API", () => {
     let taskId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Test Task",
         });
@@ -182,9 +201,11 @@ describe("Tasks API", () => {
     let taskId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Original Task",
         });
@@ -193,9 +214,11 @@ describe("Tasks API", () => {
     });
 
     it("should update task as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .put(`/api/tasks/${taskId}`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Updated Task",
           description: "Updated Description",
@@ -206,9 +229,11 @@ describe("Tasks API", () => {
     });
 
     it("should reject update by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .put(`/api/tasks/${taskId}`)
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({ title: "Hacked Task" });
 
       expect(response.status).toBe(403);
@@ -227,9 +252,11 @@ describe("Tasks API", () => {
     let taskId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Task to Assign",
         });
@@ -238,9 +265,11 @@ describe("Tasks API", () => {
     });
 
     it("should assign task as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .patch(`/api/tasks/${taskId}/assign`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           assigned_to: userId,
         });
@@ -250,9 +279,11 @@ describe("Tasks API", () => {
     });
 
     it("should reject assignment by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .patch(`/api/tasks/${taskId}/assign`)
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           assigned_to: userId,
         });
@@ -273,9 +304,11 @@ describe("Tasks API", () => {
     let taskId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Task to Complete",
           story_points: 5,
@@ -285,9 +318,11 @@ describe("Tasks API", () => {
     });
 
     it("should complete task and award points", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .patch(`/api/tasks/${taskId}/complete`)
-        .set("Cookie", memberCookies);
+        .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("completed_at");
@@ -308,18 +343,22 @@ describe("Tasks API", () => {
     let targetListId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const taskResponse = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Task to Move",
         });
 
       taskId = taskResponse.body.id;
 
+      const listCsrfToken = await getCsrfToken(managerCookies);
       const listResponse = await request(app)
         .post(`/api/lists/boards/${boardId}/lists`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", listCsrfToken)
         .send({
           name: "Target List",
         });
@@ -328,9 +367,11 @@ describe("Tasks API", () => {
     });
 
     it("should move task as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .patch(`/api/tasks/${taskId}/move`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           list_id: targetListId,
           position: 0,
@@ -341,9 +382,11 @@ describe("Tasks API", () => {
     });
 
     it("should reject move by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .patch(`/api/tasks/${taskId}/move`)
         .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           list_id: targetListId,
           position: 0,
@@ -368,9 +411,11 @@ describe("Tasks API", () => {
     let taskId: string;
 
     beforeEach(async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const createResponse = await request(app)
         .post(`/api/tasks/lists/${listId}/tasks`)
         .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken)
         .send({
           title: "Task to Delete",
         });
@@ -379,17 +424,21 @@ describe("Tasks API", () => {
     });
 
     it("should delete task as manager", async () => {
+      const csrfToken = await getCsrfToken(managerCookies);
       const response = await request(app)
         .delete(`/api/tasks/${taskId}`)
-        .set("Cookie", managerCookies);
+        .set("Cookie", managerCookies)
+        .set("X-CSRF-Token", csrfToken);
 
       expect(response.status).toBe(204);
     });
 
     it("should reject delete by member", async () => {
+      const csrfToken = await getCsrfToken(memberCookies);
       const response = await request(app)
         .delete(`/api/tasks/${taskId}`)
-        .set("Cookie", memberCookies);
+        .set("Cookie", memberCookies)
+        .set("X-CSRF-Token", csrfToken);
 
       expect(response.status).toBe(403);
     });
