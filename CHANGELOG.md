@@ -1,4 +1,8 @@
-# [0.1.0](https://github.com/gello-co/Gello/compare/v1.0.0-dev.2...v0.1.0) (2025-11-15)
+# [0.1.0-rc.1](https://github.com/gello-co/Gello/compare/v1.0.0-dev.2...v0.1.0-rc.1) (2025-11-15)
+
+**⚠️ Release Candidate - Requires Manual Verification**
+
+This is a release candidate for v0.1.0. Manual verification is required before promoting to final release.
 
 ## Features
 
