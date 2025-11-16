@@ -28,6 +28,10 @@ export const helpers = {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   },
+  substring: (str: string, start: number, end?: number) => {
+    if (!str) return "";
+    return str.substring(start, end);
+  },
   // URL helpers
   url: (path: string) => {
     if (!path) return "/";

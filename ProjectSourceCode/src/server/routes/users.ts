@@ -14,8 +14,11 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   const supabase = getSupabaseClient();
 
-  const hash = await bcrypt.hash(req.body.password, 10); //TODO: change to a different number of salting.
+  // Use 12 rounds for bcrypt (recommended security standard as of 2024)
+  const hash = await bcrypt.hash(req.body.password, 12);
   req.body.password_hash = hash;
+  // Delete plaintext password to prevent it from being stored in the database
+  delete req.body.password;
 
   const { data } = await supabase
     .from("users")

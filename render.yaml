@@ -11,11 +11,17 @@ projects:
             plan: free
             region: ohio
             buildCommand: bun install && bun run build
-            startCommand: bun run start
+            startCommand: doppler run -- bun run start:prd
+            healthCheckPath: /api/health
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: DOPPLER_TOKEN
+                sync: false
             domains:
               - www.gello.co
               - gello.co
-            autoDeployTrigger: commit
+            autoDeployTrigger: off
             rootDir: .
             previews:
               generation: manual

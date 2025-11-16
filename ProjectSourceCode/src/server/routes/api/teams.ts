@@ -1,0 +1,139 @@
+import express from "express";
+import {
+  createTeamSchema,
+  updateTeamSchema,
+} from "../../../lib/schemas/team.js";
+import { TeamService } from "../../../lib/services/team.service.js";
+import { getSupabaseClient } from "../../../lib/supabase.js";
+import { requireAdmin } from "../../middleware/requireAdmin.js";
+import { requireAuth } from "../../middleware/requireAuth.js";
+import { requireManager } from "../../middleware/requireManager.js";
+import { validate } from "../../middleware/validation.js";
+
+const router = express.Router();
+
+function getTeamService() {
+  return new TeamService(getSupabaseClient());
+}
+
+router.get("/", requireAuth, async (req, res, next) => {
+  try {
+    const teams = await getTeamService().getAllTeams();
+    res.json(teams);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/:id", requireAuth, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id parameter is required" });
+    }
+    const team = await getTeamService().getTeam(id);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+    res.json(team);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post(
+  "/",
+  requireManager,
+  validate(createTeamSchema),
+  async (req, res, next) => {
+    try {
+      const team = await getTeamService().createTeam(req.body);
+      res.status(201).json(team);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.put(
+  "/:id",
+  requireManager,
+  validate(updateTeamSchema),
+  async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).json({ error: "id parameter is required" });
+      }
+      const team = await getTeamService().updateTeam({
+        ...req.body,
+        id,
+      });
+      res.json(team);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.delete("/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id parameter is required" });
+    }
+    await getTeamService().deleteTeam(id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/:id/members", requireAuth, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id parameter is required" });
+    }
+    const members = await getTeamService().getTeamMembers(id);
+    res.json(members);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/:id/members", requireManager, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id parameter is required" });
+    }
+    const { user_id } = req.body;
+    if (!user_id) {
+      return res.status(400).json({ error: "user_id is required" });
+    }
+    const user = await getTeamService().addMemberToTeam(user_id, id);
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete(
+  "/:teamId/members/:userId",
+  requireManager,
+  async (req, res, next) => {
+    try {
+      const userId = req.params.userId;
+      if (!userId) {
+        return res.status(400).json({ error: "userId parameter is required" });
+      }
+      const user = await getTeamService().removeMemberFromTeam(userId);
+      res.json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+export default router;

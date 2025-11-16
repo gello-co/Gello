@@ -64,6 +64,20 @@ jobs:
 
       - name: Biome check (dry)
         run: bun run check:dry
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          find .devcontainer scripts -name "*.sh" -type f 2>/dev/null | while read -r file; do
+            echo "Checking $file..."
+            shellcheck "$file" || exit 1
+          done
+
+
   cache:
     name: Cache
     runs-on: ubuntu-latest
@@ -74,8 +88,6 @@ jobs:
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.1
 
       - name: Restore Bun cache
         id: bun-cache
@@ -169,8 +181,6 @@ jobs:
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.1
 
       - name: Restore Bun cache
         id: bun-cache

@@ -1,0 +1,26 @@
+<aside class="sidebar">
+	<div class="sidebar-header">
+		{{> user-avatar user=user}}
+		<div class="user-info">
+			<div class="user-name">{{user.display_name}}</div>
+			<div class="user-role">{{user.role}}</div>
+		</div>
+	</div>
+	<nav class="sidebar-nav">
+		<ul>
+			<li><a href="/boards"><i class="fas fa-columns"></i> Boards</a></li>
+			{{#if (eq user.role "admin")}}
+				<li><a href="/teams"><i class="fas fa-users"></i> Teams</a></li>
+			{{/if}}
+			{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+				<li><a href="/teams"><i class="fas fa-users"></i> My Team</a></li>
+			{{/if}}
+			<li><a href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+			<li><a href="/profile"><i class="fas fa-user"></i> Profile</a></li>
+		</ul>
+	</nav>
+	<div class="sidebar-footer">
+		{{> points-badge points=user.total_points}}
+	</div>
+</aside>
+
