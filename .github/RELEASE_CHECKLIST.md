@@ -1,9 +1,10 @@
 # Release Checklist
 
-**Version**: v0.1.0
+**Version**: v0.1.0-rc.1 (Release Candidate)
 **Date**: 2025-11-15
+**Status**: ⚠️ **RELEASE CANDIDATE - Requires Manual Verification**
 
-Use this checklist before tagging and releasing a new version.
+Use this checklist before tagging and releasing a new version. This release candidate requires manual verification before promoting to final v0.1.0 release.
 
 ---
 
