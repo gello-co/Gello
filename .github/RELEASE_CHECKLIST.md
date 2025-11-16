@@ -129,7 +129,8 @@ git push origin v0.1.0
 ### 4. Create GitHub Release
 
 - Go to GitHub → Releases → Draft new release
-- Tag: `v0.1.0`
+- **For Release Candidate**: Tag: `v0.1.0-rc.1`, mark as "Pre-release"
+- **For Final Release**: Tag: `v0.1.0` (after manual verification)
 - Title: `v0.1.0`
 - Description: Copy from CHANGELOG.md
 - Mark as "Latest release"
