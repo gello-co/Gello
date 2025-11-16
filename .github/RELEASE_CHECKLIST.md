@@ -117,6 +117,11 @@ git push origin release/v0.1.0
 ### 3. Create Release Tag
 
 ```bash
+# For release candidate:
+git tag -a v0.1.0-rc.1 -m "Release Candidate v0.1.0-rc.1"
+git push origin v0.1.0-rc.1
+
+# For final release (after manual verification):
 git tag -a v0.1.0 -m "Release v0.1.0"
 git push origin v0.1.0
 ```
