@@ -10,6 +10,8 @@ import {
   type Task,
   updateTask,
 } from "../database/tasks.db.js";
+import { getUserById } from "../database/users.db.js";
+import { ResourceNotFoundError } from "../errors/app.errors.js";
 import type {
   AssignTaskInput,
   CreateTaskInput,
@@ -45,6 +47,14 @@ export class TaskService {
   }
 
   async assignTask(input: AssignTaskInput): Promise<Task> {
+    // Validate that the assigned user exists if assigned_to is provided
+    if (input.assigned_to) {
+      const user = await getUserById(this.client, input.assigned_to);
+      if (!user) {
+        throw new ResourceNotFoundError("Assignee not found");
+      }
+    }
+
     return updateTask(this.client, {
       id: input.id,
       assigned_to: input.assigned_to,

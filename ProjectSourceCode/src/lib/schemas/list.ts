@@ -5,7 +5,7 @@ export const listSchema = z.object({
   board_id: z.uuid(),
   name: z.string().min(1),
   position: z.number().int().min(0),
-  created_at: z.string(),
+  created_at: z.coerce.date(),
 });
 
 export const createListSchema = z.object({

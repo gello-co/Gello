@@ -128,6 +128,7 @@ export class AuthService {
         role: input.role ?? "member",
         team_id: input.team_id ?? null,
         avatar_url: input.avatar_url ?? null,
+        total_points: input.total_points ?? 0,
       })
       .select()
       .single();
@@ -171,11 +172,13 @@ export class AuthService {
       throw new InvalidCredentialsError("Invalid email or password");
     }
 
-    // Get user from public.users table
+    // After signInWithPassword, the client has the session and RLS will work
+    // Use the authenticated client to respect RLS policies
     let user = await getUserById(this.client, authData.user.id);
     if (!user) {
       // User exists in auth but not in public.users - create profile
       // This can happen if user was created directly in auth or profile was deleted
+      // Use service-role client only for the INSERT operation to bypass RLS
       const serviceClient = this.getServiceRoleClient();
       const { data: newUser, error: userError } = await serviceClient
         .from("users")

@@ -7,7 +7,16 @@ import {
   type Team,
   updateTeam,
 } from "../database/teams.db.js";
-import { getUsersByTeam, type User, updateUser } from "../database/users.db.js";
+import {
+  getUserById,
+  getUsersByTeam,
+  type User,
+  updateUser,
+} from "../database/users.db.js";
+import {
+  ResourceNotFoundError,
+  UserNotFoundError,
+} from "../errors/app.errors.js";
 import type { CreateTeamInput, UpdateTeamInput } from "../schemas/team.js";
 
 export class TeamService {
@@ -34,10 +43,24 @@ export class TeamService {
   }
 
   async getTeamMembers(teamId: string): Promise<User[]> {
+    const team = await getTeamById(this.client, teamId);
+    if (!team) {
+      throw new ResourceNotFoundError("Team not found");
+    }
     return getUsersByTeam(this.client, teamId);
   }
 
   async addMemberToTeam(userId: string, teamId: string): Promise<User> {
+    const team = await getTeamById(this.client, teamId);
+    if (!team) {
+      throw new ResourceNotFoundError("Team not found");
+    }
+
+    const user = await getUserById(this.client, userId);
+    if (!user) {
+      throw new UserNotFoundError("User not found");
+    }
+
     return updateUser(this.client, {
       id: userId,
       team_id: teamId,
@@ -45,6 +68,11 @@ export class TeamService {
   }
 
   async removeMemberFromTeam(userId: string): Promise<User> {
+    const user = await getUserById(this.client, userId);
+    if (!user) {
+      throw new UserNotFoundError("User not found");
+    }
+
     return updateUser(this.client, {
       id: userId,
       team_id: null,

@@ -18,7 +18,7 @@ export const createTaskSchema = z.object({
   title: z.string().min(1),
   description: z.string().nullable().optional(),
   story_points: z.number().int().min(1).optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
+  assigned_to: z.uuid().nullable().optional(),
   position: z.number().int().min(0).optional(),
   due_date: z.string().nullable().optional(),
 });

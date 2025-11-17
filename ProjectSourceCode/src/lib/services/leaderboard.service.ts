@@ -7,7 +7,7 @@ import {
 export class LeaderboardService {
   constructor(private client: SupabaseClient) {}
 
-  async getLeaderboard(limit: number = 69): Promise<LeaderboardEntry[]> {
+  async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
     return getLeaderboard(this.client, limit);
   }
 }
