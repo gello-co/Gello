@@ -1,9 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { LeaderboardEntry } from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import { LeaderboardService } from "../../../ProjectSourceCode/src/lib/services/leaderboard.service.js";
 
 vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js");
+
+// Type alias for mock leaderboard entries (minimal fields for testing)
+type MockLeaderboardEntry = Pick<
+  LeaderboardEntry,
+  "user_id" | "total_points" | "display_name"
+>;
 
 describe("LeaderboardService", () => {
   let service: LeaderboardService;
@@ -20,9 +27,9 @@ describe("LeaderboardService", () => {
       const mockLeaderboard = [
         { user_id: "user-1", total_points: 100, display_name: "User 1" },
         { user_id: "user-2", total_points: 50, display_name: "User 2" },
-      ];
+      ] satisfies MockLeaderboardEntry[];
       vi.mocked(pointsDb.getLeaderboard).mockResolvedValue(
-        mockLeaderboard as any,
+        mockLeaderboard as LeaderboardEntry[],
       );
 
       const result = await service.getLeaderboard();
@@ -34,9 +41,9 @@ describe("LeaderboardService", () => {
     it("should get leaderboard with custom limit", async () => {
       const mockLeaderboard = [
         { user_id: "user-1", total_points: 100, display_name: "User 1" },
-      ];
+      ] satisfies MockLeaderboardEntry[];
       vi.mocked(pointsDb.getLeaderboard).mockResolvedValue(
-        mockLeaderboard as any,
+        mockLeaderboard as LeaderboardEntry[],
       );
 
       const result = await service.getLeaderboard(10);

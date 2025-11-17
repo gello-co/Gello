@@ -11,7 +11,8 @@ import {
   getCsrfToken,
   loginAsUser,
   resetTestDb,
-} from "../setup/helpers.js";
+  setCsrfHeadersIfEnabled,
+} from "../setup/supabase-test-helpers.js";
 
 describe("Boards API", () => {
   let managerCookies: string[] = [];
@@ -47,12 +48,10 @@ describe("Boards API", () => {
     ];
 
     // Create a team for boards
-    const csrfToken = await getCsrfToken(managerCookies);
-    const teamResponse = await request(app)
-      .post("/api/teams")
-      .set("Cookie", managerCookies)
-      .set("X-CSRF-Token", csrfToken)
-      .send({ name: "Test Team" });
+    const { token: csrfToken } = await getCsrfToken(managerCookies);
+    let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+    req = setCsrfHeadersIfEnabled(req, csrfToken);
+    const teamResponse = await req.send({ name: "Test Team" });
 
     teamId = teamResponse.body.id;
   });
@@ -89,16 +88,14 @@ describe("Boards API", () => {
     let boardId: string;
 
     beforeEach(async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const createResponse = await request(app)
-        .post("/api/boards")
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          name: "Test Board",
-          description: "Test Description",
-          team_id: teamId,
-        });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/boards").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({
+        name: "Test Board",
+        description: "Test Description",
+        team_id: teamId,
+      });
 
       boardId = createResponse.body.id;
     });
@@ -130,16 +127,14 @@ describe("Boards API", () => {
 
   describe("POST /api/boards", () => {
     it("should create board as manager", async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const response = await request(app)
-        .post("/api/boards")
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          name: "New Board",
-          description: "Board Description",
-          team_id: teamId,
-        });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/boards").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({
+        name: "New Board",
+        description: "Board Description",
+        team_id: teamId,
+      });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("id");
@@ -148,26 +143,22 @@ describe("Boards API", () => {
     });
 
     it("should reject board creation by member", async () => {
-      const csrfToken = await getCsrfToken(memberCookies);
-      const response = await request(app)
-        .post("/api/boards")
-        .set("Cookie", memberCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          name: "Member Board",
-          team_id: teamId,
-        });
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app).post("/api/boards").set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({
+        name: "Member Board",
+        team_id: teamId,
+      });
 
       expect(response.status).toBe(403);
     });
 
     it("should validate required fields", async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const response = await request(app)
-        .post("/api/boards")
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({});
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/boards").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({});
 
       expect(response.status).toBe(400);
     });
@@ -185,41 +176,39 @@ describe("Boards API", () => {
     let boardId: string;
 
     beforeEach(async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const createResponse = await request(app)
-        .post("/api/boards")
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          name: "Original Board",
-          team_id: teamId,
-        });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/boards").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({
+        name: "Original Board",
+        team_id: teamId,
+      });
 
       boardId = createResponse.body.id;
     });
 
     it("should update board as manager", async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .put(`/api/boards/${boardId}`)
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          name: "Updated Board",
-          description: "Updated Description",
-        });
+        .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({
+        name: "Updated Board",
+        description: "Updated Description",
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("name", "Updated Board");
     });
 
     it("should reject update by member", async () => {
-      const csrfToken = await getCsrfToken(memberCookies);
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .put(`/api/boards/${boardId}`)
-        .set("Cookie", memberCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({ name: "Hacked Board" });
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ name: "Hacked Board" });
 
       expect(response.status).toBe(403);
     });
@@ -237,35 +226,35 @@ describe("Boards API", () => {
     let boardId: string;
 
     beforeEach(async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const createResponse = await request(app)
-        .post("/api/boards")
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          name: "Board to Delete",
-          team_id: teamId,
-        });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/boards").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({
+        name: "Board to Delete",
+        team_id: teamId,
+      });
 
       boardId = createResponse.body.id;
     });
 
     it("should delete board as manager", async () => {
-      const csrfToken = await getCsrfToken(managerCookies);
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .delete(`/api/boards/${boardId}`)
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", csrfToken);
+        .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(204);
     });
 
     it("should reject delete by member", async () => {
-      const csrfToken = await getCsrfToken(memberCookies);
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .delete(`/api/boards/${boardId}`)
-        .set("Cookie", memberCookies)
-        .set("X-CSRF-Token", csrfToken);
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(403);
     });

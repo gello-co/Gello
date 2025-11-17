@@ -23,9 +23,9 @@ test.describe("Auth Flow", () => {
     await page.fill('input[name="display_name"]', testDisplayName);
     await page.click('button[type="submit"]');
 
-    // Should redirect to login or dashboard after registration
+    // Should redirect to login or home after registration
     await page.waitForURL(
-      (url) => url.pathname === "/login" || url.pathname === "/dashboard",
+      (url) => url.pathname === "/login" || url.pathname === "/",
       { timeout: 5000 },
     );
 
@@ -40,15 +40,18 @@ test.describe("Auth Flow", () => {
       await page.click('button[type="submit"]');
     }
 
-    // Should be logged in and redirected to dashboard
-    await page.waitForURL((url) => url.pathname.includes("/dashboard"), {
+    // Should be logged in and redirected to home page
+    await page.waitForURL((url) => url.pathname === "/", {
       timeout: 5000,
     });
-    await expect(page.locator("text=Dashboard")).toBeVisible();
+    // Verify we're on the home page (not expecting "Dashboard" text)
+    await expect(
+      page.locator("text=Welcome to Gello").or(page.locator("text=Boards")),
+    ).toBeVisible();
 
-    // Visual snapshot: Dashboard
+    // Visual snapshot: Home page after login
     await page.waitForLoadState("networkidle");
-    await expect(page).toHaveScreenshot("dashboard.png");
+    await expect(page).toHaveScreenshot("home-after-login.png");
 
     // Step 3: Verify session (check for user info in page)
     await expect(page.locator(`text=${testDisplayName}`)).toBeVisible();

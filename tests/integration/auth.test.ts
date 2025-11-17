@@ -12,7 +12,24 @@ import {
   getCsrfToken,
   loginAsUser,
   resetTestDb,
-} from "../setup/helpers.js";
+  setCsrfHeadersIfEnabled,
+} from "../setup/supabase-test-helpers.js";
+
+/**
+ * Helper to get CSRF token safely (handles disabled CSRF)
+ * Returns empty string when CSRF endpoint doesn't exist (404)
+ */
+async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
+  const csrfResponse = await request(app).get("/api/csrf-token");
+  if (csrfResponse.status === 404) {
+    // CSRF protection is disabled (deferred to v0.2.0)
+    return { token: "", cookie: "" };
+  }
+  return {
+    token: csrfResponse.body.csrfToken || "",
+    cookie: csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "",
+  };
+}
 
 describe("Auth API", () => {
   beforeEach(async () => {
@@ -21,21 +38,17 @@ describe("Auth API", () => {
 
   describe("POST /api/auth/register", () => {
     it("should register a new user", async () => {
-      // Get CSRF token and cookie from single request (unauthenticated)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie (handles disabled CSRF gracefully)
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/register")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "test@example.com",
-          password: "password123",
-          display_name: "Test User",
-        });
+      let req = request(app).post("/api/auth/register");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "test@example.com",
+        password: "password123",
+        display_name: "Test User",
+      });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("user");
@@ -57,21 +70,17 @@ describe("Auth API", () => {
     it("should reject duplicate email", async () => {
       await createTestUser("duplicate@example.com", "password123");
 
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/register")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "duplicate@example.com",
-          password: "password123",
-          display_name: "Duplicate User",
-        });
+      let req = request(app).post("/api/auth/register");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "duplicate@example.com",
+        password: "password123",
+        display_name: "Duplicate User",
+      });
 
       expect(response.status).toBe(409);
       expect(response.body).toHaveProperty("error", "User already exists");
@@ -79,21 +88,17 @@ describe("Auth API", () => {
     });
 
     it("should validate required fields", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/register")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "invalid-email",
-          password: "short",
-          display_name: "",
-        });
+      let req = request(app).post("/api/auth/register");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "invalid-email",
+        password: "short",
+        display_name: "",
+      });
 
       expect(response.status).toBe(400);
     });
@@ -110,20 +115,16 @@ describe("Auth API", () => {
     });
 
     it("should login with valid credentials and set session cookies", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/login")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "login@example.com",
-          password: "password123",
-        });
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "login@example.com",
+        password: "password123",
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("user");
@@ -140,20 +141,16 @@ describe("Auth API", () => {
     });
 
     it("should reject invalid email", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/login")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "nonexistent@example.com",
-          password: "password123",
-        });
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "nonexistent@example.com",
+        password: "password123",
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("error", "Invalid credentials");
@@ -161,20 +158,16 @@ describe("Auth API", () => {
     });
 
     it("should reject invalid password", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/login")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "login@example.com",
-          password: "wrongpassword",
-        });
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "login@example.com",
+        password: "wrongpassword",
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("error", "Invalid credentials");
@@ -182,20 +175,16 @@ describe("Auth API", () => {
     });
 
     it("should validate required fields", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/login")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "",
-          password: "",
-        });
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: "",
+        password: "",
+      });
 
       expect(response.status).toBe(400);
     });
@@ -212,21 +201,17 @@ describe("Auth API", () => {
     });
 
     it("should return user session with valid session cookies", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie for login
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
       // Login first to get cookies
-      const loginResponse = await request(app)
-        .post("/api/auth/login")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "session@example.com",
-          password: "password123",
-        });
+      let loginReq = request(app).post("/api/auth/login");
+      loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+      const loginResponse = await loginReq.send({
+        email: "session@example.com",
+        password: "password123",
+      });
 
       expect(loginResponse.status).toBe(200);
       const setCookies = loginResponse.headers["set-cookie"];
@@ -270,21 +255,17 @@ describe("Auth API", () => {
     });
 
     it("should accept logout request with valid session cookies", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie for login
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
       // Login first to get cookies
-      const loginResponse = await request(app)
-        .post("/api/auth/login")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "logout@example.com",
-          password: "password123",
-        });
+      let loginReq = request(app).post("/api/auth/login");
+      loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+      const loginResponse = await loginReq.send({
+        email: "logout@example.com",
+        password: "password123",
+      });
 
       const setCookies = loginResponse.headers["set-cookie"];
       if (!setCookies || !Array.isArray(setCookies)) {
@@ -297,14 +278,16 @@ describe("Auth API", () => {
         .join("; ");
 
       // Get CSRF token for authenticated request
-      const logoutCsrfToken = await getCsrfToken(
+      const { token: logoutCsrfToken } = await getCsrfToken(
         cookieString.split("; ").filter((c) => c),
       );
 
-      const response = await request(app)
+      let logoutReq = request(app)
         .post("/api/auth/logout")
-        .set("Cookie", cookieString)
-        .set("X-CSRF-Token", logoutCsrfToken);
+        .set("Cookie", cookieString);
+      logoutReq = setCsrfHeadersIfEnabled(logoutReq, logoutCsrfToken);
+
+      const response = await logoutReq;
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("message");
@@ -318,16 +301,13 @@ describe("Auth API", () => {
     });
 
     it("should reject logout without session cookies", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
-      const response = await request(app)
-        .post("/api/auth/logout")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken);
+      let req = request(app).post("/api/auth/logout");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req;
 
       expect(response.status).toBe(401);
     });
@@ -335,22 +315,18 @@ describe("Auth API", () => {
 
   describe("Complete Auth Flow", () => {
     it("should complete full flow: register → login → session → logout", async () => {
-      // Get CSRF token first (unauthenticated request)
-      const csrfResponse = await request(app).get("/api/csrf-token");
-      const csrfToken = csrfResponse.body.csrfToken;
-      const csrfCookie =
-        csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "";
+      // Get CSRF token and cookie
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
       // Register
-      const registerResponse = await request(app)
-        .post("/api/auth/register")
-        .set("Cookie", csrfCookie)
-        .set("X-CSRF-Token", csrfToken)
-        .send({
-          email: "flow@example.com",
-          password: "password123",
-          display_name: "Flow User",
-        });
+      let registerReq = request(app).post("/api/auth/register");
+      registerReq = setCsrfHeadersIfEnabled(registerReq, csrfToken, csrfCookie);
+
+      const registerResponse = await registerReq.send({
+        email: "flow@example.com",
+        password: "password123",
+        display_name: "Flow User",
+      });
 
       expect(registerResponse.status).toBe(201);
       const userId = registerResponse.body.user.id;
@@ -367,14 +343,13 @@ describe("Auth API", () => {
           .map((cookie: string) => cookie.split(";")[0])
           .join("; ");
       } else {
-        const loginResponse = await request(app)
-          .post("/api/auth/login")
-          .set("Cookie", csrfCookie)
-          .set("X-CSRF-Token", csrfToken)
-          .send({
-            email: "flow@example.com",
-            password: "password123",
-          });
+        let loginReq = request(app).post("/api/auth/login");
+        loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+        const loginResponse = await loginReq.send({
+          email: "flow@example.com",
+          password: "password123",
+        });
 
         expect(loginResponse.status).toBe(200);
         const loginCookies = loginResponse.headers["set-cookie"];
@@ -394,15 +369,17 @@ describe("Auth API", () => {
       expect(sessionResponse.body.user.id).toBe(userId);
 
       // Get CSRF token for authenticated request
-      const logoutCsrfToken = await getCsrfToken(
+      const { token: logoutCsrfToken } = await getCsrfToken(
         cookieString.split("; ").filter((c) => c),
       );
 
       // Logout
-      const logoutResponse = await request(app)
+      let logoutReq = request(app)
         .post("/api/auth/logout")
-        .set("Cookie", cookieString)
-        .set("X-CSRF-Token", logoutCsrfToken);
+        .set("Cookie", cookieString);
+      logoutReq = setCsrfHeadersIfEnabled(logoutReq, logoutCsrfToken);
+
+      const logoutResponse = await logoutReq;
 
       expect(logoutResponse.status).toBe(200);
     });

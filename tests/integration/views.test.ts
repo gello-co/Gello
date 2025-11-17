@@ -12,7 +12,8 @@ import {
   loginAsAdmin,
   loginAsUser,
   resetTestDb,
-} from "../setup/helpers.js";
+  setCsrfHeadersIfEnabled,
+} from "../setup/supabase-test-helpers.js";
 
 describe("View Rendering", () => {
   beforeEach(async () => {
@@ -92,12 +93,10 @@ describe("View Rendering", () => {
         `sb-access-token=${adminSession.access_token}`,
         `sb-refresh-token=${adminSession.refresh_token}`,
       ];
-      const csrfToken = await getCsrfToken(adminCookies);
-      const teamResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", adminCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({ name: "Test Team" });
+      const { token: csrfToken } = await getCsrfToken(adminCookies);
+      let req = request(app).post("/api/teams").set("Cookie", adminCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const teamResponse = await req.send({ name: "Test Team" });
 
       const teamId = teamResponse.body.id;
 
@@ -157,25 +156,23 @@ describe("View Rendering", () => {
         `sb-access-token=${adminSession.access_token}`,
         `sb-refresh-token=${adminSession.refresh_token}`,
       ];
-      const csrfToken = await getCsrfToken(adminCookies);
-      const teamResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", adminCookies)
-        .set("X-CSRF-Token", csrfToken)
-        .send({ name: "Test Team" });
+      const { token: csrfToken } = await getCsrfToken(adminCookies);
+      let req = request(app).post("/api/teams").set("Cookie", adminCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const teamResponse = await req.send({ name: "Test Team" });
 
       const teamId = teamResponse.body.id;
 
-      const boardCsrfToken = await getCsrfToken(adminCookies);
-      const boardResponse = await request(app)
+      const { token: boardCsrfToken } = await getCsrfToken(adminCookies);
+      let boardReq = request(app)
         .post("/api/boards")
-        .set("Cookie", adminCookies)
-        .set("X-CSRF-Token", boardCsrfToken)
-        .send({
-          name: "Test Board",
-          description: "Test Description",
-          team_id: teamId,
-        });
+        .set("Cookie", adminCookies);
+      boardReq = setCsrfHeadersIfEnabled(boardReq, boardCsrfToken);
+      const boardResponse = await boardReq.send({
+        name: "Test Board",
+        description: "Test Description",
+        team_id: teamId,
+      });
 
       const boardId = boardResponse.body.id;
 

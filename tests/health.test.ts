@@ -4,81 +4,114 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { getTestSupabaseClient } from "./setup/helpers.js";
+import { getTestSupabaseClient } from "./setup/supabase-test-helpers.js";
 
 describe("Test Environment Health", () => {
   it("should connect to Supabase database", async () => {
     const client = getTestSupabaseClient();
 
-    // Simple connectivity test - if Supabase is running (verified by devcontainer),
-    // this should work. If it fails, it's a real issue, not a timing problem.
-    const { error } = await client.from("users").select("id").limit(1);
+    // Service-role client should bypass RLS, so querying users table should succeed
+    // This verifies both connection and service-role permissions
+    const { data, error } = await client.from("users").select("id").limit(1);
 
-    // Connection successful if no error OR if error is not a connection error
-    // (RLS policy errors mean connection is working)
+    // Success - connection and service-role are working
     if (!error) {
-      expect(error).toBeNull();
+      expect(data).toBeDefined();
       return;
     }
 
-    // If it's a connection error, fail immediately (Supabase should be ready)
-    if (
-      error.message.includes("fetch failed") ||
-      error.message.includes("ECONNRESET")
-    ) {
+    // Check for connection-level errors (network, fetch, timeout)
+    const errorMessage = error.message.toLowerCase();
+    const isConnectionError =
+      errorMessage.includes("fetch failed") ||
+      errorMessage.includes("econnreset") ||
+      errorMessage.includes("connection") ||
+      errorMessage.includes("network") ||
+      errorMessage.includes("timeout") ||
+      errorMessage.includes("econnrefused") ||
+      errorMessage.includes("enotfound");
+
+    if (isConnectionError) {
       throw new Error(
         `Database connection failed: ${error.message}. Ensure Supabase is running: bun run supabase:start`,
       );
     }
 
-    // Other errors (e.g., RLS) mean connection is working
-    expect(error).toBeDefined(); // Error exists but connection works
+    // Check for RLS/permission errors (shouldn't happen with service-role, but handle explicitly)
+    const isRLSError =
+      error.code === "PGRST116" ||
+      errorMessage.includes("permission denied") ||
+      errorMessage.includes("row-level security") ||
+      errorMessage.includes("rls") ||
+      errorMessage.includes("unauthorized") ||
+      errorMessage.includes("forbidden");
+
+    if (isRLSError) {
+      throw new Error(
+        `Service-role client has permission issues: ${error.message}. Check service-role key configuration.`,
+      );
+    }
+
+    // Any other error is unexpected and should fail the test
+    throw new Error(
+      `Unexpected database error: ${error.message} (code: ${error.code || "unknown"}). This may indicate a configuration issue.`,
+    );
   });
 
   it("should authenticate with service role key", async () => {
     const client = getTestSupabaseClient();
 
-    // Simple service role test - if Supabase is running (verified by devcontainer),
-    // this should work immediately
+    // Test service-role admin operations - should succeed if service-role key is valid
     try {
       const result = await client.auth.admin.listUsers({
         page: 1,
         perPage: 1,
       });
 
+      // Explicitly assert no error and data is valid
+      // This ensures permission/API failures fail the test
+      expect(result.error).toBeNull();
+      expect(result.data).toBeDefined();
+      expect(result.data).not.toBeNull();
+      expect(Array.isArray(result.data.users)).toBe(true);
+      // Verify users array has expected structure (at least empty array or users with id)
+      if (result.data.users.length > 0) {
+        const firstUser = result.data.users[0];
+        if (firstUser) {
+          expect(firstUser).toBeDefined();
+          expect(firstUser).toHaveProperty("id");
+          expect(typeof firstUser.id).toBe("string");
+        }
+      }
       // Success - service role is working
-      if (!result.error) {
-        expect(result.data).toBeDefined();
-        return;
-      }
-
-      // If it's a connection error, fail immediately
-      if (
-        result.error.message.includes("fetch failed") ||
-        result.error.message.includes("ECONNRESET")
-      ) {
-        throw new Error(
-          `Service role authentication failed: ${result.error.message}. Ensure Supabase is running: bun run supabase:start`,
-        );
-      }
-
-      // Other errors mean connection is working (even if operation failed)
-      expect(result).toBeDefined();
+      return;
     } catch (error) {
       const err = error as Error;
-      if (
-        err.message.includes("fetch failed") ||
-        err.message.includes("ECONNRESET") ||
+
+      // Check for connection errors in thrown exceptions
+      const errorMessage = err.message.toLowerCase();
+      const isConnectionError =
+        errorMessage.includes("fetch failed") ||
+        errorMessage.includes("econnreset") ||
+        errorMessage.includes("connection") ||
+        errorMessage.includes("network") ||
+        errorMessage.includes("timeout") ||
+        errorMessage.includes("econnrefused") ||
+        errorMessage.includes("enotfound") ||
         (err.cause &&
           typeof err.cause === "object" &&
           "code" in err.cause &&
-          err.cause.code === "ECONNRESET")
-      ) {
+          (err.cause.code === "ECONNRESET" ||
+            err.cause.code === "ECONNREFUSED" ||
+            err.cause.code === "ENOTFOUND"));
+
+      if (isConnectionError) {
         throw new Error(
           `Service role connection failed: ${err.message}. Ensure Supabase is running: bun run supabase:start`,
         );
       }
-      // Re-throw other errors
+
+      // Re-throw other errors (they should have been handled above)
       throw err;
     }
   });
