@@ -3,16 +3,16 @@
  * Tests CRUD operations, task assignment, completion, and movement
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
   getCsrfToken,
   loginAsUser,
-  resetTestDb,
+  prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/supabase-test-helpers.js";
+} from "../setup/helpers/index.js";
 
 describe("Tasks API", () => {
   let managerCookies: string[] = [];
@@ -22,8 +22,8 @@ describe("Tasks API", () => {
   let listId: string;
   let userId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
 
     const manager = await createTestUser(
       "manager@test.com",
@@ -82,7 +82,7 @@ describe("Tasks API", () => {
       });
 
     listId = listResponse.body.id;
-  });
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/tasks/lists/:listId/tasks", () => {
     it("should return tasks for a list", async () => {

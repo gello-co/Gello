@@ -3,24 +3,24 @@
  * Tests leaderboard, user points, and manual point awards
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
   getCsrfToken,
   loginAsUser,
-  resetTestDb,
+  prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/supabase-test-helpers.js";
+} from "../setup/helpers/index.js";
 
 describe("Points API", () => {
   let adminCookies: string[] = [];
   let memberCookies: string[] = [];
   let userId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
 
     const admin = await createTestUser(
       "admin@test.com",
@@ -48,7 +48,7 @@ describe("Points API", () => {
       `sb-access-token=${memberSession.access_token}`,
       `sb-refresh-token=${memberSession.refresh_token}`,
     ];
-  });
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/points/leaderboard", () => {
     it("should return leaderboard for authenticated user", async () => {

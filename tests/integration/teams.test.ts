@@ -3,17 +3,17 @@
  * Tests CRUD operations and team member management
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
   getCsrfToken,
   loginAsAdmin,
   loginAsUser,
-  resetTestDb,
+  prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/supabase-test-helpers.js";
+} from "../setup/helpers/index.js";
 
 describe("Teams API", () => {
   let adminCookies: string[] = [];
@@ -21,8 +21,8 @@ describe("Teams API", () => {
   let memberCookies: string[] = [];
   let teamId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
 
     // Create users with different roles
     await createTestUser(
@@ -62,7 +62,7 @@ describe("Teams API", () => {
       `sb-access-token=${memberSession.access_token}`,
       `sb-refresh-token=${memberSession.refresh_token}`,
     ];
-  });
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/teams", () => {
     it("should return all teams for authenticated user", async () => {
@@ -369,12 +369,13 @@ describe("Teams API", () => {
       );
       userId = user.user.id;
 
-      const { token: addMemberCsrfToken } = await getCsrfToken(managerCookies);
-      await request(app)
+      const { token: addMemberCsrfToken, cookies: addMemberCookies } =
+        await getCsrfToken(managerCookies);
+      let addMemberReq = request(app)
         .post(`/api/teams/${teamId}/members`)
-        .set("Cookie", managerCookies)
-        .set("X-CSRF-Token", addMemberCsrfToken)
-        .send({ user_id: userId });
+        .set("Cookie", addMemberCookies);
+      addMemberReq = setCsrfHeadersIfEnabled(addMemberReq, addMemberCsrfToken);
+      await addMemberReq.send({ user_id: userId });
     });
 
     it("should remove member from team as manager", async () => {

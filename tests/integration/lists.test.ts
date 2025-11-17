@@ -3,46 +3,47 @@
  * Tests CRUD operations and list reordering
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
   getCsrfToken,
   loginAsUser,
-  resetTestDb,
+  prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/supabase-test-helpers.js";
+} from "../setup/helpers/index.js";
 
 describe("Lists API", () => {
   let managerCookies: string[] = [];
   let memberCookies: string[] = [];
+  let managerEmail: string;
+  let memberEmail: string;
   let teamId: string;
   let boardId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
+
+    managerEmail = generateTestEmail("manager");
+    memberEmail = generateTestEmail("member");
 
     await createTestUser(
-      "manager@test.com",
+      managerEmail,
       "password123",
       "manager",
       "Manager User",
     );
-    await createTestUser(
-      "member@test.com",
-      "password123",
-      "member",
-      "Member User",
-    );
+    await createTestUser(memberEmail, "password123", "member", "Member User");
 
-    const managerSession = await loginAsUser("manager@test.com", "password123");
+    const managerSession = await loginAsUser(managerEmail, "password123");
     managerCookies = [
       `sb-access-token=${managerSession.access_token}`,
       `sb-refresh-token=${managerSession.refresh_token}`,
     ];
 
-    const memberSession = await loginAsUser("member@test.com", "password123");
+    const memberSession = await loginAsUser(memberEmail, "password123");
     memberCookies = [
       `sb-access-token=${memberSession.access_token}`,
       `sb-refresh-token=${memberSession.refresh_token}`,
@@ -67,7 +68,7 @@ describe("Lists API", () => {
     });
 
     boardId = boardResponse.body.id;
-  });
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/lists/boards/:boardId/lists", () => {
     it("should return lists for a board", async () => {

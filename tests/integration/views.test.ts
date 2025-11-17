@@ -3,22 +3,22 @@
  * Tests that page routes return correct Handlebars templates with proper data
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
   getCsrfToken,
   loginAsAdmin,
   loginAsUser,
-  resetTestDb,
+  prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/supabase-test-helpers.js";
+} from "../setup/helpers/index.js";
 
 describe("View Rendering", () => {
-  beforeEach(async () => {
-    await resetTestDb();
-  });
+  beforeAll(async () => {
+    await prepareTestDb();
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /", () => {
     it("should render home page", async () => {

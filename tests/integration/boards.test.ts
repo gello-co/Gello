@@ -3,24 +3,24 @@
  * Tests CRUD operations for boards
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
   getCsrfToken,
   loginAsUser,
-  resetTestDb,
+  prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/supabase-test-helpers.js";
+} from "../setup/helpers/index.js";
 
 describe("Boards API", () => {
   let managerCookies: string[] = [];
   let memberCookies: string[] = [];
   let teamId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
 
     await createTestUser(
       "manager@test.com",
@@ -54,7 +54,7 @@ describe("Boards API", () => {
     const teamResponse = await req.send({ name: "Test Team" });
 
     teamId = teamResponse.body.id;
-  });
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/boards", () => {
     it("should return boards for a team", async () => {

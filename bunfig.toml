@@ -4,5 +4,6 @@ env = "BUN_PUBLIC_*"
 [test]
 # Load Supabase/Bun setup before any tests execute
 preload = ["./happydom.ts", "./tests/setup/bun-setup.ts"]
-# Integration tests need generous timeout for Supabase startup/network retries
+# Integration tests with local Supabase should be fast
+# TRUNCATE-based cleanup is much faster than full db reset
 timeout = 30000
