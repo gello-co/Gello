@@ -2,7 +2,7 @@
 name = "gello"
 version = "0.1.0"
 description = "Gamified productivity app for teams"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.14"
 dependencies = []
 
 [tool.hatch.build.targets.wheel]
