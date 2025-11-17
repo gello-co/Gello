@@ -56,13 +56,5 @@
         "organizeImports": "on"
       }
     }
-  },
-  "overrides": [
-    {
-      "includes": ["**/*.ts", "**/*.tsx"],
-      "linter": {
-        "enabled": false
-      }
-    }
-  ]
+  }
 }

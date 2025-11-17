@@ -10,6 +10,8 @@ const INVALID_CREDENTIALS_ERROR = Symbol("InvalidCredentialsError");
 const USER_NOT_FOUND_ERROR = Symbol("UserNotFoundError");
 const VALIDATION_ERROR = Symbol("ValidationError");
 const RESOURCE_NOT_FOUND_ERROR = Symbol("ResourceNotFoundError");
+const RETRYABLE_ERROR = Symbol("RetryableError");
+const NON_RETRYABLE_ERROR = Symbol("NonRetryableError");
 
 export class DuplicateUserError extends Error {
   private readonly [DUPLICATE_USER_ERROR] = true;
@@ -104,6 +106,42 @@ export class ResourceNotFoundError extends Error {
       (error !== null &&
         typeof error === "object" &&
         RESOURCE_NOT_FOUND_ERROR in error)
+    );
+  }
+}
+
+export class RetryableError extends Error {
+  private readonly [RETRYABLE_ERROR] = true;
+
+  constructor(message: string = "Retryable error occurred") {
+    super(message);
+    this.name = "RetryableError";
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  static isRetryableError(error: unknown): error is RetryableError {
+    return (
+      error instanceof RetryableError ||
+      (error !== null && typeof error === "object" && RETRYABLE_ERROR in error)
+    );
+  }
+}
+
+export class NonRetryableError extends Error {
+  private readonly [NON_RETRYABLE_ERROR] = true;
+
+  constructor(message: string = "Non-retryable error occurred") {
+    super(message);
+    this.name = "NonRetryableError";
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  static isNonRetryableError(error: unknown): error is NonRetryableError {
+    return (
+      error instanceof NonRetryableError ||
+      (error !== null &&
+        typeof error === "object" &&
+        NON_RETRYABLE_ERROR in error)
     );
   }
 }

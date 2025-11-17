@@ -168,3 +168,6 @@ supabase/certs/
 # Snaplet generated metadata
 .snaplet/
 supabase/seed/.snaplet/
+
+# Test lock files (file-based locking for integration tests)
+.test-locks/

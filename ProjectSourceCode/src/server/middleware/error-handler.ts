@@ -12,14 +12,39 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next,
 ) => {
-  // Structured error logging with context
   const isDevelopment = process.env.NODE_ENV === "development";
+
+  // Compute the actual status code first
+  let status = 500;
+  if (DuplicateUserError.isDuplicateUserError(err)) {
+    status = 409;
+  } else if (InvalidCredentialsError.isInvalidCredentialsError(err)) {
+    status = 401;
+  } else if (UserNotFoundError.isUserNotFoundError(err)) {
+    status = 404;
+  } else if (err.name === "ZodError" || err.issues) {
+    status = 400;
+  } else if (err.status === 404 || err.statusCode === 404) {
+    status = 404;
+  } else if (err.status === 403 || err.statusCode === 403) {
+    status = 403;
+  } else {
+    status = err.statusCode || err.status || res.statusCode || 500;
+  }
+
+  // Ensure res.statusCode is set to the computed status
+  if (!res.statusCode || res.statusCode === 200) {
+    res.statusCode = status;
+  }
+
+  // Structured error logging with context (after status is determined)
   logger.error(
     {
       method: req.method,
       path: req.path,
-      statusCode: res.statusCode || 500,
+      statusCode: status,
       error: {
+        type: err.name || "Error",
         name: err.name,
         message: err.message,
         code: err.code,
@@ -33,21 +58,21 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (DuplicateUserError.isDuplicateUserError(err)) {
     // Custom application errors (using symbolic methods)
-    return res.status(409).json({
+    return res.status(status).json({
       error: "User already exists",
       message: err.message,
     });
   }
 
   if (InvalidCredentialsError.isInvalidCredentialsError(err)) {
-    return res.status(401).json({
+    return res.status(status).json({
       error: "Invalid credentials",
       message: err.message,
     });
   }
 
   if (UserNotFoundError.isUserNotFoundError(err)) {
-    return res.status(404).json({
+    return res.status(status).json({
       error: "User not found",
       message: err.message,
     });
@@ -55,7 +80,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (err.name === "ZodError" || err.issues) {
     // Validation errors (Zod errors)
-    return res.status(400).json({
+    return res.status(status).json({
       error: "Validation error",
       message: err.message,
       details: err.issues,
@@ -64,7 +89,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Generic "not found" errors
   if (err.status === 404 || err.statusCode === 404) {
-    return res.status(404).json({
+    return res.status(status).json({
       error: "Not found",
       message: err.message,
     });
@@ -72,7 +97,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Authorization errors
   if (err.status === 403 || err.statusCode === 403) {
-    return res.status(403).json({
+    return res.status(status).json({
       error: "Access denied",
       message: err.message,
     });
@@ -80,7 +105,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Default: Internal server error
   // Always show error details in development (check both NODE_ENV and if message exists)
-  return res.status(500).json({
+  return res.status(status).json({
     error: "Internal server error",
     message: isDevelopment ? err.message || String(err) : undefined,
     stack: isDevelopment ? err.stack : undefined,

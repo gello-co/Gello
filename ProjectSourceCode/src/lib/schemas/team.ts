@@ -10,9 +10,12 @@ export const createTeamSchema = z.object({
   name: z.string().trim().min(1).max(100),
 });
 
-export const updateTeamSchema = z.object({
-  id: z.uuid(),
+export const updateTeamBodySchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
+});
+
+export const updateTeamSchema = updateTeamBodySchema.extend({
+  id: z.string().uuid(),
 });
 
 export type Team = z.infer<typeof teamSchema>;

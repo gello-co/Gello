@@ -49,7 +49,8 @@ if [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ]; then
 fi
 
 # Install local CA if not already installed
-if ! mkcert -CAROOT &> /dev/null; then
+CA_ROOT="$(mkcert -CAROOT 2>/dev/null || echo "")"
+if [ -z "$CA_ROOT" ] || [ ! -d "$CA_ROOT" ] || [ ! -f "$CA_ROOT/rootCA.pem" ] || [ ! -f "$CA_ROOT/rootCA-key.pem" ]; then
   echo "🔐 Installing mkcert local CA (one-time setup)..."
   mkcert -install
   echo "✅ Local CA installed in system trust store"

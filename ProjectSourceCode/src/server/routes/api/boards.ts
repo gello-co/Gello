@@ -2,10 +2,10 @@ import type { NextFunction, Request, Response } from "express";
 import express from "express";
 import {
   createBoardSchema,
-  updateBoardSchema,
+  updateBoardBodySchema,
 } from "../../../lib/schemas/board.js";
 import { BoardService } from "../../../lib/services/board.service.js";
-import { getSupabaseClient } from "../../../lib/supabase.js";
+import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 import { requireManager } from "../../middleware/requireManager.js";
 import { validate } from "../../middleware/validation.js";
@@ -16,13 +16,17 @@ const router = express.Router();
  * Middleware to attach BoardService to request
  * Instantiates BoardService once per request and attaches it to req.boardService
  */
-function attachBoardService(
+async function attachBoardService(
   req: Request,
   _res: Response,
   next: NextFunction,
-): void {
-  req.boardService = new BoardService(getSupabaseClient());
-  next();
+) {
+  try {
+    req.boardService = new BoardService(await getSupabaseClientForRequest(req));
+    next();
+  } catch (error) {
+    next(error);
+  }
 }
 
 router.get("/", requireAuth, attachBoardService, async (req, res, next) => {
@@ -76,7 +80,7 @@ router.put(
   "/:id",
   requireManager,
   attachBoardService,
-  validate(updateBoardSchema),
+  validate(updateBoardBodySchema),
   async (req, res, next) => {
     try {
       const id = req.params.id;

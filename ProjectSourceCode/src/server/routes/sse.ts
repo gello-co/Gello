@@ -1,6 +1,7 @@
 import express from "express";
 import { LeaderboardService } from "../../lib/services/leaderboard.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
+import { logger } from "../lib/logger.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 
 const router = express.Router();
@@ -24,7 +25,14 @@ router.get("/leaderboard", requireAuth, (req, res) => {
       const leaderboard = await getLeaderboardService().getLeaderboard(100);
       res.write(`data: ${JSON.stringify(leaderboard)}\n\n`);
     } catch (error) {
-      console.error("Error sending SSE update:", error);
+      logger.error(
+        {
+          err: error,
+          clientIp: req.ip,
+          path: req.path,
+        },
+        "Error sending SSE update",
+      );
       clients.delete(res);
       res.end();
     }

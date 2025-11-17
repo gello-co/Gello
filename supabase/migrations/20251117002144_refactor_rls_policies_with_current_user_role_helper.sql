@@ -95,7 +95,11 @@ USING (
             FROM public.users AS u
             WHERE u.id = auth.uid()
         )
-        AND (public.current_user_role() IN ('admin'::public.user_role, 'manager'::public.user_role))
+        AND (
+            public.current_user_role() IN (
+                'admin'::public.user_role, 'manager'::public.user_role
+            )
+        )
     )
     OR (public.current_user_role() = 'admin'::public.user_role)
 )
@@ -106,7 +110,11 @@ WITH CHECK (
             FROM public.users AS u
             WHERE u.id = auth.uid()
         )
-        AND (public.current_user_role() IN ('admin'::public.user_role, 'manager'::public.user_role))
+        AND (
+            public.current_user_role() IN (
+                'admin'::public.user_role, 'manager'::public.user_role
+            )
+        )
     )
     OR (public.current_user_role() = 'admin'::public.user_role)
 );
@@ -140,7 +148,11 @@ USING (
                 WHERE u.id = auth.uid()
             )
         )
-        AND (public.current_user_role() IN ('admin'::public.user_role, 'manager'::public.user_role))
+        AND (
+            public.current_user_role() IN (
+                'admin'::public.user_role, 'manager'::public.user_role
+            )
+        )
     )
     OR (public.current_user_role() = 'admin'::public.user_role)
 )
@@ -155,7 +167,11 @@ WITH CHECK (
                 WHERE u.id = auth.uid()
             )
         )
-        AND (public.current_user_role() IN ('admin'::public.user_role, 'manager'::public.user_role))
+        AND (
+            public.current_user_role() IN (
+                'admin'::public.user_role, 'manager'::public.user_role
+            )
+        )
     )
     OR (public.current_user_role() = 'admin'::public.user_role)
 );
@@ -193,7 +209,11 @@ USING (
                 WHERE u.id = auth.uid()
             )
         )
-        AND (public.current_user_role() IN ('admin'::public.user_role, 'manager'::public.user_role))
+        AND (
+            public.current_user_role() IN (
+                'admin'::public.user_role, 'manager'::public.user_role
+            )
+        )
     )
     OR (public.current_user_role() = 'admin'::public.user_role)
 )
@@ -209,7 +229,11 @@ WITH CHECK (
                 WHERE u.id = auth.uid()
             )
         )
-        AND (public.current_user_role() IN ('admin'::public.user_role, 'manager'::public.user_role))
+        AND (
+            public.current_user_role() IN (
+                'admin'::public.user_role, 'manager'::public.user_role
+            )
+        )
     )
     OR (public.current_user_role() = 'admin'::public.user_role)
 );

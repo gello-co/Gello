@@ -16,11 +16,14 @@ export const createBoardSchema = z.object({
   created_by: z.uuid().nullish(),
 });
 
-export const updateBoardSchema = z.object({
-  id: z.uuid(),
+export const updateBoardBodySchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().nullish(),
   team_id: z.uuid().optional(),
+});
+
+export const updateBoardSchema = updateBoardBodySchema.extend({
+  id: z.string().uuid(),
 });
 
 export type Board = z.infer<typeof boardSchema>;

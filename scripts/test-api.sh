@@ -15,7 +15,7 @@ function run_curl() {
 	shift 2
 	local url="$BASE_URL$path"
 	local headers=(-H 'Content-Type: application/json')
-	if [[ -n $AUTH_TOKEN ]]; then
+	if [[ -n "$AUTH_TOKEN" ]]; then
 		headers+=(-H "Authorization: Bearer ${AUTH_TOKEN}")
 	fi
 	info "$method $url"
@@ -52,12 +52,13 @@ Commands:
   teams:create              - Create a team (manager/admin)
   boards:list <teamId>      - List boards for a given team
   tasks:list <listId>       - List tasks inside a list
-  tasks:create <listId>     - Create a task (reads JSON body from stdin)
+  tasks:create <listId> [json] - Create a task (optional JSON body as second argument, defaults to {})
   leaderboard               - Fetch leaderboard snapshot
 
 Examples:
   AUTH_TOKEN=$(./scripts/test-api.sh auth:login '{"email":"ada.admin@example.com","password":"password"}' | jq -r '.token')
   ./scripts/test-api.sh teams:list | jq
+  ./scripts/test-api.sh tasks:create <listId> '{"key":"value"}' | jq
 EOF
 }
 

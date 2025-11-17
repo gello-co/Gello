@@ -12,42 +12,57 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Security middleware with CSP configured to allow external scripts
+const nodeEnv = process.env.NODE_ENV ?? "development";
+const isProd = nodeEnv === "production";
+
+const helmetOptions: Parameters<typeof helmet>[0] = isProd
+  ? {
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "https://cdn.jsdelivr.net",
+            "https://unpkg.com",
+            "https://kit.fontawesome.com",
+          ],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://cdn.jsdelivr.net",
+            "https://ka-f.fontawesome.com",
+          ],
+          fontSrc: [
+            "'self'",
+            "https://kit.fontawesome.com",
+            "https://cdn.jsdelivr.net",
+            "https://ka-f.fontawesome.com",
+          ],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'", "https://ka-f.fontawesome.com"],
+        },
+      },
+    }
+  : {
+      // Disable CSP/HSTS locally to prevent Supabase TLS + mkcert issues during tests.
+      contentSecurityPolicy: false,
+      strictTransportSecurity: false,
+    };
+
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "https://cdn.jsdelivr.net",
-          "https://unpkg.com",
-          "https://kit.fontawesome.com",
-        ],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://cdn.jsdelivr.net",
-          "https://ka-f.fontawesome.com",
-        ],
-        fontSrc: [
-          "'self'",
-          "https://kit.fontawesome.com",
-          "https://cdn.jsdelivr.net",
-          "https://ka-f.fontawesome.com",
-        ],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https://ka-f.fontawesome.com"],
-      },
-    },
+    crossOriginEmbedderPolicy: false,
+    ...helmetOptions,
   }),
 );
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-app.use("/api/", limiter);
+if (isProd) {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  });
+  app.use("/api/", limiter);
+}
 
 // Handlebars configuration
 app.engine(

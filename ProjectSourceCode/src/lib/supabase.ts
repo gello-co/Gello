@@ -4,8 +4,8 @@ import { env } from "../config/env";
 let client: SupabaseClient | null = null;
 
 /**
- * Get Supabase client with cookie-based session management
- * Stores session tokens in secure, httpOnly cookies
+ * Get global singleton Supabase client for server-side operations
+ * Note: This client does NOT handle session persistence (see getSupabaseClientForRequest for per-request clients with session support)
  */
 export function getSupabaseClient() {
   if (client) return client;
@@ -14,22 +14,16 @@ export function getSupabaseClient() {
       "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
     );
   }
+  // Global singleton client for server-side operations
+  // Note: This client does NOT persist sessions because:
+  // 1. It's a singleton shared across all requests (no per-request state)
+  // 2. Session persistence is handled by per-request clients via getSupabaseClientForRequest()
+  // 3. Per-request clients restore sessions from httpOnly cookies in middleware
+  // Storage methods are no-op placeholders (not used when persistSession: false)
   client = createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      persistSession: true,
-      storage: {
-        getItem: (key: string) => {
-          // For server-side, we'll handle cookies via Express
-          // This is a placeholder - actual cookie handling in middleware
-          return null;
-        },
-        setItem: (key: string, value: string) => {
-          // Handled by Express cookie middleware
-        },
-        removeItem: (key: string) => {
-          // Handled by Express cookie middleware
-        },
-      },
+      persistSession: false,
+      autoRefreshToken: false,
     },
   });
   return client;

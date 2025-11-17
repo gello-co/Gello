@@ -1,4 +1,8 @@
-import { ResourceNotFoundError } from "../errors/app.errors.js";
+import {
+  NonRetryableError,
+  ResourceNotFoundError,
+  RetryableError,
+} from "../errors/app.errors.js";
 
 /**
  * Configuration for retry behavior
@@ -12,21 +16,138 @@ const RETRY_CONFIG = {
 } as const;
 
 /**
+ * Well-known error codes that indicate retryable errors (transient failures)
+ * Case-insensitive matching will be used
+ */
+const RETRYABLE_ERROR_CODES = [
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ENOTFOUND",
+  "ETIMEDOUT",
+  "EAI_AGAIN",
+  "ENETUNREACH",
+  "EHOSTUNREACH",
+] as const;
+
+/**
+ * Well-known error codes that indicate non-retryable errors (business logic failures)
+ * Case-insensitive matching will be used
+ */
+const NON_RETRYABLE_ERROR_CODES = [
+  "PGRST116", // Supabase: Resource not found
+  "23505", // Postgres: Unique violation
+  "23503", // Postgres: Foreign key violation
+  "23502", // Postgres: Not null violation
+  "P0001", // Postgres: Raise exception
+] as const;
+
+/**
+ * Well-known error names that indicate retryable errors
+ * Case-insensitive matching will be used
+ */
+const RETRYABLE_ERROR_NAMES = [
+  "TimeoutError",
+  "NetworkError",
+  "ConnectionError",
+  "RetryableError",
+] as const;
+
+/**
+ * Well-known error names that indicate non-retryable errors
+ * Case-insensitive matching will be used
+ */
+const NON_RETRYABLE_ERROR_NAMES = [
+  "ValidationError",
+  "ResourceNotFoundError",
+  "NonRetryableError",
+  "ZodError",
+] as const;
+
+/**
+ * Type guard to check if an error has a retryable flag property
+ */
+function hasRetryableFlag(error: unknown): error is { retryable: boolean } {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    "retryable" in error &&
+    typeof (error as { retryable: unknown }).retryable === "boolean"
+  );
+}
+
+/**
+ * Case-insensitive string comparison helper
+ */
+function equalsIgnoreCase(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
+/**
+ * Checks if a value matches any item in an array (case-insensitive)
+ */
+function matchesAny(value: string, items: readonly string[]): boolean {
+  return items.some((item) => equalsIgnoreCase(value, item));
+}
+
+/**
  * Checks if an error is retryable (transient errors that may succeed on retry)
+ *
+ * Uses a priority-based strategy:
+ * 1. Preserve existing ResourceNotFoundError guard
+ * 2. Check well-known error codes and error names (case-insensitive)
+ * 3. Check for typed flag or custom class property (retryable flag, instanceof RetryableError/NonRetryableError)
+ * 4. Fall back to existing lower-cased message checks
  *
  * Business logic errors (ResourceNotFoundError, validation errors) are NOT retryable.
  * Only transient errors (database connection, network issues) are retryable.
  */
 export function isRetryableError(error: unknown): boolean {
-  // Don't retry on business logic errors
+  // Priority 1: Preserve existing ResourceNotFoundError guard
   if (ResourceNotFoundError.isResourceNotFoundError(error)) {
     return false;
   }
 
+  // Handle non-Error inputs robustly
   if (!(error instanceof Error)) {
     return false;
   }
 
+  // Priority 2: Check well-known error codes (case-insensitive)
+  const errorCode = (error as { code?: string }).code;
+  if (errorCode && typeof errorCode === "string") {
+    if (matchesAny(errorCode, NON_RETRYABLE_ERROR_CODES)) {
+      return false;
+    }
+    if (matchesAny(errorCode, RETRYABLE_ERROR_CODES)) {
+      return true;
+    }
+  }
+
+  // Priority 2: Check well-known error names (case-insensitive)
+  const errorName = error.name;
+  if (errorName && typeof errorName === "string") {
+    if (matchesAny(errorName, NON_RETRYABLE_ERROR_NAMES)) {
+      return false;
+    }
+    if (matchesAny(errorName, RETRYABLE_ERROR_NAMES)) {
+      return true;
+    }
+  }
+
+  // Priority 3: Check for typed flag or custom class property
+  if (hasRetryableFlag(error)) {
+    return error.retryable;
+  }
+
+  if (RetryableError.isRetryableError(error)) {
+    return true;
+  }
+
+  if (NonRetryableError.isNonRetryableError(error)) {
+    return false;
+  }
+
+  // Priority 4: Fall back to existing lower-cased message checks
   const message = error.message.toLowerCase();
 
   // Don't retry on business logic errors
@@ -86,12 +207,12 @@ export async function retryWithBackoff<T>(
     try {
       return await fn();
     } catch (error) {
-      lastError = error as Error;
+      lastError = error instanceof Error ? error : new Error(String(error));
 
       // Only retry on transient errors
       if (attempt < maxRetries - 1 && isRetryableError(error)) {
         // Calculate exponential delay with cap to prevent unbounded delays
-        const exponentialDelay = initialDelay * Math.pow(2, attempt);
+        const exponentialDelay = initialDelay * 2 ** attempt;
         const cappedDelay = Math.min(RETRY_CONFIG.maxDelay, exponentialDelay);
 
         // Apply jitter to prevent thundering-herd problems

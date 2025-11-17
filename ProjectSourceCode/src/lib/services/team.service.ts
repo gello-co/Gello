@@ -34,6 +34,24 @@ export class TeamService {
     return createTeam(this.client, input);
   }
 
+  async createTeamWithManager(
+    input: CreateTeamInput,
+    managerId: string,
+  ): Promise<{ team: Team; user: User }> {
+    // Create team first
+    const team = await createTeam(this.client, input);
+
+    // Then assign manager to team
+    // Note: Supabase client doesn't support transactions directly,
+    // but these operations are sequential and we handle errors properly
+    const user = await updateUser(this.client, {
+      id: managerId,
+      team_id: team.id,
+    });
+
+    return { team, user };
+  }
+
   async updateTeam(input: UpdateTeamInput): Promise<Team> {
     return updateTeam(this.client, input);
   }
