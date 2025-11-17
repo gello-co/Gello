@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./src/views/**/*.{hbs,html,js}", "./src/public/**/*.{html,js}"],
-  plugins: [],
+  content: [
+    "./ProjectSourceCode/src/views/**/*.{hbs,html,js}",
+    "./ProjectSourceCode/src/public/**/*.{html,js}",
+  ],
+  plugins: [require("@tailwindcss/forms")],
 };
