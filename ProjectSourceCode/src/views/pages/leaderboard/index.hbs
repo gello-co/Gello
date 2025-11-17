@@ -10,20 +10,28 @@
 				</tr>
 			</thead>
 			<tbody id="leaderboardBody">
-				{{#each leaderboard}}
+				{{#if (length leaderboard)}}
+					{{#each leaderboard}}
+						<tr>
+							<td>{{rank}}</td>
+							<td>
+								<div class="d-flex align-items-center">
+									{{> user-avatar user=this}}
+									<span class="ms-2">{{display_name}}</span>
+								</div>
+							</td>
+							<td>
+								{{> points-badge points=total_points}}
+							</td>
+						</tr>
+					{{/each}}
+				{{else}}
 					<tr>
-						<td>{{rank}}</td>
-						<td>
-							<div class="d-flex align-items-center">
-								{{> user-avatar user=this}}
-								<span class="ms-2">{{display_name}}</span>
-							</div>
-						</td>
-						<td>
-							{{> points-badge points=total_points}}
+						<td colspan="3" class="text-center text-muted">
+							No leaderboard data available yet
 						</td>
 					</tr>
-				{{/each}}
+				{{/if}}
 			</tbody>
 		</table>
 	</div>

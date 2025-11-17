@@ -12,7 +12,7 @@
 			{{> task-card task=this user=../user}}
 		{{/each}}
 	</div>
-	{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+	{{#if (or (eq ../user.role "admin") (eq ../user.role "manager"))}}
 		<button class="btn btn-primary btn-sm mt-2" onclick="createTask('{{id}}')">
 			<i class="fas fa-plus"></i> Add Task
 		</button>
