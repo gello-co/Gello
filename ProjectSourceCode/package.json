@@ -7,7 +7,7 @@
     "dev": "bun --hot src/index.ts",
     "dev:env": "bash ../.devOps/scripts/sync.sh || echo 'Failed to sync'",
     "build": "bun run build:css && bun run build:server",
-    "build:css": "postcss src/public/css/input.css -o src/public/css/output.css",
+    "build:css": "NODE_ENV=production postcss src/public/css/input.css -o src/public/css/output.css --minify",
     "build:server": "bun build src/index.ts --outdir=dist --target=node",
     "start": "NODE_ENV=production bun src/index.ts",
     "commit": "commit",
