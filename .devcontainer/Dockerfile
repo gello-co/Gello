@@ -18,11 +18,7 @@ RUN apt-get update && \
 
 # Install Bun (system-wide to /usr/local/bin)
 # bunx is included with Bun installation
-RUN curl -fsSL https://bun.sh/install | bash && \
-    cp /root/.bun/bin/bun /usr/local/bin/bun && \
-    [ -f /root/.bun/bin/bunx ] && cp /root/.bun/bin/bunx /usr/local/bin/bunx || true && \
-    chmod +x /usr/local/bin/bun && \
-    [ -f /usr/local/bin/bunx ] && chmod +x /usr/local/bin/bunx || true && \
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash && \
     bun --version
 
 # Install mise system-wide via official installation script
