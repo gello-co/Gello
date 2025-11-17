@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev:env": "bash .devOps/scripts/sync.sh || echo 'Failed to sync'",
-    "dev": "doppler run -- bun --hot ProjectSourceCode/src/index.ts",
+    "dev:env": "bash docs/dev/.devOps/scripts/sync.sh || echo 'Failed to sync'",
+    "dev": "bun --hot ProjectSourceCode/src/index.ts",
     "build": "bun run build:css && bun run build:server",
     "build:css": "postcss ProjectSourceCode/src/public/css/input.css -o ProjectSourceCode/src/public/css/output.css",
     "build:server": "bun build ProjectSourceCode/src/index.ts --outdir=dist --target=node --sourcemap",
@@ -47,7 +47,9 @@
     "workflow:run:ci": "./bin/act pull_request -W .github/workflows/ci.yml",
     "workflow:run:preview": "./bin/act pull_request -W .github/workflows/preview.yml",
     "workflow:run:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot]",
-    "workflow:run:lint": "./bin/act pull_request -W .github/workflows/ci.yml -j lint"
+    "workflow:run:lint": "./bin/act pull_request -W .github/workflows/ci.yml -j lint",
+    "seed": "bun run scripts/seed-db.ts",
+    "docs:validate": "bun run scripts/docs-validate.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",

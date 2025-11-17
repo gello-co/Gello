@@ -4,6 +4,49 @@
 
 <!-- required -->
 
+## Week 4: 11/13/25
+
+<!-- required -->
+
+Attendees
+
+- TA: Mateo Cantagallo
+- Team Attendance:
+  - @duskoutlaw
+  - @jasmitha-22
+  - @PaytonJHsu
+  - @jnnkim1
+  - @wistb
+
+<!-- required -->
+
+Decisions made:
+
+- We presented our current application and current work with all of the individual work which has been approved.
+Our unit testing has also been approved.
+
+<!-- required -->
+
+Alternative actions/options discussed:
+
+- We were given the permission to continue the application as is.
+- Some recommendations for the presentation was to include the stages of development and some of the testing we did.
+- For our application, the recommendation was to get all of the functionality of our application ready for the live demo, as well as polishing the application.
+
+<!-- required -->
+
+Follow-up items, including agreed-on roles and responsibilities:
+
+- For next week, we decided to narrow down on the final list of features for our application, using the unit testing to decide the rest of the interface and how to finalize and polish our application.
+
+<!-- optional -->
+
+Notes
+
+---
+
+<!-- required -->
+
 ## Week 3: 11/6/25
 
 <!-- required -->
