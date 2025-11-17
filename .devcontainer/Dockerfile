@@ -10,9 +10,11 @@ RUN apt-get update && \
     curl \
     wget \
     ca-certificates \
+    libnss3-tools \
     apt-transport-https \
     gnupg \
     lsof \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -54,8 +56,14 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
     brew install mkcert && \
     mkcert -version && \
+    mkcert -install && \
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/vscode/.bashrc && \
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/vscode/.zshrc 2>/dev/null || true
+
+# Install Supabase CLI globally (no need for bunx prefix inside devcontainer)
+RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
+    brew install supabase/tap/supabase && \
+    supabase --version
 
 # Set working directory
 WORKDIR /workspace
