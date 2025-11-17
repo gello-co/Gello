@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/supabase-test-helpers.js";
+import {
+  createTestUser,
+  loginAsUser,
+  resetTestDb,
+} from "../setup/helpers/index.js";
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 const DEFAULT_TIMEOUT = 3000; // Timeout for element visibility/wait checks
@@ -82,7 +86,7 @@ test.describe("Board Workflow", () => {
 
     // Extract board ID from URL
     const boardUrl = page.url();
-    const boardIdMatch = boardUrl.match(/\/boards\/([^\/]+)/);
+    const boardIdMatch = boardUrl.match(/\/boards\/([^/]+)/);
     expect(boardIdMatch).toBeTruthy();
     const boardId = boardIdMatch![1];
 

@@ -5,7 +5,11 @@
 
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/supabase-test-helpers.js";
+import {
+  createTestUser,
+  loginAsUser,
+  resetTestDb,
+} from "../setup/helpers/index.js";
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
