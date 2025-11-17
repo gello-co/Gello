@@ -41,6 +41,22 @@ RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
+# Install Homebrew (for mkcert installation on Linux)
+# See: https://docs.brew.sh/Homebrew-on-Linux
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc && \
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
+    brew --version
+
+# Install mkcert for locally-trusted TLS certificates
+# See: https://github.com/FiloSottile/mkcert
+# Also add Homebrew to vscode user's shell configs for consistency
+RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
+    brew install mkcert && \
+    mkcert -version && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/vscode/.bashrc && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/vscode/.zshrc 2>/dev/null || true
+
 # Set working directory
 WORKDIR /workspace
 

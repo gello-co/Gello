@@ -36,7 +36,7 @@ This devcontainer provides a fully self-contained development environment for th
    - Make Playwright browsers available for MCP tools
 
 4. **Access the Application**:
-   - Open http://localhost:3000
+   - Open <http://localhost:3000>
    - Login with test users (see credentials below)
 
 ## Configuration Flags
@@ -81,7 +81,7 @@ export FULL_SETUP_METRICS=true  # Metrics enabled by default
 1. **Open Container**: Use "Reopen in Container"
 2. **Wait for Setup**: Fast setup completes in ~30-60 seconds
 3. **Run Single Command**: `bun run start`
-4. **Access App**: http://localhost:3000
+4. **Access App**: <http://localhost:3000>
 5. **Login**: Use test user credentials (see below)
 
 That's it! The single command brings up the full environment.
@@ -98,15 +98,20 @@ All seeded users have password `password123`:
 
 ## Available Pages
 
+**Public Pages (No Auth Required):**
 - `/` - Home page
-- `/login` - Login page
+- `/login` - Login page (redirects to `/` after successful login)
 - `/register` - Registration page
-- `/boards` - Boards list (requires auth - all roles)
-- `/boards/:id` - Board detail (requires auth - all roles)
-- `/teams` - Teams list (requires auth - all roles, admin sees all teams)
-- `/teams/:id` - Team detail (requires auth - all roles)
-- `/leaderboard` - Points leaderboard (requires auth - all roles)
-- `/profile` - User profile (requires auth - all roles)
+
+**Authenticated Pages (Login Required):**
+- `/boards` - Boards list (all roles)
+- `/boards/:id` - Board detail (all roles)
+- `/teams` - Teams list (all roles, admin sees all teams)
+- `/teams/:id` - Team detail (all roles)
+- `/leaderboard` - Points leaderboard (all roles)
+- `/profile` - User profile (all roles)
+
+**Note:** After successful login, users are redirected to the home page (`/`), not a dashboard route. The dashboard layout is used for authenticated pages but there is no `/dashboard` route.
 
 ## MCP Tools Integration
 
@@ -139,7 +144,7 @@ Playwright browsers are installed and available for:
 **Example workflow:**
 1. Run `bun run start` (ensures Playwright browsers are available)
 2. Use Browser MCP tools to:
-   - Open http://localhost:3000
+   - Open <http://localhost:3000>
    - Login with test credentials
    - Navigate through boards, teams, leaderboard
    - Verify interactive features work correctly
@@ -173,12 +178,12 @@ bun run verify             # Run all checks + tests
 
 The following ports are forwarded automatically:
 
-- `3000`: Application server
-- `54321`: Supabase API
-- `54322`: Supabase Database
-- `54323`: Supabase Studio
-- `54324`: Supabase Inbucket (email testing)
-- `54325`: Supabase Storage
+- `3000`: Application server (HTTP accessible)
+- `54321`: Supabase API (HTTP accessible - health checks: `/health` for general API, `/auth/v1/health` for Auth service)
+- `54322`: Supabase Database (PostgreSQL - not HTTP accessible, use connection string)
+- `54323`: Supabase Studio (HTTP accessible - web UI for database management)
+- `54324`: Supabase Inbucket (HTTP accessible - email testing interface)
+- `54325`: Supabase Storage (S3-compatible API - HTTP accessible at `/storage/v1/s3`)
 
 ## Requirements
 
@@ -193,7 +198,7 @@ The following ports are forwarded automatically:
    ```
 
 2. **Login and Navigate**:
-   - Open http://localhost:3000
+   - Open <http://localhost:3000>
    - Login with test user (see credentials above)
    - Navigate all pages to test features
 
@@ -245,6 +250,8 @@ If ports are already in use:
 
 All Supabase credentials are loaded automatically from `supabase status -o env`.
 No manual `.env` file setup required for local development.
+
+**Note**: CSRF protection is deferred to v0.2.0
 
 ### Playwright Browsers Not Available
 

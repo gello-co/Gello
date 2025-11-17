@@ -45,12 +45,7 @@ display_metrics_summary() {
           local seconds=$((phase_duration % 60))
           printf "  %-25s %dm %ds\n" "$display_name:" "$minutes" "$seconds"
         fi
-
-        # Track total from total_full_setup entry
-        if [ "$phase" = "total_full_setup" ]; then
-          total_time=$phase_duration
-        fi
-      elif [ "$phase" = "total_full_setup" ]; then
+      elif [ "$phase" = "total_full_setup" ] && [ -n "$phase_duration" ]; then
         total_time=$phase_duration
       fi
     fi
@@ -123,6 +118,23 @@ if ! $BUNX_CMD supabase --version &> /dev/null; then
   echo "⚠️  Supabase CLI not available via $BUNX_CMD (will be downloaded on first use)"
 else
   echo "✅ Supabase CLI available via $BUNX_CMD"
+fi
+
+# Verify mkcert is available (for TLS certificate generation)
+# mkcert should be installed in Dockerfile via Homebrew
+if command -v mkcert &> /dev/null; then
+  echo "✅ mkcert is available (for local HTTPS certificates)"
+elif [ -f "/home/linuxbrew/.linuxbrew/bin/mkcert" ]; then
+  # mkcert might be installed but not in PATH yet
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" 2>/dev/null || true
+  if command -v mkcert &> /dev/null; then
+    echo "✅ mkcert is available (via Homebrew)"
+  else
+    echo "⚠️  mkcert not found in PATH (should be installed in Dockerfile)"
+  fi
+else
+  echo "⚠️  mkcert not found (should be installed in Dockerfile)"
+  echo "   Install manually: brew install mkcert"
 fi
 
 echo "✅ All required tools are available"
@@ -333,7 +345,7 @@ else
   echo "⏭️  Skipping full setup (FULL_SETUP_ON_CREATE=false)"
   echo "   Fast setup is the default. To enable full setup, set FULL_SETUP_ON_CREATE=true"
   echo "   Metrics are enabled by default. To disable, set FULL_SETUP_METRICS=false"
-  
+
   # Always close metrics JSON if it was created (even in fast setup)
   if [ -f "$METRICS_FILE" ] && [ "$FULL_SETUP_METRICS" = "true" ]; then
     # Check if JSON array is already closed
