@@ -1,17 +1,32 @@
+import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import * as tasksDb from "../../../ProjectSourceCode/src/lib/database/tasks.db.js";
 import * as usersDb from "../../../ProjectSourceCode/src/lib/database/users.db.js";
 import { PointsService } from "../../../ProjectSourceCode/src/lib/services/points.service.js";
 import * as pointsUtils from "../../../ProjectSourceCode/src/lib/utils/points.js";
+import { mockFn } from "../../setup/helpers/mock.js";
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/tasks.db.js");
-vi.mock("../../../ProjectSourceCode/src/lib/database/users.db.js");
-vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js");
-vi.mock("../../../ProjectSourceCode/src/lib/utils/points.js");
+vi.mock("../../../ProjectSourceCode/src/lib/database/tasks.db.js", () => ({
+  getTaskById: vi.fn(),
+  updateTask: vi.fn(),
+}));
+vi.mock("../../../ProjectSourceCode/src/lib/database/users.db.js", () => ({
+  getUserById: vi.fn(),
+  updateUser: vi.fn(),
+}));
+vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js", () => ({
+  createPointsHistory: vi.fn(),
+  getPointsHistoryByUser: vi.fn(),
+  getLeaderboard: vi.fn(),
+  getUserPoints: vi.fn(),
+}));
+vi.mock("../../../ProjectSourceCode/src/lib/utils/points.js", () => ({
+  calculateTaskPoints: vi.fn(),
+  validateManualAward: vi.fn(),
+}));
 
-describe("PointsService", () => {
+describe("PointsService (bun)", () => {
   let service: PointsService;
   let mockClient: SupabaseClient;
 
@@ -36,9 +51,9 @@ describe("PointsService", () => {
         task_id: "task-1",
       };
 
-      vi.mocked(tasksDb.getTaskById).mockResolvedValue(mockTask as any);
-      vi.mocked(pointsUtils.calculateTaskPoints).mockReturnValue(5);
-      vi.mocked(pointsDb.createPointsHistory).mockResolvedValue(
+      mockFn(tasksDb.getTaskById).mockResolvedValue(mockTask as any);
+      mockFn(pointsUtils.calculateTaskPoints).mockReturnValue(5);
+      mockFn(pointsDb.createPointsHistory).mockResolvedValue(
         mockPointsHistory as any,
       );
 
@@ -60,7 +75,7 @@ describe("PointsService", () => {
     });
 
     it("should throw error if task not found", async () => {
-      vi.mocked(tasksDb.getTaskById).mockResolvedValue(null);
+      mockFn(tasksDb.getTaskById).mockResolvedValue(null);
 
       await expect(
         service.awardPointsForTaskCompletion("task-1", "user-1"),
@@ -74,7 +89,7 @@ describe("PointsService", () => {
         completed_at: "2024-01-01T00:00:00Z",
       };
 
-      vi.mocked(tasksDb.getTaskById).mockResolvedValue(mockTask as any);
+      mockFn(tasksDb.getTaskById).mockResolvedValue(mockTask as any);
 
       await expect(
         service.awardPointsForTaskCompletion("task-1", "user-1"),
@@ -95,9 +110,9 @@ describe("PointsService", () => {
         reason: "manual_award",
       };
 
-      vi.mocked(pointsUtils.validateManualAward).mockReturnValue(true);
-      vi.mocked(usersDb.getUserById).mockResolvedValue(mockUser as any);
-      vi.mocked(pointsDb.createPointsHistory).mockResolvedValue(
+      mockFn(pointsUtils.validateManualAward).mockReturnValue(true);
+      mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
+      mockFn(pointsDb.createPointsHistory).mockResolvedValue(
         mockPointsHistory as any,
       );
 
@@ -119,7 +134,7 @@ describe("PointsService", () => {
     });
 
     it("should throw error for invalid points amount", async () => {
-      vi.mocked(pointsUtils.validateManualAward).mockReturnValue(false);
+      mockFn(pointsUtils.validateManualAward).mockReturnValue(false);
 
       await expect(
         service.awardManualPoints(
@@ -130,8 +145,8 @@ describe("PointsService", () => {
     });
 
     it("should throw error if user not found", async () => {
-      vi.mocked(pointsUtils.validateManualAward).mockReturnValue(true);
-      vi.mocked(usersDb.getUserById).mockResolvedValue(null);
+      mockFn(pointsUtils.validateManualAward).mockReturnValue(true);
+      mockFn(usersDb.getUserById).mockResolvedValue(null);
 
       await expect(
         service.awardManualPoints(
@@ -145,9 +160,9 @@ describe("PointsService", () => {
       const mockUser = { id: "user-1" };
       const mockPointsHistory = { id: "points-1" };
 
-      vi.mocked(pointsUtils.validateManualAward).mockReturnValue(true);
-      vi.mocked(usersDb.getUserById).mockResolvedValue(mockUser as any);
-      vi.mocked(pointsDb.createPointsHistory).mockResolvedValue(
+      mockFn(pointsUtils.validateManualAward).mockReturnValue(true);
+      mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
+      mockFn(pointsDb.createPointsHistory).mockResolvedValue(
         mockPointsHistory as any,
       );
 
@@ -172,7 +187,7 @@ describe("PointsService", () => {
         { id: "points-1", user_id: "user-1", points_earned: 5 },
       ];
 
-      vi.mocked(pointsDb.getPointsHistoryByUser).mockResolvedValue(
+      mockFn(pointsDb.getPointsHistoryByUser).mockResolvedValue(
         mockHistory as any,
       );
 
@@ -190,9 +205,7 @@ describe("PointsService", () => {
     it("should return leaderboard with default limit", async () => {
       const mockLeaderboard = [{ user_id: "user-1", total_points: 100 }];
 
-      vi.mocked(pointsDb.getLeaderboard).mockResolvedValue(
-        mockLeaderboard as any,
-      );
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(mockLeaderboard as any);
 
       const result = await service.getLeaderboard();
 
@@ -203,9 +216,7 @@ describe("PointsService", () => {
     it("should return leaderboard with custom limit", async () => {
       const mockLeaderboard = [{ user_id: "user-1", total_points: 100 }];
 
-      vi.mocked(pointsDb.getLeaderboard).mockResolvedValue(
-        mockLeaderboard as any,
-      );
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(mockLeaderboard as any);
 
       const result = await service.getLeaderboard(50);
 
@@ -216,7 +227,7 @@ describe("PointsService", () => {
 
   describe("getUserPoints", () => {
     it("should return user points", async () => {
-      vi.mocked(pointsDb.getUserPoints).mockResolvedValue(150);
+      mockFn(pointsDb.getUserPoints).mockResolvedValue(150);
 
       const result = await service.getUserPoints("user-1");
 

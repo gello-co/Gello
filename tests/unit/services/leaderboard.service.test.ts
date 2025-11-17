@@ -1,18 +1,20 @@
+import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { LeaderboardEntry } from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import { LeaderboardService } from "../../../ProjectSourceCode/src/lib/services/leaderboard.service.js";
+import { mockFn } from "../../setup/helpers/mock.js";
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js");
+vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js", () => ({
+  getLeaderboard: vi.fn(),
+}));
 
-// Type alias for mock leaderboard entries (minimal fields for testing)
 type MockLeaderboardEntry = Pick<
   LeaderboardEntry,
   "user_id" | "total_points" | "display_name"
 >;
 
-describe("LeaderboardService", () => {
+describe("LeaderboardService (bun)", () => {
   let service: LeaderboardService;
   let mockClient: SupabaseClient;
 
@@ -28,13 +30,14 @@ describe("LeaderboardService", () => {
         { user_id: "user-1", total_points: 100, display_name: "User 1" },
         { user_id: "user-2", total_points: 50, display_name: "User 2" },
       ] satisfies MockLeaderboardEntry[];
-      vi.mocked(pointsDb.getLeaderboard).mockResolvedValue(
+
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(
         mockLeaderboard as LeaderboardEntry[],
       );
 
       const result = await service.getLeaderboard();
 
-      expect(pointsDb.getLeaderboard).toHaveBeenCalledWith(mockClient, 69);
+      expect(pointsDb.getLeaderboard).toHaveBeenCalledWith(mockClient, 10);
       expect(result).toEqual(mockLeaderboard);
     });
 
@@ -42,7 +45,8 @@ describe("LeaderboardService", () => {
       const mockLeaderboard = [
         { user_id: "user-1", total_points: 100, display_name: "User 1" },
       ] satisfies MockLeaderboardEntry[];
-      vi.mocked(pointsDb.getLeaderboard).mockResolvedValue(
+
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(
         mockLeaderboard as LeaderboardEntry[],
       );
 
