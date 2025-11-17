@@ -1,17 +1,20 @@
 /**
- * Supabase test helpers for integration tests
+ * Unified Supabase test helpers for integration tests
  *
  * Provides utilities for:
- * - Supabase client configuration (local development)
- * - Database reset and cleanup
+ * - Supabase client configuration (local development with HTTPS support)
+ * - Database reset and cleanup (with mutex for parallel test safety)
  * - Test user creation and authentication
  * - Retry logic for network operations
+ * - CSRF token handling for authenticated requests
  *
  * All operations use local Supabase by default for faster, isolated tests.
+ * Environment variables are loaded by vitest-setup.ts from 'supabase status -o env'.
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { User } from "../../ProjectSourceCode/src/lib/database/users.db.js";
+import { DuplicateUserError } from "../../ProjectSourceCode/src/lib/errors/app.errors.js";
 import { AuthService } from "../../ProjectSourceCode/src/lib/services/auth.service.js";
 
 // ============================================================================
@@ -50,8 +53,8 @@ const RETRY_CONFIG = {
  * Auth user pagination settings
  */
 const AUTH_PAGINATION = {
-  pageSize: 100,
-  deleteRetries: 2,
+  pageSize: 50, // Smaller page size to reduce load
+  deleteRetries: 3,
 } as const;
 
 // ============================================================================
@@ -134,14 +137,83 @@ validateCredentials();
 // ============================================================================
 
 /**
+ * Shared Supabase client pool for test operations
+ * Reuses clients to prevent connection pool exhaustion during parallel test execution
+ * Clients are stateless and safe to reuse across tests
+ */
+let sharedClient: SupabaseClient | null = null;
+
+/**
+ * Creates a fetch wrapper with timeout and TLS configuration for local HTTPS
+ */
+function createFetchWithTLS(
+  isLocalhost: boolean,
+): (url: RequestInfo | URL, options?: RequestInit) => Promise<Response> {
+  return (url: RequestInfo | URL, options?: RequestInit) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    // If an existing signal exists, listen to it and abort our controller when it aborts
+    // This ensures both timeout and existing signal trigger the same controller
+    const existingSignal = options?.signal;
+    let abortListener: (() => void) | null = null;
+
+    if (existingSignal) {
+      abortListener = () => controller.abort();
+      existingSignal.addEventListener("abort", abortListener);
+    }
+
+    // Configure fetch options for local HTTPS with self-signed certificates
+    const fetchOptions: RequestInit = {
+      ...options,
+      signal: controller.signal,
+    };
+
+    // Bun-specific: Configure TLS to accept self-signed certificates for localhost
+    if (isLocalhost && typeof Bun !== "undefined") {
+      (fetchOptions as any).tls = {
+        rejectUnauthorized: false,
+      };
+    }
+
+    return fetch(url, fetchOptions).finally(() => {
+      clearTimeout(timeoutId);
+      // Remove listener if it was attached
+      if (existingSignal && abortListener) {
+        existingSignal.removeEventListener("abort", abortListener);
+      }
+    });
+  };
+}
+
+/**
  * Creates a Supabase client with service role key for test operations
+ * Uses a shared singleton client to prevent connection pool exhaustion
  *
  * @returns Configured Supabase client with service role permissions
  */
 export function getTestSupabaseClient(): SupabaseClient {
-  return createClient(getSupabaseUrl(), getSupabaseServiceKey(), {
-    auth: { persistSession: false },
-  });
+  // Reuse shared client to prevent connection pool exhaustion
+  // Supabase JS client is stateless and safe to reuse
+  if (!sharedClient) {
+    const url = getSupabaseUrl();
+    const isLocalhost = url.includes("127.0.0.1") || url.includes("localhost");
+
+    sharedClient = createClient(url, getSupabaseServiceKey(), {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      db: {
+        schema: "public",
+      },
+      global: {
+        // Configure fetch with timeout and TLS for self-signed certificates
+        fetch: createFetchWithTLS(isLocalhost) as typeof fetch,
+      },
+    });
+  }
+  return sharedClient;
 }
 
 /**
@@ -149,8 +221,15 @@ export function getTestSupabaseClient(): SupabaseClient {
  * Used for verifying end-user authentication flows
  */
 function getAnonSupabaseClient(): SupabaseClient {
-  return createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+  const url = getSupabaseUrl();
+  const isLocalhost = url.includes("127.0.0.1") || url.includes("localhost");
+
+  return createClient(url, getSupabaseAnonKey(), {
     auth: { persistSession: false },
+    global: {
+      // Configure fetch to accept self-signed certificates for local HTTPS
+      fetch: createFetchWithTLS(isLocalhost) as typeof fetch,
+    },
   });
 }
 
@@ -200,11 +279,71 @@ function isRateLimitError(error: unknown): boolean {
 }
 
 /**
+ * Certify connection to Supabase before operations
+ * Verifies connectivity and retries if needed
+ * Returns true if connection is certified, false if connection issues detected
+ */
+async function certifyConnection(
+  client: ReturnType<typeof getTestSupabaseClient>,
+  maxRetries = 5,
+): Promise<boolean> {
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Simple query to verify connection
+      const { error } = await client.from("users").select("id").limit(1);
+      if (!error) {
+        return true; // Connection certified
+      }
+      // Check if it's a connection error vs business logic error
+      if (
+        error.message.includes("fetch failed") ||
+        error.message.includes("ECONNRESET")
+      ) {
+        lastError = new Error(`Connection error: ${error.message}`);
+      } else {
+        // Business logic error (e.g., RLS policy) - connection is working
+        return true;
+      }
+    } catch (error) {
+      const err = error as Error;
+      if (
+        err.message.includes("fetch failed") ||
+        err.message.includes("ECONNRESET") ||
+        (err.cause &&
+          typeof err.cause === "object" &&
+          "code" in err.cause &&
+          err.cause.code === "ECONNRESET")
+      ) {
+        lastError = err;
+      } else {
+        // Other errors - connection might be working, just retry
+        lastError = err;
+      }
+    }
+
+    // Retry with exponential backoff
+    if (attempt < maxRetries - 1) {
+      const delay = 300 * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  // Connection failed after retries - log warning but don't throw
+  // The actual operation will fail with a clearer error
+  console.warn(
+    `⚠️  Connection certification failed after ${maxRetries} attempts: ${lastError?.message}`,
+  );
+  return false;
+}
+
+/**
  * Retries an async operation with exponential backoff
  *
  * @param fn - Function to retry
  * @param maxRetries - Maximum number of retry attempts
  * @param initialDelay - Initial delay in milliseconds
+ * @param certifyFirst - Whether to certify connection before first attempt
  * @returns Result of the function
  * @throws Last error if all retries fail
  */
@@ -212,8 +351,18 @@ async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = RETRY_CONFIG.maxRetries,
   initialDelay: number = RETRY_CONFIG.initialDelay,
+  certifyFirst = false,
 ): Promise<T> {
   let lastError: Error | undefined;
+
+  // Certify connection before first attempt if requested
+  if (certifyFirst) {
+    const certified = await certifyConnection(getTestSupabaseClient());
+    if (!certified) {
+      // Connection not certified, but proceed anyway - operation will fail with clearer error
+      // This prevents blocking tests when Supabase is temporarily unavailable
+    }
+  }
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -249,22 +398,32 @@ function createTimeoutPromise<T>(ms: number, message: string): Promise<T> {
 // ============================================================================
 
 /**
+ * Mutex to prevent concurrent database resets
+ * Provides safety when multiple test files run in parallel
+ */
+let resetMutex: Promise<void> = Promise.resolve();
+
+/**
  * Clears all data from a single table
  */
 async function clearTable(
   client: SupabaseClient,
   table: string,
 ): Promise<void> {
-  await retryWithBackoff(async () => {
-    const { error } = await client
-      .from(table)
-      .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000");
+  await retryWithBackoff(
+    async () => {
+      const { error } = await client
+        .from(table)
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
-    if (error) {
-      console.warn(`Failed to clear table ${table}:`, error.message);
-    }
-  }).catch((err) => {
+      if (error) {
+        console.warn(`Failed to clear table ${table}:`, error.message);
+      }
+    },
+    5, // More retries for table operations
+    300, // Longer initial delay
+  ).catch((err) => {
     // Log but don't fail - table might already be empty
     console.warn(`Failed to clear table ${table} after retries:`, err.message);
   });
@@ -278,48 +437,58 @@ async function clearAuthUsers(client: SupabaseClient): Promise<void> {
   let page = 0;
 
   while (hasMore) {
-    const result = await retryWithBackoff(async () => {
-      return await client.auth.admin.listUsers({
-        page,
-        perPage: AUTH_PAGINATION.pageSize,
-      });
-    }).catch((err) => {
+    const result = await retryWithBackoff(
+      async () => {
+        return await client.auth.admin.listUsers({
+          page,
+          perPage: AUTH_PAGINATION.pageSize,
+        });
+      },
+      5, // More retries
+      300, // Longer initial delay
+    ).catch((err) => {
       console.warn("Failed to list auth users after retries:", err.message);
       return { data: null, error: err };
     });
 
     const { data: authUsers, error } = result;
 
-    if (error || !authUsers?.users || authUsers.users.length === 0) {
-      hasMore = false;
-      if (error) {
-        console.warn("Failed to list auth users:", error.message);
-      }
+    if (error) {
+      console.warn("Failed to list auth users:", error.message);
       break;
     }
 
-    // Delete users in parallel batches
-    const deletePromises = authUsers.users.map((authUser) =>
-      retryWithBackoff(
+    if (!authUsers?.users || authUsers.users.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    // Delete users sequentially to prevent overwhelming Supabase
+    for (const authUser of authUsers.users) {
+      await retryWithBackoff(
         () => client.auth.admin.deleteUser(authUser.id),
-        AUTH_PAGINATION.deleteRetries,
+        AUTH_PAGINATION.deleteRetries, // More retries for individual deletes
+        200, // Longer initial delay
       ).catch((err) => {
-        // Ignore "User not found" errors
+        // Ignore errors during cleanup (user might already be deleted)
         if (!err.message?.includes("User not found")) {
           console.warn(
             `Failed to delete auth user ${authUser.id}:`,
             err.message,
           );
         }
-      }),
-    );
+      });
+      // Delay between user deletions
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
 
-    await Promise.all(deletePromises);
-
-    // Check if there are more users
-    hasMore = authUsers.users.length >= AUTH_PAGINATION.pageSize;
-    if (hasMore) {
+    if (authUsers.users.length < AUTH_PAGINATION.pageSize) {
+      // Check if there are more users
+      hasMore = false;
+    } else {
       page++;
+      // Delay between pages
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 }
@@ -329,22 +498,51 @@ async function clearAuthUsers(client: SupabaseClient): Promise<void> {
  *
  * Clears data in reverse dependency order for efficiency.
  * Includes retry logic for network connection issues.
+ * Uses mutex to prevent concurrent resets when tests run in parallel.
  */
 export async function resetTestDb(): Promise<void> {
-  const client = getTestSupabaseClient();
+  // Wait for any ongoing reset to complete, then acquire the mutex
+  const previousReset = resetMutex;
+  let releaseMutex: () => void;
+  resetMutex = new Promise((resolve) => {
+    releaseMutex = resolve;
+  });
 
-  // Clear tables in reverse dependency order
-  for (const table of TEST_TABLES) {
-    await clearTable(client, table);
+  // Wait for previous reset to complete
+  await previousReset;
+
+  // Add recovery delay to let Supabase stabilize after previous reset
+  // Longer delay to ensure connection pool recovers
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  try {
+    const client = getTestSupabaseClient();
+
+    // Certify connection before starting reset (non-blocking)
+    const certified = await certifyConnection(client);
+    if (!certified) {
+      console.warn(
+        "⚠️  Connection not certified before reset - proceeding anyway (will retry on failure)",
+      );
+    }
+
+    // Clear tables in reverse dependency order
+    for (const table of TEST_TABLES) {
+      await clearTable(client, table);
+      // Delay between table clears to prevent overwhelming Supabase
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    // Clear auth users
+    await clearAuthUsers(client);
+
+    // Longer delay to ensure cleanup completes and Supabase recovers
+    // This helps prevent connection pool exhaustion
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  } finally {
+    // Release the mutex
+    releaseMutex!();
   }
-
-  // Clear auth users
-  await clearAuthUsers(client);
-
-  // Small delay to ensure cleanup completes
-  await new Promise((resolve) =>
-    setTimeout(resolve, RETRY_CONFIG.cleanupDelay),
-  );
 }
 
 // ============================================================================
@@ -410,8 +608,9 @@ async function registerUserWithRetry(
               display_name: displayName,
               role,
             }),
-          2, // 2 retries with backoff for network errors
-          RETRY_CONFIG.initialDelay * 2,
+          3, // 3 retries with backoff for network errors
+          300, // 300ms initial delay
+          true, // Certify connection first
         ),
         createTimeoutPromise(
           RETRY_CONFIG.registerTimeout,
@@ -421,6 +620,12 @@ async function registerUserWithRetry(
 
       return result;
     } catch (error) {
+      // If user already exists, that's okay - we'll handle it below
+      if (DuplicateUserError.isDuplicateUserError(error)) {
+        // User exists in auth, will be handled by caller
+        return null;
+      }
+
       lastError = error as Error;
 
       // Retry on rate limiting, timeout, or network errors
@@ -465,7 +670,7 @@ async function retrieveUserWithRetry(
           return queryResult;
         },
         2, // 2 retries with backoff for network errors
-        RETRY_CONFIG.initialDelay * 2,
+        200, // 200ms initial delay
       );
 
       if (result.data) {
@@ -518,51 +723,33 @@ export async function createTestUser(
   const authClient = getAnonSupabaseClient();
   const authService = new AuthService(authClient);
 
-  // Check if user already exists
+  // Check if user already exists in public.users table
   const existingUser = await findExistingUser(client, email);
   if (existingUser) {
-    const anonClient = getAnonSupabaseClient();
-    const loginAttempt = await anonClient.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (!loginAttempt.error) {
-      // Ensure no lingering session
-      await anonClient.auth.signOut().catch(() => {});
-      return {
-        user: existingUser,
-        email,
-        password,
-      };
-    }
-
-    // Password mismatch or auth inconsistency - remove and recreate
-    await retryWithBackoff(
-      async () => {
+    // Verify the user can actually log in (password might be wrong)
+    try {
+      const testLogin = await authService.login({ email, password });
+      if (testLogin.user) {
+        return {
+          user: existingUser,
+          email,
+          password,
+        };
+      }
+    } catch (loginError) {
+      // Password might be wrong, delete and recreate
+      console.warn(
+        `User ${email} exists but password doesn't match, recreating...`,
+      );
+      // Delete auth user and retry registration
+      try {
         await client.auth.admin.deleteUser(existingUser.id);
-      },
-      2,
-      RETRY_CONFIG.initialDelay,
-    ).catch((error) => {
-      console.warn(
-        `Failed to delete auth user ${existingUser.id}:`,
-        (error as Error).message,
-      );
-    });
-
-    await retryWithBackoff(
-      async () => {
-        await client.from("users").delete().eq("id", existingUser.id);
-      },
-      2,
-      RETRY_CONFIG.initialDelay,
-    ).catch((error) => {
-      console.warn(
-        `Failed to delete user profile ${existingUser.id}:`,
-        (error as Error).message,
-      );
-    });
+      } catch (deleteError) {
+        // Ignore delete errors
+      }
+      // Also delete from public.users
+      await client.from("users").delete().eq("id", existingUser.id);
+    }
   }
 
   // Register new user with retry logic
@@ -582,6 +769,27 @@ export async function createTestUser(
       email,
       password,
     };
+  }
+
+  // If user already exists (DuplicateUserError), try to fetch from database
+  if (!registerResult) {
+    const duplicateUser = await findExistingUser(client, email);
+    if (duplicateUser) {
+      // Wait a bit for sync, then try login
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      try {
+        const testLogin = await authService.login({ email, password });
+        if (testLogin.user) {
+          return {
+            user: duplicateUser,
+            email,
+            password,
+          };
+        }
+      } catch {
+        // Login failed, will throw error below
+      }
+    }
   }
 
   // Fallback: Retrieve user from database with retry
@@ -697,4 +905,109 @@ export async function loginAsUser(
   const authService = new AuthService(authClient);
 
   return loginUser(authService, email, password);
+}
+
+// ============================================================================
+// CSRF Token Helpers
+// ============================================================================
+
+/**
+ * Get CSRF token for authenticated or unauthenticated requests
+ * Makes GET request to /api/csrf-token endpoint
+ * For authenticated requests, pass session cookies
+ * For unauthenticated requests, pass empty array or omit cookies
+ * Returns both the token and cookies array (including CSRF cookie from response)
+ * Does not mutate the input cookies array
+ * Note: The CSRF cookie is automatically set by csrf-csrf middleware
+ */
+export async function getCsrfToken(
+	cookies?: string[] | string,
+): Promise<{ token: string; cookies: string[] }> {
+	const app = (await import("../../ProjectSourceCode/src/server/app.js")).app;
+	const { default: request } = await import("supertest");
+
+  let req = request(app).get("/api/csrf-token");
+
+  // Normalize input cookies to array format
+  const inputCookies = Array.isArray(cookies)
+    ? cookies
+    : cookies
+      ? [cookies]
+      : [];
+
+  // Only set cookies if provided (for authenticated requests)
+  if (inputCookies.length > 0) {
+    req = req.set("Cookie", inputCookies);
+  }
+
+  const response = await req;
+
+  // CSRF protection is disabled (deferred to v0.2.0)
+  // Return empty token and original cookies if endpoint doesn't exist
+  if (response.status === 404) {
+    return {
+      token: "",
+      cookies: inputCookies,
+    };
+  }
+
+  if (response.status !== 200) {
+    throw new Error(
+      `Failed to get CSRF token: ${response.status} - ${response.text}`,
+    );
+  }
+
+  // Extract CSRF cookie from response and merge with provided cookies array
+  // This ensures subsequent requests include both session and CSRF cookies
+  const csrfCookieHeader = response.headers["set-cookie"]?.[0];
+  if (csrfCookieHeader) {
+    // Extract just the cookie name=value part (before the first semicolon)
+    const csrfCookie = csrfCookieHeader.split(";")[0];
+    if (csrfCookie) {
+      // Remove any existing CSRF cookies (csrf= or __Host-csrf=)
+      // to avoid having multiple CSRF cookies that don't match the token
+      const filteredCookies = inputCookies.filter(
+        (cookie) =>
+          !cookie.startsWith("csrf=") && !cookie.startsWith("__Host-csrf="),
+      );
+      // Return new array with CSRF cookie added (no mutation)
+      return {
+        token: response.body.csrfToken || "",
+        cookies: [...filteredCookies, csrfCookie],
+      };
+    }
+  }
+
+  return {
+    token: response.body.csrfToken || "",
+    cookies: inputCookies,
+  };
+}
+
+/**
+ * Helper function to get CSRF token and merged cookies for API requests
+ * Returns both the token and cookies array (including CSRF cookie from response)
+ * Use this when you need to include the CSRF cookie in subsequent requests
+ */
+export async function getCsrfTokenWithCookies(
+  cookies?: string[] | string,
+): Promise<{ token: string; cookies: string[] }> {
+  return getCsrfToken(cookies);
+}
+
+/**
+ * Helper to conditionally set CSRF headers on a request
+ * Only sets headers if CSRF token is not empty (CSRF enabled)
+ * Use this to wrap request setup when CSRF may be disabled
+ */
+export function setCsrfHeadersIfEnabled<
+  T extends { set: (key: string, value: string) => T },
+>(req: T, csrfToken: string, csrfCookie?: string): T {
+  if (csrfToken) {
+    req = req.set("X-CSRF-Token", csrfToken);
+  }
+  if (csrfCookie) {
+    req = req.set("Cookie", csrfCookie);
+  }
+  return req;
 }
