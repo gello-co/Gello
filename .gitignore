@@ -165,3 +165,6 @@ gello-worktrees/
 supabase/.branches/
 # Supabase local certificates (auto-generated, not committed)
 supabase/certs/
+# Snaplet generated metadata
+.snaplet/
+supabase/seed/.snaplet/
