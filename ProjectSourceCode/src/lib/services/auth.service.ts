@@ -31,19 +31,33 @@ export type SessionUser = {
 };
 
 export class AuthService {
-  constructor(private client: SupabaseClient) {}
+  private readonly serviceRoleClient: SupabaseClient | null;
 
-  // Cached service-role client (singleton pattern)
-  private static serviceRoleClient: SupabaseClient | null = null;
+  // Cached service-role client (singleton pattern) for production use
+  private static serviceRoleClientCache: SupabaseClient | null = null;
+
+  constructor(
+    private client: SupabaseClient,
+    serviceRoleClient?: SupabaseClient,
+  ) {
+    // Allow injecting service role client for testing
+    // If not provided, will be created lazily via getServiceRoleClient()
+    this.serviceRoleClient = serviceRoleClient ?? null;
+  }
 
   /**
    * Get service role client for admin operations
-   * Returns a cached singleton instance to avoid recreating on every call
+   * Returns injected client if provided, otherwise a cached singleton instance
    */
   private getServiceRoleClient(): SupabaseClient {
+    // Use injected client if provided (for testing)
+    if (this.serviceRoleClient) {
+      return this.serviceRoleClient;
+    }
+
     // Return cached client if it exists
-    if (AuthService.serviceRoleClient) {
-      return AuthService.serviceRoleClient;
+    if (AuthService.serviceRoleClientCache) {
+      return AuthService.serviceRoleClientCache;
     }
 
     // Validate environment variables
@@ -54,7 +68,7 @@ export class AuthService {
     }
 
     // Create and cache the service-role client
-    AuthService.serviceRoleClient = createClient(
+    AuthService.serviceRoleClientCache = createClient(
       env.SUPABASE_URL,
       env.SUPABASE_SERVICE_ROLE_KEY,
       {
@@ -65,7 +79,7 @@ export class AuthService {
       },
     );
 
-    return AuthService.serviceRoleClient;
+    return AuthService.serviceRoleClientCache;
   }
 
   /**
@@ -73,12 +87,21 @@ export class AuthService {
    * Creates auth user and syncs to public.users table
    */
   async register(input: CreateUserInput): Promise<AuthResult> {
-    // Check if user already exists
-    const { data: existingUser } = await this.client
+    const serviceClient = this.getServiceRoleClient();
+
+    // Check if user already exists (needs service role due to RLS)
+    const { data: existingUser, error: existingUserError } = await serviceClient
       .from("users")
       .select("id, email")
       .eq("email", input.email)
-      .single();
+      .maybeSingle();
+
+    // Handle errors other than "not found"
+    if (existingUserError && existingUserError.code !== "PGRST116") {
+      throw new Error(
+        `Failed to check for existing user: ${existingUserError.message}`,
+      );
+    }
 
     if (existingUser) {
       throw new DuplicateUserError("User with this email already exists");
@@ -117,7 +140,6 @@ export class AuthService {
     }
 
     // Create corresponding record in public.users table with auth.users.id
-    const serviceClient = this.getServiceRoleClient();
     const { data: newUser, error: userError } = await serviceClient
       .from("users")
       .insert({
