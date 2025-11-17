@@ -36,6 +36,22 @@ export async function requireAuth(
     req.user = session;
     next();
   } catch (error) {
+    // Log authentication errors for monitoring and debugging
+    const errorLog = {
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      path: req.path,
+      error: {
+        name: error instanceof Error ? error.name : "Unknown",
+        message: error instanceof Error ? error.message : String(error),
+        stack:
+          process.env.NODE_ENV === "development" && error instanceof Error
+            ? error.stack
+            : undefined,
+      },
+    };
+    console.error("[AUTH ERROR]", JSON.stringify(errorLog, null, 2));
+
     return res.status(401).json({ error: "Authentication failed" });
   }
 }

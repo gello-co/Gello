@@ -4,6 +4,7 @@ import {
   InvalidCredentialsError,
   UserNotFoundError,
 } from "../../lib/errors/app.errors.js";
+import { logger } from "../lib/logger.js";
 
 export const errorHandler: ErrorRequestHandler = (
   err: Error | any,
@@ -11,35 +12,24 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next,
 ) => {
-  // Structured error logging
-  const errorLog = {
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    path: req.path,
-    error: {
-      name: err.name,
-      message: err.message,
-      code: err.code,
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  // Structured error logging with context
+  const isDevelopment = process.env.NODE_ENV === "development";
+  logger.error(
+    {
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode || 500,
+      error: {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        ...(isDevelopment && { stack: err.stack }),
+      },
     },
-  };
+    "Request error",
+  );
 
-  console.error("[ERROR]", JSON.stringify(errorLog, null, 2));
-
-  // CSRF errors (from csrf-csrf)
-  // csrf-csrf throws errors with status 403 and message containing "CSRF"
-  // Also check for status/statusCode in case error is wrapped
-  if (
-    err.status === 403 ||
-    err.statusCode === 403 ||
-    err.message?.includes("CSRF") ||
-    err.message?.includes("csrf")
-  ) {
-    return res.status(403).json({
-      error: "CSRF token validation failed",
-      message: process.env.NODE_ENV === "development" ? err.message : undefined,
-    });
-  }
+  // CSRF error handling deferred to v0.2.0
 
   if (DuplicateUserError.isDuplicateUserError(err)) {
     // Custom application errors (using symbolic methods)
@@ -90,8 +80,6 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Default: Internal server error
   // Always show error details in development (check both NODE_ENV and if message exists)
-  const isDevelopment =
-    process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
   return res.status(500).json({
     error: "Internal server error",
     message: isDevelopment ? err.message || String(err) : undefined,

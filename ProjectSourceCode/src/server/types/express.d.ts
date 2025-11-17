@@ -1,4 +1,5 @@
 import type { Request } from "express";
+import type { BoardService } from "../../lib/services/board.service.js";
 
 declare global {
   namespace Express {
@@ -12,11 +13,9 @@ declare global {
         total_points: number;
         avatar_url: string | null;
       } | null;
-      /**
-       * CSRF token method added by csrf-csrf middleware
-       * Available when csrfProtection middleware is applied
-       */
-      csrfToken?: () => string;
+      boardService?: BoardService;
+      // CSRF types deferred to v0.2.0
+      // csrfToken?: () => string;
     }
   }
 }

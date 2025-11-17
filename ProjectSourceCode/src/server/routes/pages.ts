@@ -106,18 +106,19 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
 
 router.get("/boards", requireAuth, async (req, res, next) => {
   try {
+    // requireAuth guarantees req.user is set when next() is called
     const boardService = getBoardService();
     const teamId = req.query.team_id as string | undefined;
     let boards: Awaited<ReturnType<typeof boardService.getBoardsByTeam>> = [];
     if (teamId) {
       boards = await boardService.getBoardsByTeam(teamId);
     } else {
-      boards = [];
+      boards = await boardService.getBoardsForUser(req.user!.id);
     }
     res.render("pages/boards/index", {
       title: "Boards",
       layout: "dashboard",
-      user: req.user,
+      user: req.user!,
       boards,
     });
   } catch (error) {
@@ -171,7 +172,7 @@ router.get("/boards/:id", requireAuth, async (req, res, next) => {
       board,
       lists: listsWithTasks,
       users,
-      scripts: ["/js/board.js"],
+      scripts: ["/js/board.js", "/js/task-modal.js", "/js/task-card.js"],
     });
   } catch (error) {
     next(error);
@@ -195,19 +196,17 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
 
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {
-    if (!req.user) {
-      return res.redirect("/login");
-    }
-    const pointsService = getPointsService(req.user.id);
+    // requireAuth guarantees req.user is set when next() is called
+    const pointsService = getPointsService(req.user!.id);
     const taskService = getTaskService();
 
-    const pointsHistory = await pointsService.getPointsHistory(req.user.id);
-    const assignedTasks = await taskService.getTasksByAssignee(req.user.id);
+    const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
+    const assignedTasks = await taskService.getTasksByAssignee(req.user!.id);
 
     res.render("pages/profile/index", {
       title: "Profile",
       layout: "dashboard",
-      user: req.user,
+      user: req.user!,
       pointsHistory,
       assignedTasks,
     });

@@ -19,10 +19,6 @@ router.get("/leaderboard", requireAuth, (req, res) => {
 
   clients.add(res);
 
-  req.on("close", () => {
-    clients.delete(res);
-  });
-
   const sendUpdate = async () => {
     try {
       const leaderboard = await getLeaderboardService().getLeaderboard(100);

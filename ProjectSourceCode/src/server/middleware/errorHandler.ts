@@ -2,7 +2,9 @@ import type { ErrorRequestHandler, Request, Response } from "express";
 import {
   DuplicateUserError,
   InvalidCredentialsError,
+  ResourceNotFoundError,
   UserNotFoundError,
+  ValidationError,
 } from "../../lib/errors/app.errors.js";
 
 export const errorHandler: ErrorRequestHandler = (
@@ -35,16 +37,22 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  // Validation errors
-  if (err.name === "ValidationError" || err.message.includes("validation")) {
+  // Validation errors - prefer instanceof check, fallback to case-insensitive regex
+  if (
+    ValidationError.isValidationError(err) ||
+    /validation/i.test(err.message)
+  ) {
     return res.status(400).json({
       error: "Validation error",
       message: err.message,
     });
   }
 
-  // Generic "not found" errors
-  if (err.message.includes("not found")) {
+  // Resource not found errors - prefer instanceof check, fallback to case-insensitive regex
+  if (
+    ResourceNotFoundError.isResourceNotFoundError(err) ||
+    /not found/i.test(err.message)
+  ) {
     return res.status(404).json({
       error: "Not found",
       message: err.message,

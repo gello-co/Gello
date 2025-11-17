@@ -79,13 +79,13 @@ import { requestLogger } from "./middleware/request-logger.js";
 
 app.use(requestLogger);
 
-// CSRF protection using csrf-csrf (Double Submit Cookie Pattern)
-import { csrfProtection, csrfTokenToLocals } from "./middleware/csrf.js";
+// CSRF protection deferred to v0.2.0
+// import { csrfProtection, csrfTokenToLocals } from "./middleware/csrf.js";
 
 // Apply CSRF protection to all routes (except GET requests which are safe)
-app.use(csrfProtection);
+// app.use(csrfProtection);
 // Make CSRF token available to all views
-app.use(csrfTokenToLocals);
+// app.use(csrfTokenToLocals);
 
 import { errorHandler } from "./middleware/error-handler.js";
 import apiRoutes from "./routes/api.js";

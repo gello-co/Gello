@@ -1,4 +1,5 @@
 import express from "express";
+import { z } from "zod";
 import { manualAwardSchema } from "../../../lib/schemas/points.js";
 import { LeaderboardService } from "../../../lib/services/leaderboard.service.js";
 import { PointsService } from "../../../lib/services/points.service.js";
@@ -20,7 +21,10 @@ function getPointsService(userId?: string) {
 router.get("/leaderboard", requireAuth, async (req, res, next) => {
   try {
     const leaderboardService = getLeaderboardService();
-    const limit = Number.parseInt(req.query.limit as string, 10) || 100;
+    const limit = Math.min(
+      Math.max(Number.parseInt(req.query.limit as string, 10) || 100, 1),
+      1000,
+    );
     const leaderboard = await leaderboardService.getLeaderboard(limit);
     res.json(leaderboard);
   } catch (error) {
@@ -33,6 +37,11 @@ router.get("/users/:id/points", requireAuth, async (req, res, next) => {
     const id = req.params.id;
     if (!id) {
       return res.status(400).json({ error: "id parameter is required" });
+    }
+    // Validate UUID format
+    const uuidValidation = z.uuid().safeParse(id);
+    if (!uuidValidation.success) {
+      return res.status(400).json({ error: "id must be a valid UUID" });
     }
     const pointsService = getPointsService(req.user?.id);
     const points = await pointsService.getUserPoints(id);
@@ -51,6 +60,11 @@ router.post(
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ error: "id parameter is required" });
+      }
+      // Validate UUID format
+      const uuidValidation = z.uuid().safeParse(id);
+      if (!uuidValidation.success) {
+        return res.status(400).json({ error: "id must be a valid UUID" });
       }
       if (!req.user) {
         return res.status(401).json({ error: "Unauthorized" });

@@ -65,8 +65,16 @@ export async function getSupabaseClientForRequest(req: {
         access_token: accessToken,
         refresh_token: refreshToken,
       });
-    } catch {
-      // Ignore errors - session may be invalid, will be caught on first API call
+    } catch (error) {
+      // Log for debugging but don't throw - invalid sessions are expected
+      // Only log safe error details to avoid exposing sensitive session/token data
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorName = error instanceof Error ? error.name : "Error";
+      console.debug(
+        "Failed to restore session from cookies:",
+        `${errorName}: ${errorMessage}`,
+      );
     }
   }
 
