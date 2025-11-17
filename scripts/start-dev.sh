@@ -7,7 +7,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 # Load test user credentials from .env.local (or .env) with fallbacks
-# Credentials match seeded users in scripts/seed-db.ts
+# Credentials match seeded users in scripts/seed-db-snaplet.ts
 load_test_credentials() {
   # Try .env.local first, then .env
   local env_file=".env.local"

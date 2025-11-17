@@ -31,7 +31,7 @@ if [ ! -s "$TMP_ENV" ] || ! grep -qE "(API_URL|PUBLISHABLE_KEY|ANON_KEY)" "$TMP_
   return 1 2>/dev/null || exit 1
 fi
 
-# Export environment variables from supabase status
+# Export environment variables from bunx supabase status
 set -a  # Automatically export all variables
 eval "$(cat "$TMP_ENV")" 2>/dev/null
 set +a
