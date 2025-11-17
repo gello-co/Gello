@@ -16,62 +16,103 @@ const logLevel = process.env.LOG_LEVEL || (isDevelopment ? "debug" : "info");
 const logFile = process.env.LOG_FILE;
 
 /**
- * Create and configure Pino logger instance
+ * Redact sensitive fields from logs
+ * Prevents authorization headers and cookies from being logged
+ */
+const redactPaths = [
+  "req.headers.authorization",
+  "req.headers.cookie",
+  "headers.authorization",
+  "headers.cookie",
+  "authorization",
+  "cookie",
+];
+
+/**
+ * Create and configure Pino logger instance with fallback to console
  * - Development: Pretty printing for readability (console output)
  * - Production: JSON format for log aggregation
  *   - Console output by default
  *   - File output if LOG_FILE is set (rotation handled externally)
  * - Configurable log level via LOG_LEVEL environment variable
+ * - Redacts sensitive fields (authorization, cookie)
+ * - Falls back to console if initialization fails
  */
-export const logger =
-  isProduction && logFile
-    ? pino(
-        {
-          level: logLevel,
-          formatters: {
-            level: (label) => {
-              return { level: label };
+let loggerInstance: pino.Logger;
+
+try {
+  loggerInstance =
+    isProduction && logFile
+      ? pino(
+          {
+            level: logLevel,
+            redact: redactPaths,
+            formatters: {
+              level: (label) => {
+                return { level: label };
+              },
+            },
+            timestamp: pino.stdTimeFunctions.isoTime,
+            base: {
+              env: process.env.NODE_ENV || "production",
             },
           },
-          timestamp: pino.stdTimeFunctions.isoTime,
+          // File destination for production (rotation handled by logrotate/PM2/systemd)
+          pino.destination({
+            dest: logFile,
+            sync: false, // Async writes for better performance
+            mkdir: true, // Create log directory if it doesn't exist
+          }),
+        )
+      : pino({
+          level: logLevel,
+          redact: redactPaths,
+          ...(isDevelopment
+            ? {
+                // Pretty printing for development (console)
+                transport: {
+                  target: "pino-pretty",
+                  options: {
+                    colorize: true,
+                    translateTime: "SYS:standard",
+                    ignore: "pid,hostname",
+                  },
+                },
+              }
+            : {
+                // JSON format for production (console, if LOG_FILE not set)
+                formatters: {
+                  level: (label) => {
+                    return { level: label };
+                  },
+                },
+                timestamp: pino.stdTimeFunctions.isoTime,
+              }),
           base: {
-            env: process.env.NODE_ENV || "production",
+            env: process.env.NODE_ENV || "development",
           },
-        },
-        // File destination for production (rotation handled by logrotate/PM2/systemd)
-        pino.destination({
-          dest: logFile,
-          sync: false, // Async writes for better performance
-          mkdir: true, // Create log directory if it doesn't exist
-        }),
-      )
-    : pino({
-        level: logLevel,
-        ...(isDevelopment
-          ? {
-              // Pretty printing for development (console)
-              transport: {
-                target: "pino-pretty",
-                options: {
-                  colorize: true,
-                  translateTime: "SYS:standard",
-                  ignore: "pid,hostname",
-                },
-              },
-            }
-          : {
-              // JSON format for production (console, if LOG_FILE not set)
-              formatters: {
-                level: (label) => {
-                  return { level: label };
-                },
-              },
-              timestamp: pino.stdTimeFunctions.isoTime,
-            }),
-        base: {
-          env: process.env.NODE_ENV || "development",
-        },
-      });
+        });
+} catch (error) {
+  // Fallback to console if logger initialization fails
+  console.error(
+    "Failed to initialize Pino logger, falling back to console:",
+    error,
+  );
+  loggerInstance = pino({
+    level: logLevel,
+    redact: redactPaths,
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        translateTime: "SYS:standard",
+        ignore: "pid,hostname",
+      },
+    },
+  });
+}
+
+export const logger = loggerInstance;
 
 /**
  * Create a child logger with additional context

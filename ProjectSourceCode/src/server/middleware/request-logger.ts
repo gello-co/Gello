@@ -1,9 +1,32 @@
 /**
  * Request logging middleware
  * Logs HTTP requests with method, path, status code, and response time
+ * Uses structured JSON logging with metadata for parseability and filtering
  */
 
+import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
+import { logger } from "../lib/logger.js";
+
+/**
+ * Generate a unique request ID for tracking requests across logs
+ */
+function generateRequestId(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * Sanitize headers by removing sensitive fields
+ * Returns a copy of headers with authorization and cookie removed
+ */
+function sanitizeHeaders(
+  headers: Record<string, unknown>,
+): Record<string, unknown> {
+  const sanitized = { ...headers };
+  delete sanitized.authorization;
+  delete sanitized.cookie;
+  return sanitized;
+}
 
 export function requestLogger(
   req: Request,
@@ -11,6 +34,7 @@ export function requestLogger(
   next: NextFunction,
 ): void {
   const startTime = Date.now();
+  const requestId = generateRequestId();
 
   // Log request when response finishes
   res.on("finish", () => {
@@ -18,18 +42,27 @@ export function requestLogger(
     const method = req.method;
     const path = req.path;
     const statusCode = res.statusCode;
-    const statusMessage = res.statusMessage || "";
+    const sanitizedHeaders = sanitizeHeaders(
+      req.headers as Record<string, unknown>,
+    );
 
-    // Format log message
-    const logMessage = `${method} ${path} ${statusCode} ${statusMessage} - ${duration}ms`;
+    // Build metadata object for structured logging
+    const metadata = {
+      method,
+      path,
+      statusCode,
+      duration,
+      requestId,
+      headers: sanitizedHeaders,
+    };
 
-    // Log errors (4xx, 5xx) as errors, others as info
+    // Log errors (5xx) as errors, client errors (4xx) as warnings, others as info
     if (statusCode >= 500) {
-      console.error(`[ERROR] ${logMessage}`);
+      logger.error(metadata, `${method} ${path} ${statusCode} - ${duration}ms`);
     } else if (statusCode >= 400) {
-      console.warn(`[WARN] ${logMessage}`);
+      logger.warn(metadata, `${method} ${path} ${statusCode} - ${duration}ms`);
     } else {
-      console.log(`[INFO] ${logMessage}`);
+      logger.info(metadata, `${method} ${path} ${statusCode} - ${duration}ms`);
     }
   });
 
