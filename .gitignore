@@ -160,3 +160,8 @@ bin/
 playwright-report/
 test-results/
 gello-worktrees/
+
+# Supabase CLI development artifacts
+supabase/.branches/
+# Supabase local certificates (auto-generated, not committed)
+supabase/certs/
