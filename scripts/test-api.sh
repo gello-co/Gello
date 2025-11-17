@@ -23,6 +23,17 @@ function run_curl() {
 	printf '\n'
 }
 
+function require_id() {
+	local id=$1
+	local param_name=$2
+	local command_name=$3
+
+	if [[ -z "$id" ]]; then
+		echo "Error: $command_name requires non-empty <$param_name>" >&2
+		exit 1
+	fi
+}
+
 function usage() {
 	cat <<'EOF'
 Manual API smoke tester for Gello backend.
@@ -71,6 +82,7 @@ case "$command" in
 			echo "boards:list requires <teamId>" >&2
 			exit 1
 		fi
+		require_id "$1" "teamId" "boards:list"
 		run_curl GET "/api/teams/$1/boards"
 		;;
 	tasks:list)
@@ -78,6 +90,7 @@ case "$command" in
 			echo "tasks:list requires <listId>" >&2
 			exit 1
 		fi
+		require_id "$1" "listId" "tasks:list"
 		run_curl GET "/api/lists/$1/tasks"
 		;;
 	tasks:create)
@@ -85,6 +98,7 @@ case "$command" in
 			echo "tasks:create requires <listId>" >&2
 			exit 1
 		fi
+		require_id "$1" "listId" "tasks:create"
 		run_curl POST "/api/lists/$1/tasks" --data "${2:-'{}'}"
 		;;
 	leaderboard)

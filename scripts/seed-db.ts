@@ -444,10 +444,10 @@ const SEED_POINTS: SeedPoints[] = [
 async function findUserByEmail(
   client: SupabaseClient,
   email: string,
-): Promise<{ id: string; email: string } | null> {
+): Promise<{ id: string; email: string; total_points: number | null } | null> {
   const { data } = await client
     .from("users")
-    .select("id, email")
+    .select("id, email, total_points")
     .eq("email", email)
     .single();
   return data || null;
@@ -601,30 +601,36 @@ async function main() {
   // Dynamic imports are used to ensure env.ts picks up the correct values
   // TypeScript can't resolve these paths statically, but they work at runtime
   // Using `any` type for dynamic imports since TypeScript can't statically resolve them
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { AuthService } = (await import(
-    "../ProjectSourceCode/src/lib/services/auth.service.js"
-  )) as any;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { BoardService } = (await import(
-    "../ProjectSourceCode/src/lib/services/board.service.js"
-  )) as any;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { ListService } = (await import(
-    "../ProjectSourceCode/src/lib/services/list.service.js"
-  )) as any;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { PointsService } = (await import(
-    "../ProjectSourceCode/src/lib/services/points.service.js"
-  )) as any;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { TaskService } = (await import(
-    "../ProjectSourceCode/src/lib/services/task.service.js"
-  )) as any;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const { TeamService } = (await import(
-    "../ProjectSourceCode/src/lib/services/team.service.js"
-  )) as any;
+
+  /**
+   * Helper function to import services dynamically
+   * Contains the required eslint-disable comment and type cast
+   * @param path - Relative path to the service module
+   * @returns The imported module (cast to any for TypeScript compatibility)
+   */
+  async function importService<T>(path: string): Promise<any> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+    return (await import(path)) as any;
+  }
+
+  const { AuthService } = await importService(
+    "../ProjectSourceCode/src/lib/services/auth.service.js",
+  );
+  const { BoardService } = await importService(
+    "../ProjectSourceCode/src/lib/services/board.service.js",
+  );
+  const { ListService } = await importService(
+    "../ProjectSourceCode/src/lib/services/list.service.js",
+  );
+  const { PointsService } = await importService(
+    "../ProjectSourceCode/src/lib/services/points.service.js",
+  );
+  const { TaskService } = await importService(
+    "../ProjectSourceCode/src/lib/services/task.service.js",
+  );
+  const { TeamService } = await importService(
+    "../ProjectSourceCode/src/lib/services/team.service.js",
+  );
 
   // Create service client directly with verified values
   const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -674,6 +680,8 @@ async function main() {
   console.info("👥 Creating users...");
   for (const seedUser of SEED_USERS) {
     let user = await findUserByEmail(serviceClient, seedUser.email);
+    let wasCreated = false; // Track whether user was newly created
+
     if (!user) {
       try {
         const team = seedUser.teamName
@@ -685,8 +693,16 @@ async function main() {
           display_name: seedUser.display_name,
           role: seedUser.role,
           team_id: team?.id,
+          total_points: seedUser.total_points,
         });
-        user = { id: created.user.id, email: created.user.email };
+        // Fetch the full user record including total_points for comparison
+        const fullUser = await findUserByEmail(serviceClient, seedUser.email);
+        user = fullUser || {
+          id: created.user.id,
+          email: created.user.email,
+          total_points: seedUser.total_points ?? 0,
+        };
+        wasCreated = true; // User was newly created via register
         console.info(`  ✅ Created user: ${user.email} (${seedUser.role})`);
       } catch (error: any) {
         // User already exists in auth - find them in users table
@@ -698,6 +714,7 @@ async function main() {
           const existing = await findUserByEmail(serviceClient, seedUser.email);
           if (existing) {
             user = existing;
+            wasCreated = false; // User already existed
             console.info(
               `  ⏭️  User already exists: ${user.email} (${seedUser.role})`,
             );
@@ -749,7 +766,7 @@ async function main() {
                   avatar_url: null,
                   total_points: seedUser.total_points ?? 0,
                 })
-                .select("id, email")
+                .select("id, email, total_points")
                 .single();
 
               if (insertError) {
@@ -761,6 +778,7 @@ async function main() {
 
               if (newUser) {
                 user = newUser;
+                wasCreated = true; // User was newly created via sync
                 console.info(
                   `  ✅ Synced user from auth: ${user.email} (${seedUser.role})`,
                 );
@@ -778,13 +796,20 @@ async function main() {
         }
       }
     } else {
+      wasCreated = false; // User already existed
       console.info(
         `  ⏭️  User already exists: ${user.email} (${seedUser.role})`,
       );
     }
 
-    if (seedUser.total_points !== undefined && user) {
-      // Update total_points if specified
+    // Only update total_points if user already existed OR if existing user's total_points differs
+    // Newly created users already have the correct total_points from insert, so no update needed
+    if (
+      seedUser.total_points !== undefined &&
+      user &&
+      !wasCreated &&
+      (user.total_points ?? 0) !== seedUser.total_points
+    ) {
       await serviceClient
         .from("users")
         .update({ total_points: seedUser.total_points })

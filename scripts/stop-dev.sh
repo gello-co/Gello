@@ -13,11 +13,24 @@ check_port() {
   local port=$1
   if command -v lsof &> /dev/null; then
     lsof -ti:$port > /dev/null 2>&1
+  elif command -v ss &> /dev/null; then
+    # ss is preferred over netstat (more modern, handles IPv4/IPv6 better)
+    ss -ltnp 2>/dev/null | grep -qE "[:\]]${port}\b" 2>/dev/null
   elif command -v netstat &> /dev/null; then
-    netstat -tuln 2>/dev/null | grep -q ":$port " 2>/dev/null
+    # Try netstat with -p first (process info), fallback to -tuln if -p not supported
+    if netstat -tlnp 2>/dev/null | grep -qE "[:\]]${port}\b" 2>/dev/null; then
+      true
+    else
+      # Fallback to -tuln if -p not supported (some systems don't support -p)
+      netstat -tuln 2>/dev/null | grep -qE "[:\]]${port}\b" 2>/dev/null
+    fi
   else
-    # Fallback: try to connect to the port
-    timeout 1 bash -c "echo > /dev/tcp/localhost/$port" 2>/dev/null
+    # Fallback: try to connect to the port (bash-only, guarded by shebang)
+    if [ -n "$BASH_VERSION" ]; then
+      timeout 1 bash -c "echo > /dev/tcp/localhost/$port" 2>/dev/null || false
+    else
+      false
+    fi
   fi
 }
 
@@ -52,14 +65,11 @@ fi
 # Stop Supabase
 echo ""
 echo "🛑 Stopping Supabase..."
-if bunx supabase status > /dev/null 2>&1; then
-  if bunx supabase stop; then
-    echo "✅ Supabase stopped"
-  else
-    echo "⚠️  Supabase stop had issues, but continuing..."
-  fi
+if bunx supabase stop > /dev/null 2>&1; then
+  echo "✅ Supabase stopped"
 else
-  echo "ℹ️  Supabase not running"
+  # Exit code is non-zero (already stopped, CLI quirks, or actual error)
+  echo "⚠️  Supabase stop returned non-zero (may already be stopped)"
 fi
 
 echo ""

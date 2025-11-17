@@ -1,136 +1,121 @@
 #!/bin/bash
-# Restart development environment: Stop everything, then start again
-# This script provides a clean restart of all development services
+# Restart script for development environment
+# Stops all services, restarts Supabase, and starts the server
 
 set -e
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Parse command-line arguments
-DELAY_SECONDS="${STOP_TO_START_DELAY:-2}"
-USE_POLLING=false
+cd "$PROJECT_ROOT"
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --delay)
-      DELAY_SECONDS="$2"
-      shift 2
-      ;;
-    --poll)
-      USE_POLLING=true
-      shift
-      ;;
-    --help)
-      echo "Usage: $0 [--delay SECONDS] [--poll]"
-      echo ""
-      echo "Options:"
-      echo "  --delay SECONDS    Wait SECONDS before starting (default: 2, or STOP_TO_START_DELAY env var)"
-      echo "  --poll             Poll service ports until they're available (with timeout)"
-      echo ""
-      echo "Environment variables:"
-      echo "  STOP_TO_START_DELAY    Default delay in seconds (default: 2)"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      echo "Use --help for usage information"
-      exit 1
-      ;;
-  esac
-done
+echo "🛑 Stopping existing services..."
+# Kill any running bun processes for this project (project-scoped)
+# Use two-step approach: find candidates, filter by working directory, then kill
 
-# Validate delay is a non-negative number
-if ! [[ "$DELAY_SECONDS" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-  echo "❌ Error: Delay must be a number, got: $DELAY_SECONDS"
-  exit 1
-fi
+kill_project_processes() {
+  local pattern=$1
+  local description=$2
 
-echo "🔄 Restarting Gello development environment..."
-echo ""
+  # Step 1: Find candidate PIDs using pgrep
+  local candidate_pids
+  candidate_pids=$(pgrep -f "$pattern" 2>/dev/null || true)
 
-# Function to check if a port is available (not in use)
-check_port_available() {
-  local port=$1
-  if command -v lsof &> /dev/null; then
-    ! lsof -ti:$port > /dev/null 2>&1
-  elif command -v netstat &> /dev/null; then
-    ! netstat -tuln 2>/dev/null | grep -q ":$port " 2>/dev/null
-  else
-    # Fallback: try to connect to the port (if connection fails, port is available)
-    ! timeout 1 bash -c "echo > /dev/tcp/localhost/$port" 2>/dev/null
+  if [ -z "$candidate_pids" ]; then
+    echo "   ℹ️  No $description processes found"
+    return 0
   fi
-}
 
-# Function to check if Supabase is stopped
-check_supabase_stopped() {
-  ! bunx supabase status > /dev/null 2>&1
-}
-
-# Stop everything
-if [ -f "scripts/stop-dev.sh" ]; then
-  bash scripts/stop-dev.sh
-else
-  # Fallback: manual stop
-  echo "🛑 Stopping services..."
-
-  # Stop dev server on port 3000
-  if command -v lsof &> /dev/null; then
-    PID=$(lsof -ti:3000 2>/dev/null || true)
-    if [ -n "$PID" ]; then
-      kill $PID 2>/dev/null || true
-      sleep 1
+  # Step 2: Filter by working directory (project-scoped)
+  local matching_pids=()
+  for pid in $candidate_pids; do
+    # Check if process working directory matches project root
+    local proc_cwd
+    # Try multiple methods: lsof (macOS/Linux), /proc (Linux), pwdx (Linux)
+    if command -v lsof &> /dev/null; then
+      proc_cwd=$(lsof -a -d cwd -p "$pid" -Fn 2>/dev/null | grep '^n' | cut -c2-)
+    elif [ -e "/proc/$pid/cwd" ]; then
+      proc_cwd=$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)
+    else
+      # Fallback: skip directory check on unsupported systems
+      proc_cwd="$PROJECT_ROOT"
     fi
-  fi
 
-  # Stop Supabase
-  if bunx supabase status > /dev/null 2>&1; then
-    bunx supabase stop 2>/dev/null || true
-  fi
-fi
-
-# Wait for services to fully stop
-echo ""
-echo "⏳ Waiting for services to stop..."
-
-if [ "$USE_POLLING" = true ]; then
-  # Poll until services are stopped (with timeout)
-  MAX_WAIT=30
-  WAIT_COUNT=0
-  SERVICES_STOPPED=false
-
-  while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    if check_port_available 3000 && check_supabase_stopped; then
-      SERVICES_STOPPED=true
-      break
-    fi
-    sleep 0.5
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    if [ $((WAIT_COUNT % 4)) -eq 0 ]; then
-      echo "   Still waiting for services to stop... ($WAIT_COUNT/$MAX_WAIT seconds)"
+    if [ -n "$proc_cwd" ] && [ "$proc_cwd" = "$PROJECT_ROOT" ]; then
+      matching_pids+=("$pid")
     fi
   done
 
-  if [ "$SERVICES_STOPPED" = true ]; then
-    echo "✅ Services stopped"
-  else
-    echo "⚠️  Services may not be fully stopped (timeout after ${MAX_WAIT}s), continuing anyway..."
+  # Step 3: Kill filtered PIDs
+  if [ ${#matching_pids[@]} -eq 0 ]; then
+    echo "   ℹ️  No $description processes found in project directory"
+    return 0
   fi
+
+  # Optionally print for verification
+  echo "   Found ${#matching_pids[@]} $description process(es) in project directory"
+
+  # Kill each matching PID
+  for pid in "${matching_pids[@]}"; do
+    kill "$pid" 2>/dev/null || true
+  done
+
+  # Wait briefly for graceful shutdown
+  sleep 0.5
+
+  # Force kill any that are still running
+  for pid in "${matching_pids[@]}"; do
+    if kill -0 "$pid" 2>/dev/null; then
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+  done
+}
+
+# Kill project-specific processes
+kill_project_processes "bun.*ProjectSourceCode/src/index.ts" "server"
+kill_project_processes "bun.*test:server" "test server"
+
+sleep 2
+
+echo "🔄 Checking Supabase status..."
+# Check if Supabase is running, start if not
+if ! bunx supabase status > /dev/null 2>&1; then
+  echo "   Starting Supabase..."
+  bunx supabase start
 else
-  # Use configured delay
-  if [ "$DELAY_SECONDS" != "0" ]; then
-    sleep "$DELAY_SECONDS"
-  fi
+  echo "   Supabase is already running"
 fi
 
-# Start everything
+echo "📋 Loading environment variables..."
+# Load Supabase environment variables
+eval "$(bunx supabase status -o env)"
+
+# Export required variables
+export SUPABASE_URL="$API_URL"
+export SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY"
+export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+export NODE_ENV="development"
+
+echo "✅ Environment loaded:"
+echo "   SUPABASE_URL: ${SUPABASE_URL:0:30}..."
+echo "   PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:0:20}..."
+echo "   SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:0:20}..."
+
+# Automatically seed database (idempotent - safe to run multiple times)
 echo ""
-echo "🚀 Starting services..."
-if [ -f "scripts/start-dev.sh" ]; then
-  exec bash scripts/start-dev.sh
+echo "🌱 Seeding database with test data..."
+# Seed script loads Supabase env vars itself, but use doppler for auth-related env vars
+if doppler run -- bun run seed > /tmp/seed-output.log 2>&1; then
+  echo "✅ Database seeded successfully"
 else
-  # Fallback: manual start
-  bun run supabase:start
-  sleep 3
-  bun run dev
+  echo "⚠️  Database seeding had issues (this is OK if data already exists)"
 fi
 
+echo ""
+echo "🚀 Starting server..."
+echo "   Server will run at http://localhost:3000"
+echo "   Press Ctrl+C to stop"
+echo ""
+
+# Start server with hot reload
+bun --hot ProjectSourceCode/src/index.ts

@@ -159,6 +159,15 @@ fi
 
 # Load Supabase environment variables before starting dev server
 echo ""
+echo "🔐 Checking Supabase TLS certificates..."
+# Generate certificates using mkcert if they don't exist (for HTTPS/TLS support)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/setup-supabase-certs.sh" || {
+  echo "⚠️  Warning: Failed to setup certificates. HTTPS may not work."
+  echo "   Install mkcert: https://github.com/FiloSottile/mkcert"
+}
+
+echo ""
 echo "📦 Loading Supabase environment variables..."
 if bunx supabase status -o env > /tmp/supabase-env-final.log 2>&1; then
   # Source the env vars

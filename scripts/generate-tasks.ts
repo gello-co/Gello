@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { Command } from "commander";
 
 type CliOptions = {
   boardId: string;
@@ -16,29 +17,38 @@ function pickEnv(...candidates: Array<string | undefined>) {
 }
 
 function parseArgs(): CliOptions {
-  const args = new Map<string, string>();
-  for (const raw of Bun.argv.slice(2)) {
-    const [rawKey, value] = raw.split("=", 2);
-    if (!rawKey || !rawKey.startsWith("--")) continue;
-    const key = rawKey.slice(2);
-    if (!value) {
-      throw new Error(`Missing value for argument --${key}`);
-    }
-    args.set(key, value);
-  }
+  const program = new Command();
 
-  const boardId = args.get("board");
-  const countRaw = args.get("count") ?? "20";
-  const count = Number.parseInt(countRaw, 10);
-  if (!boardId) {
-    throw new Error(
-      "Usage: bun scripts/generate-tasks.ts --board=<boardId> [--count=20]",
-    );
-  }
-  if (!Number.isFinite(count) || count <= 0) {
-    throw new Error("`count` must be a positive integer");
-  }
-  return { boardId, count };
+  program
+    .name("generate-tasks")
+    .description("Generate test tasks for a board")
+    .requiredOption(
+      "--board <boardId>",
+      "Board ID to generate tasks for (required)",
+    )
+    .option(
+      "--count <n>",
+      "Number of tasks to generate (default: 20)",
+      (value) => {
+        const count = Number.parseInt(value, 10);
+        if (!Number.isFinite(count) || count <= 0) {
+          throw new Error("count must be a positive integer");
+        }
+        return count;
+      },
+      20,
+    )
+    .configureHelp({
+      showGlobalOptions: true,
+    })
+    .parse();
+
+  const options = program.opts<{ board: string; count: number }>();
+
+  return {
+    boardId: options.board,
+    count: options.count,
+  };
 }
 
 async function main() {
