@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ResourceNotFoundError } from "../errors/app.errors.js";
 
 export type PointsReason = "task_complete" | "manual_award";
 
@@ -35,45 +36,29 @@ export async function createPointsHistory(
   client: SupabaseClient,
   input: CreatePointsHistoryInput,
 ): Promise<PointsHistory> {
-  const { data: historyData, error: historyError } = await client
-    .from("points_history")
-    .insert({
-      user_id: input.user_id,
-      points_earned: input.points_earned,
-      reason: input.reason,
-      task_id: input.task_id ?? null,
-      awarded_by: input.awarded_by ?? null,
-      notes: input.notes ?? null,
-    })
-    .select()
-    .single();
+  // Call a Postgres function that wraps these operations in a transaction
+  const { data, error } = await client.rpc("create_points_history_atomic", {
+    p_user_id: input.user_id,
+    p_points_earned: input.points_earned,
+    p_reason: input.reason,
+    p_task_id: input.task_id ?? null,
+    p_awarded_by: input.awarded_by ?? null,
+    p_notes: input.notes ?? null,
+  });
 
-  if (historyError) {
-    throw new Error(`Failed to create points history: ${historyError.message}`);
+  if (error) {
+    // Map Postgres exception messages to appropriate error types
+    if (error.message.includes("User not found")) {
+      throw new ResourceNotFoundError(error.message);
+    }
+    throw new Error(`Failed to create points history: ${error.message}`);
   }
 
-  const { data: user } = await client
-    .from("users")
-    .select("total_points")
-    .eq("id", input.user_id)
-    .single();
-
-  if (!user) {
-    throw new Error(`User not found: ${input.user_id}`);
+  if (!data) {
+    throw new Error("Failed to create points history: No data returned");
   }
 
-  const newTotal = (user.total_points ?? 0) + input.points_earned;
-
-  const { error: updateError } = await client
-    .from("users")
-    .update({ total_points: newTotal })
-    .eq("id", input.user_id);
-
-  if (updateError) {
-    throw new Error(`Failed to update user points: ${updateError.message}`);
-  }
-
-  return historyData as PointsHistory;
+  return data as PointsHistory;
 }
 
 export async function getPointsHistoryByUser(

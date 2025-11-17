@@ -60,6 +60,33 @@ export async function getBoardsByTeam(
   return (data ?? []) as Board[];
 }
 
+export async function getBoardsByUser(
+  client: SupabaseClient,
+  userId: string,
+): Promise<Board[]> {
+  // First get the user's team_id
+  const { data: user, error: userError } = await client
+    .from("users")
+    .select("team_id")
+    .eq("id", userId)
+    .single();
+
+  if (userError) {
+    if (userError.code === "PGRST116") {
+      return [];
+    }
+    throw new Error(`Failed to get user: ${userError.message}`);
+  }
+
+  // If user is null or has no team, return empty array
+  if (!user?.team_id) {
+    return [];
+  }
+
+  // Get boards for the user's team
+  return getBoardsByTeam(client, user.team_id);
+}
+
 export async function createBoard(
   client: SupabaseClient,
   input: CreateBoardInput,
