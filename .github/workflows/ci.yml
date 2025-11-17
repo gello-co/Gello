@@ -72,10 +72,26 @@ jobs:
 
       - name: Run ShellCheck
         run: |
-          find .devcontainer scripts -name "*.sh" -type f 2>/dev/null | while read -r file; do
+          # Check required directories exist
+          test -d .devcontainer || { echo "Error: Missing .devcontainer directory"; exit 1; }
+          test -d scripts || { echo "Error: Missing scripts directory"; exit 1; }
+
+          # Find shell scripts and capture output
+          shell_files=$(find .devcontainer scripts -name "*.sh" -type f)
+
+          # Fail if no shell files found
+          if [ -z "$shell_files" ]; then
+            echo "Error: No shell scripts found in .devcontainer or scripts directories"
+            exit 1
+          fi
+
+          # Run shellcheck on each file
+          exit_code=0
+          while read -r file; do
             echo "Checking $file..."
-            shellcheck "$file" || exit 1
-          done
+            shellcheck "$file" || exit_code=1
+          done <<< "$shell_files"
+          exit $exit_code
 
 
   cache:
