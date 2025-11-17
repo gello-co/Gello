@@ -264,8 +264,20 @@ jobs:
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
-      - name: Run tests (CI)
-        run: bun run test:ci
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local instance
+        run: bunx supabase start
+
+      - name: Run tests with Bun
+        run: bun test --bail
+
+      - name: Stop Supabase
+        if: always()
+        run: bunx supabase stop
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v5
