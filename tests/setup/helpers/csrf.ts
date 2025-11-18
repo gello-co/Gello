@@ -16,15 +16,22 @@ export async function getCsrfToken(
 
   let req = request(app).get("/api/csrf-token");
 
+  // Accept either array or string (joined cookie header)
+  // String format is preferred for supertest reliability
+  if (cookies) {
+    if (typeof cookies === "string") {
+      req = req.set("Cookie", cookies);
+    } else if (Array.isArray(cookies) && cookies.length > 0) {
+      // Convert array to joined string for consistency
+      req = req.set("Cookie", cookies.join("; "));
+    }
+  }
+  
   const inputCookies = Array.isArray(cookies)
     ? cookies
     : cookies
       ? [cookies]
       : [];
-
-  if (inputCookies.length > 0) {
-    req = req.set("Cookie", inputCookies);
-  }
 
   const response = await req;
 

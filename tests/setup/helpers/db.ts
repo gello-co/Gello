@@ -476,7 +476,7 @@ export function resetSharedClient(): void {
 }
 
 function createFetchWithTLS(
-  isLocalhost: boolean,
+  _isLocalhost: boolean,
 ): (url: RequestInfo | URL, options?: RequestInit) => Promise<Response> {
   return (url: RequestInfo | URL, options?: RequestInit) => {
     const controller = new AbortController();
@@ -499,13 +499,31 @@ function createFetchWithTLS(
       fetchOptions.headers = new Headers(options.headers as HeadersInit);
     }
 
-    if (typeof Bun !== "undefined" && isLocalhost) {
-      (fetchOptions as any).tls = {
-        rejectUnauthorized: false,
-      };
-    }
+    // Use Bun's native fetch which supports TLS options
+    // This bypasses happy-dom's fetch (which overrides global fetch) and doesn't support TLS configuration
+    // Bun.fetch is always available in Bun runtime and supports TLS options via fetchOptions.tls
+    const fetchImpl = typeof Bun !== "undefined" ? Bun.fetch : fetch;
 
-    return fetch(url, fetchOptions).finally(() => {
+    // Note: TLS configuration removed - using HTTP for local Supabase to avoid WSL2/Docker TLS handshake issues
+    // See: .agents/tmp/mkcert-implementation-status.md for details
+    // If TLS is re-enabled in the future, uncomment the TLS configuration below:
+    /*
+    if (typeof Bun !== "undefined" && isLocalhost) {
+      const mkcertCA = getMkcertCACert();
+      if (mkcertCA) {
+        (fetchOptions as any).tls = {
+          ca: mkcertCA,
+          rejectUnauthorized: true,
+        };
+      } else {
+        (fetchOptions as any).tls = {
+          rejectUnauthorized: false,
+        };
+      }
+    }
+    */
+
+    return fetchImpl(url, fetchOptions).finally(() => {
       clearTimeout(timeoutId);
       if (existingSignal && abortListener) {
         existingSignal.removeEventListener("abort", abortListener);
@@ -803,6 +821,8 @@ export async function prepareTestDb(): Promise<void> {
   const releaseLock = await acquireDbLock(requestId, 10000);
 
   try {
+    // Get fresh client - reset if there were previous connection issues
+    resetSharedClient();
     const client = getTestSupabaseClient();
 
     // Use fast TRUNCATE cleanup

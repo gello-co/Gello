@@ -1,4 +1,5 @@
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 
 /**
  * Bun test global setup.
@@ -20,9 +21,43 @@ function sleepSync(ms: number): void {
   Atomics.wait(sleepArray, 0, 0, ms);
 }
 
+// Store mkcert CA certificate for direct use in Bun's TLS configuration
+// Bun's fetch TLS options don't fully respect NODE_EXTRA_CA_CERTS, so we load it directly
+let mkcertCACert: string | null = null;
+
 function configureLocalHttps(): void {
   const url = process.env.API_URL || process.env.SUPABASE_URL;
   if (url && (url.includes("127.0.0.1") || url.includes("localhost"))) {
+    // Try to use mkcert root CA for proper certificate trust
+    // Load the CA certificate directly for Bun's TLS configuration
+    try {
+      const mkcertCARoot = execSync("mkcert -CAROOT 2>/dev/null", {
+        encoding: "utf-8",
+      })
+        .toString()
+        .trim();
+      if (mkcertCARoot) {
+        const rootCAPath = `${mkcertCARoot}/rootCA.pem`;
+        // Check if root CA file exists
+        if (existsSync(rootCAPath)) {
+          // Read CA certificate for direct use in Bun's TLS options
+          mkcertCACert = readFileSync(rootCAPath, "utf-8");
+
+          // Also set NODE_EXTRA_CA_CERTS for Node.js compatibility
+          process.env.NODE_EXTRA_CA_CERTS = rootCAPath;
+
+          console.log(
+            `[bun-setup] Configured mkcert root CA: ${rootCAPath} (loaded for Bun TLS)`,
+          );
+          return;
+        }
+      }
+    } catch {
+      // mkcert not available or CAROOT not found - fall back to disabling verification
+    }
+
+    // Fallback: Disable certificate verification for localhost (less secure but works)
+    // This is used when mkcert is not available or not configured
     const warningHandler = (warning: Error) => {
       if (warning.message.includes("NODE_TLS_REJECT_UNAUTHORIZED")) {
         return;
@@ -33,7 +68,15 @@ function configureLocalHttps(): void {
     };
     process.on("warning", warningHandler);
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    console.log(
+      "[bun-setup] Using NODE_TLS_REJECT_UNAUTHORIZED=0 (mkcert not configured)",
+    );
   }
+}
+
+// Export function to get mkcert CA certificate for use in fetch TLS configuration
+export function getMkcertCACert(): string | null {
+  return mkcertCACert;
 }
 
 let envOutput: string[] = [];
@@ -87,8 +130,17 @@ if (supabaseReady) {
     process.env.SUPABASE_PUBLISHABLE_KEY = process.env.PUBLISHABLE_KEY;
   }
   if (process.env.API_URL) {
-    process.env.SUPABASE_LOCAL_URL = process.env.API_URL;
-    process.env.SUPABASE_URL = process.env.API_URL;
+    // Convert HTTPS to HTTP for local development (TLS disabled in config.toml)
+    // This avoids WSL2/Docker TLS handshake issues
+    const apiUrl = process.env.API_URL.replace(/^https:/, "http:");
+    process.env.SUPABASE_LOCAL_URL = apiUrl;
+    process.env.SUPABASE_URL = apiUrl;
+  }
+
+  // Set AUTH_SITE_URL for Supabase Auth (required for local development)
+  // Use HTTP to match the API URL configuration
+  if (!process.env.AUTH_SITE_URL) {
+    process.env.AUTH_SITE_URL = "http://127.0.0.1:3000";
   }
 
   configureLocalHttps();

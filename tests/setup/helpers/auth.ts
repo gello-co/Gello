@@ -3,6 +3,7 @@ import type { User } from "../../../ProjectSourceCode/src/lib/database/users.db.
 import { DuplicateUserError } from "../../../ProjectSourceCode/src/lib/errors/app.errors.js";
 import { AuthService } from "../../../ProjectSourceCode/src/lib/services/auth.service.js";
 import { SEEDED_USER_PASSWORD } from "../../../scripts/seed-db-snaplet";
+import { setCsrfHeadersIfEnabled } from "./csrf.js";
 import {
   createTimeoutPromise,
   getAnonSupabaseClient,
@@ -29,11 +30,8 @@ const ADMIN_CREDENTIALS = {
   displayName: "Test Admin",
 } as const;
 
-const SEEDED_USER_FIXTURES: Record<string, { role: User["role"] }> = {
-  "admin@test.com": { role: "admin" },
-  "manager@test.com": { role: "manager" },
-  "member@test.com": { role: "member" },
-} as const;
+// Note: SEEDED_USER_FIXTURES removed - tests now use fresh users via generateTestEmail()
+// Seeded users (admin@test.com, manager@test.com, member@test.com) are only for manual testing
 
 async function findExistingUser(
   client: ReturnType<typeof getTestSupabaseClient>,
@@ -152,20 +150,6 @@ async function retrieveUserWithRetry(
   throw new Error(`Failed to retrieve created user: ${email}`);
 }
 
-async function loginUser(
-  authService: AuthService,
-  email: string,
-  password: string,
-): Promise<SessionTokens> {
-  const result = await authService.login({ email, password });
-
-  if (!result.session) {
-    throw new Error("Failed to get session from login");
-  }
-
-  return result.session;
-}
-
 async function ensureAdminUser(): Promise<void> {
   const client = getTestSupabaseClient();
 
@@ -187,47 +171,28 @@ export async function createTestUser(
   const authClient = getAnonSupabaseClient();
   const authService = new AuthService(authClient);
 
-  const seededUser = SEEDED_USER_FIXTURES[email];
+  // Always create fresh users for tests - no reuse of existing users
+  // This ensures full test isolation and eliminates auth state conflicts
+  // Even if a user exists with matching credentials, we delete and recreate
+  // to ensure Supabase Auth state is fresh and synchronized
   const existingUser = await findExistingUser(client, email);
 
-  if (seededUser) {
-    if (role && role !== seededUser.role) {
-      console.warn(
-        `[tests][auth] Requested role '${role}' for seeded user '${email}', but fixture role is '${seededUser.role}'. Using seeded role.`,
-      );
-    }
-    if (!existingUser) {
-      throw new Error(
-        `Seeded user ${email} not found. Run 'bun run seed' before executing tests.`,
-      );
-    }
-    return {
-      user: existingUser,
-      email,
-      password: SEEDED_USER_PASSWORD,
-    };
-  }
-
+  // Always delete existing user to ensure fresh state
+  // This prevents auth state synchronization issues in parallel test execution
   if (existingUser) {
     try {
-      const testLogin = await authService.login({ email, password });
-      if (testLogin.user) {
-        return {
-          user: existingUser,
-          email,
-          password,
-        };
-      }
+      await client.auth.admin.deleteUser(existingUser.id);
     } catch {
-      try {
-        await client.auth.admin.deleteUser(existingUser.id);
-      } catch {
-        // ignore
-      }
+      // ignore if already deleted or doesn't exist in auth
+    }
+    try {
       await client.from("users").delete().eq("id", existingUser.id);
+    } catch {
+      // ignore if already deleted
     }
   }
 
+  // Create new user
   const displayNameValue = displayName ?? email.split("@")[0] ?? "Test User";
   const registerResult = await registerUserWithRetry(
     authService,
@@ -238,6 +203,11 @@ export async function createTestUser(
   );
 
   if (registerResult?.user) {
+    // Fixed delay after user creation to allow Supabase Auth to sync
+    // Configurable via TEST_AUTH_SYNC_DELAY env var (default: 500ms)
+    const syncDelay = parseInt(process.env.TEST_AUTH_SYNC_DELAY || "500", 10);
+    await new Promise((resolve) => setTimeout(resolve, syncDelay));
+
     return {
       user: { ...registerResult.user, password_hash: "" } as User,
       email,
@@ -245,25 +215,52 @@ export async function createTestUser(
     };
   }
 
+  // Handle race condition: user might have been created by another test
+  // In this case, delete and retry once to ensure fresh creation
   if (!registerResult) {
     const duplicateUser = await findExistingUser(client, email);
     if (duplicateUser) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Delete the duplicate and retry creation
       try {
-        const testLogin = await authService.login({ email, password });
-        if (testLogin.user) {
-          return {
-            user: duplicateUser,
-            email,
-            password,
-          };
-        }
+        await client.auth.admin.deleteUser(duplicateUser.id);
       } catch {
-        // fallthrough
+        // ignore if already deleted
+      }
+      try {
+        await client.from("users").delete().eq("id", duplicateUser.id);
+      } catch {
+        // ignore if already deleted
+      }
+
+      // Wait for cleanup to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Retry registration
+      const retryResult = await registerUserWithRetry(
+        authService,
+        email,
+        password,
+        displayNameValue,
+        role,
+      );
+
+      if (retryResult?.user) {
+        const syncDelay = parseInt(
+          process.env.TEST_AUTH_SYNC_DELAY || "500",
+          10,
+        );
+        await new Promise((resolve) => setTimeout(resolve, syncDelay));
+
+        return {
+          user: { ...retryResult.user, password_hash: "" } as User,
+          email,
+          password,
+        };
       }
     }
   }
 
+  // Retrieve the user that was created
   const user = await retrieveUserWithRetry(client, email);
 
   return {
@@ -273,27 +270,120 @@ export async function createTestUser(
   };
 }
 
-export async function loginAsAdmin(): Promise<SessionTokens> {
-  const authClient = getAnonSupabaseClient();
-  const authService = new AuthService(authClient);
-
+export async function loginAsAdmin(options?: {
+  bypass?: boolean;
+}): Promise<{ cookies: string[]; cookieHeader: string; bypassHeaders?: Record<string, string> }> {
   await ensureAdminUser();
-
-  return loginUser(
-    authService,
+  return loginAsUser(
     ADMIN_CREDENTIALS.email,
     ADMIN_CREDENTIALS.password,
+    options,
   );
 }
 
+/**
+ * Login via the app's login endpoint and return cookies.
+ * Uses the real production login flow for realistic testing.
+ *
+ * For MVP reliability: includes a fixed delay after login to allow
+ * Supabase Auth to sync session state before returning.
+ *
+ * @param email - User email address
+ * @param password - User password
+ * @param options - Optional configuration
+ * @param options.bypass - If true, returns bypass headers instead of real cookies (test env only)
+ * @returns Object with cookies array or bypass headers
+ */
 export async function loginAsUser(
   email: string,
   password: string,
-): Promise<SessionTokens> {
-  const authClient = getAnonSupabaseClient();
-  const authService = new AuthService(authClient);
+  options?: { bypass?: boolean },
+): Promise<{ cookies: string[]; cookieHeader: string; bypassHeaders?: Record<string, string> }> {
+  // MVP: Test bypass option for rapid local development
+  // Only available in test environment
+  if (options?.bypass && process.env.NODE_ENV === "test") {
+    return {
+      cookies: [],
+      cookieHeader: "",
+      bypassHeaders: {
+        "X-Test-Bypass": "true",
+        "X-Test-User-Id": email, // Use email as user identifier for bypass
+      },
+    };
+  }
 
-  return loginUser(authService, email, password);
+  // Import app and request dynamically to avoid circular dependencies
+  const { app } = await import("../../../ProjectSourceCode/src/server/app.js");
+  const request = (await import("supertest")).default;
+
+  // Get CSRF token if needed
+  const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+  // Call the real login endpoint
+  let loginReq = request(app).post("/api/auth/login");
+  loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+  const response = await loginReq.send({ email, password });
+
+  if (!response.ok) {
+    throw new Error(
+      `Login failed: ${response.status} - ${response.text || response.body?.error || "Unknown error"}`,
+    );
+  }
+
+  // Extract cookies from Set-Cookie headers
+  const setCookies = response.headers["set-cookie"];
+  if (!setCookies || !Array.isArray(setCookies) || setCookies.length === 0) {
+    throw new Error("No cookies returned from login endpoint");
+  }
+
+  // Extract cookie values (remove attributes like HttpOnly, Secure, etc.)
+  // Join cookies as a single Cookie header string for supertest (more reliable than array)
+  const cookieStrings = setCookies
+    .map((cookie: string) => {
+      // Extract just the name=value part (before first semicolon)
+      const nameValue = cookie.split(";")[0]?.trim();
+      return nameValue;
+    })
+    .filter(
+      (c): c is string =>
+        typeof c === "string" && c.length > 0 && c.includes("="),
+    );
+
+  if (cookieStrings.length === 0) {
+    throw new Error(
+      `No valid cookies extracted from login response. Set-Cookie headers: ${JSON.stringify(setCookies)}`,
+    );
+  }
+
+  // Join cookies with "; " (semicolon + space) as per HTTP Cookie header spec
+  const cookieHeader = cookieStrings.join("; ");
+
+  // MVP: Fixed delay after login to allow Supabase Auth to sync session state
+  // This is simpler and more reliable than complex polling for MVP
+  // Configurable via TEST_AUTH_SYNC_DELAY env var (default: 500ms)
+  const syncDelay = parseInt(process.env.TEST_AUTH_SYNC_DELAY || "500", 10);
+  await new Promise((resolve) => setTimeout(resolve, syncDelay));
+
+  // Return both array (for backward compatibility) and joined string (preferred)
+  return { cookies: cookieStrings, cookieHeader };
+}
+
+/**
+ * Helper to get CSRF token safely (handles case where CSRF is disabled).
+ */
+async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
+  const { app } = await import("../../../ProjectSourceCode/src/server/app.js");
+  const request = (await import("supertest")).default;
+
+  const csrfResponse = await request(app).get("/api/csrf-token");
+  if (csrfResponse.status === 404) {
+    return { token: "", cookie: "" };
+  }
+  return {
+    token: csrfResponse.body.csrfToken || "",
+    cookie: csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "",
+  };
 }
 
 export function generateTestEmail(label: string): string {

@@ -28,9 +28,12 @@ export async function ensureTemplateExists(): Promise<void> {
   );
 
   const mainClient = new Client({ connectionString: MAIN_DB_URL });
-  await mainClient.connect();
+  let clientConnected = false;
 
   try {
+    await mainClient.connect();
+    clientConnected = true;
+
     // Check if template database exists
     const { rows } = await mainClient.query(
       `SELECT 1 FROM pg_database WHERE datname = $1`,
@@ -41,6 +44,7 @@ export async function ensureTemplateExists(): Promise<void> {
       logger.info({ requestId }, "[template] Template database already exists");
       templateCreated = true;
       await mainClient.end();
+      clientConnected = false;
       return;
     }
 
@@ -66,6 +70,10 @@ export async function ensureTemplateExists(): Promise<void> {
           "[template] Template was created while waiting for lock",
         );
         templateCreated = true;
+        // Release lock before closing connection
+        await mainClient.query("SELECT pg_advisory_unlock(12345)");
+        await mainClient.end();
+        clientConnected = false;
         return;
       }
 
@@ -73,7 +81,9 @@ export async function ensureTemplateExists(): Promise<void> {
       logger.info({ requestId }, "[template] Creating empty template database");
       await mainClient.query(`CREATE DATABASE ${TEMPLATE_DB_NAME}`);
 
+      // Close connection before using external processes (no longer needed)
       await mainClient.end();
+      clientConnected = false;
 
       // Use pg_dump to copy schema from postgres to template
       logger.info(
@@ -113,23 +123,29 @@ export async function ensureTemplateExists(): Promise<void> {
           } else {
             logger.error(
               { requestId, pgDumpStderr, psqlStderr },
-              "[template] Schema copy failed"
+              "[template] Schema copy failed",
             );
             reject(
               new Error(
-                `psql failed with code ${code}\npsql stderr: ${psqlStderr}\npg_dump stderr: ${pgDumpStderr}`
-              )
+                `psql failed with code ${code}\npsql stderr: ${psqlStderr}\npg_dump stderr: ${pgDumpStderr}`,
+              ),
             );
           }
         });
 
         pgDump.on("error", (err) => {
-          logger.error({ requestId, error: err.message }, "[template] pg_dump spawn error");
+          logger.error(
+            { requestId, error: err.message },
+            "[template] pg_dump spawn error",
+          );
           reject(err);
         });
-        
+
         psql.on("error", (err) => {
-          logger.error({ requestId, error: err.message }, "[template] psql spawn error");
+          logger.error(
+            { requestId, error: err.message },
+            "[template] psql spawn error",
+          );
           reject(err);
         });
       });
@@ -167,7 +183,6 @@ export async function ensureTemplateExists(): Promise<void> {
       await lockClient.end();
     }
   } catch (error) {
-    await mainClient.end();
     logger.error(
       {
         requestId,
@@ -176,5 +191,10 @@ export async function ensureTemplateExists(): Promise<void> {
       "[template] Failed to ensure template exists",
     );
     throw error;
+  } finally {
+    // Ensure client is closed
+    if (clientConnected) {
+      await mainClient.end();
+    }
   }
 }

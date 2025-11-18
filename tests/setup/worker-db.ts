@@ -53,8 +53,7 @@ export async function createWorkerDatabase(): Promise<string> {
     // Note: Supabase API URL (via Kong) stays the same
     // PostgREST will still use the main database schema
     // We're only using per-worker databases for direct SQL connections
-    const supabaseApiUrl =
-      process.env.SUPABASE_URL || "https://127.0.0.1:54321";
+    const supabaseApiUrl = process.env.SUPABASE_URL || "http://127.0.0.1:54321";
 
     // Set environment variables for this worker
     process.env.WORKER_DB_URL = dbUrl;
@@ -129,7 +128,4 @@ export function getWorkerDbUrl(): string {
   return workerDbUrl;
 }
 
-// Cleanup on process exit
-process.on("exit", () => {
-  // Note: Can't use async here, cleanup happens in beforeEach/afterEach
-});
+// Cleanup is handled in worker-db-preload.ts via beforeExit handler

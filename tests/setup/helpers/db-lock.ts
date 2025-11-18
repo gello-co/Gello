@@ -1,3 +1,4 @@
+import { unlinkSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
@@ -83,7 +84,7 @@ function isProcessAlive(pid: number): boolean {
 
 process.on("exit", () => {
   try {
-    require("node:fs").unlinkSync(LOCK_FILE);
+    unlinkSync(LOCK_FILE);
   } catch {
     // Ignore cleanup errors on exit
   }
