@@ -37,14 +37,4 @@ router.post("/register", (req, res) => {
   }
 });
 
-//CRUD board routes
-
-router.get("/viewBoards", async (req, res) => {});
-
-router.post("/createBoard", async (req, res) => {});
-
-router.put("/updateBoard", async (req, res) => {});
-
-router.delete("/deleteBoard", async (req, res) => {});
-
 export default router;
