@@ -96,6 +96,15 @@ echo "🚀 Setting up Gello development environment..."
 # Initialize Doppler CLI (fetches token from gist)
 bash .devcontainer/doppler-init.sh
 
+# Create cache directories for better performance
+mkdir -p .bun-cache .cache logs
+echo "✅ Cache directories created"
+
+# Verify Homebrew is in PATH (for mkcert)
+if ! command -v brew &> /dev/null; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" 2>/dev/null || true
+fi
+
 # Verify tools are installed (should be in Dockerfile)
 if ! command -v bun &> /dev/null; then
   echo "❌ Bun not found - should be installed in Dockerfile"

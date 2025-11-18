@@ -1,43 +1,48 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 echo "🔐 Initializing Doppler CLI..."
 
-# Check if token is provided via environment variable first
-if [ -z "$DOPPLER_TOKEN" ]; then
-  # If not in env, prompt user interactively
-  echo "📥 Doppler token not found in DOPPLER_TOKEN environment variable"
-  echo "   Please provide your Doppler token:"
-  read -s -p "   Doppler Token: " DOPPLER_TOKEN
-  echo ""
-  
-  if [ -z "$DOPPLER_TOKEN" ]; then
-    echo "❌ Doppler token is required"
-    echo ""
-    echo "   To set the token:"
-    echo "   1. Export DOPPLER_TOKEN environment variable, or"
-    echo "   2. Run this script interactively and paste the token when prompted"
-    echo ""
-    echo "   For CI/CD, use OIDC: doppler oidc login"
-    exit 1
-  fi
-else
-  echo "✅ Doppler token found in environment variable"
+if ! command -v doppler >/dev/null 2>&1; then
+  echo "⚠️  Doppler CLI is not installed (expected inside devcontainer). Skipping auth."
+  exit 0
 fi
 
-# Authenticate Doppler with the token (scoped to current directory, not global)
-# Note: For CI/CD, prefer OIDC (doppler oidc login) for short-lived credentials when supported
-echo "🔑 Authenticating Doppler..."
-if echo "$DOPPLER_TOKEN" | doppler configure set token --scope . --silent; then
-  echo "✅ Doppler authenticated successfully"
-else
-  echo "❌ Failed to authenticate Doppler"
+# If already authenticated, nothing to do
+if doppler me >/dev/null 2>&1; then
+  echo "✅ Doppler already authenticated"
+  exit 0
+fi
+
+# Use env token when provided, otherwise prompt
+if [ -z "${DOPPLER_TOKEN:-}" ]; then
+  echo "📥 Doppler token not found in DOPPLER_TOKEN environment variable"
+  read -s -p "   Paste Doppler Token: " DOPPLER_TOKEN
+  echo ""
+fi
+
+if [ -z "${DOPPLER_TOKEN:-}" ]; then
+  cat <<'EOF'
+❌ Doppler token is required for CLI access.
+
+Options:
+  1. Export DOPPLER_TOKEN in your host shell before rebuilding the container, or
+  2. Run this script again and paste the token when prompted, or
+  3. Run "doppler login" interactively inside the container.
+EOF
   exit 1
 fi
 
-# Verify authentication
-if doppler me &> /dev/null; then
-  echo "✅ Doppler authentication verified"
-else
-  echo "⚠️  Doppler authentication verification failed (may still work)"
+echo "🔑 Authenticating Doppler..."
+if echo "$DOPPLER_TOKEN" | doppler configure set token --scope . --silent; then
+  if doppler me >/dev/null 2>&1; then
+    echo "✅ Doppler authentication verified"
+    exit 0
+  fi
 fi
+
+cat <<'EOF'
+⚠️  Doppler authentication failed (token may be invalid).
+Try running: doppler login --scope . --project gello --config dev
+EOF
+exit 1

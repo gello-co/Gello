@@ -25,7 +25,16 @@ This devcontainer provides a fully self-contained development environment for th
    - Initializes Supabase config (if needed)
    - Sets up git hooks (if .git exists)
 
-3. **Start Development** (single command):
+3. **Verify Setup** (recommended):
+   ```bash
+   # Quick health check
+   bash .devcontainer/test-devcontainer.sh
+
+   # Full E2E workflow validation (includes test suite)
+   bash .devcontainer/e2e-workflow-test.sh
+   ```
+
+4. **Start Development** (single command):
    ```bash
    bun run start
    ```
@@ -35,7 +44,13 @@ This devcontainer provides a fully self-contained development environment for th
    - Start the development server with hot reload
    - Make Playwright browsers available for MCP tools
 
-4. **Access the Application**:
+5. **Authenticate Doppler (recommended once per container)**:
+   ```bash
+   doppler login --scope . --no-localhost --project gello --config dev
+   ```
+   This uses the browser/device flow (no long-lived token). After the CLI prints a verification code and URL, open it on your host, approve access, then run `doppler me` to confirm the container is authenticated.
+
+6. **Access the Application**:
    - Open <http://localhost:3000>
    - Login with test users (see credentials below)
 
@@ -80,9 +95,10 @@ export FULL_SETUP_METRICS=true  # Metrics enabled by default
 
 1. **Open Container**: Use "Reopen in Container"
 2. **Wait for Setup**: Fast setup completes in ~30-60 seconds
-3. **Run Single Command**: `bun run start`
-4. **Access App**: <http://localhost:3000>
-5. **Login**: Use test user credentials (see below)
+3. **Authenticate Doppler**: `bash .devcontainer/doppler-init.sh` (prompts for token if `DOPPLER_TOKEN` not set)
+4. **Run Single Command**: `bun run start`
+5. **Access App**: <http://localhost:3000>
+6. **Login**: Use test user credentials (see below)
 
 That's it! The single command brings up the full environment.
 

@@ -1,72 +1,107 @@
-# Gello Development Container
-# Base image with common dev tools
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE:-mcr.microsoft.com/devcontainers/base:ubuntu}
+# Gello Development Container - Simplified for devcontainer features compatibility
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
-# Install system dependencies and tools in one layer for better caching
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    default-jre \
+# Container metadata
+LABEL maintainer="Gello Development Team"
+LABEL description="Gello development environment with Bun, Node.js, Supabase, and developer tools"
+LABEL version="3.0"
+
+# Install system dependencies in layers for better caching
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Core utilities
     curl \
     wget \
     ca-certificates \
-    libnss3-tools \
-    apt-transport-https \
     gnupg \
     lsof \
+    # Build tools
+    build-essential \
+    g++ \
+    make \
+    python3 \
+    python3-pip \
+    # Database clients
     postgresql-client \
+    # Process monitoring
+    procps \
+    htop \
+    # CLI utilities
+    jq \
+    tree \
+    zip \
+    unzip \
+    # Git LFS
+    git-lfs \
+    # Java for Supabase
+    default-jre \
+    # Security tools
+    libnss3-tools \
+    apt-transport-https \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install Bun (system-wide to /usr/local/bin)
-# bunx is included with Bun installation
-RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash && \
-    bun --version
+# Install Node.js LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs \
+    && node --version \
+    && npm --version \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install mise system-wide via official installation script
-# Note: mise does not have an official apt/PPA package, so using official install script
-# Errors will surface if installation fails (no || true)
-RUN curl https://mise.run | sh && \
-    /root/.local/bin/mise --version
+# Install Bun (system-wide)
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash \
+    && bun --version
 
-# Install oh-my-zsh for vscode user (optional - fails gracefully if network issues occur)
-RUN mkdir -p /home/vscode && \
-    chown -R vscode:vscode /home/vscode && \
-    su vscode -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' || echo "Warning: oh-my-zsh installation failed (optional, continuing...)"
+# Install Homebrew as vscode user (required for mkcert and Supabase CLI)
+USER vscode
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
+    && echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc \
+    && echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.zshrc
 
-# Install Doppler CLI (using official method from https://docs.doppler.com/docs/dockerfile)
-RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | tee /etc/apt/sources.list.d/doppler-cli.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends doppler && \
-    doppler --version && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get clean
+# Install brew packages (mkcert, supabase)
+RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" \
+    && brew install mkcert supabase/tap/supabase \
+    && mkcert -install
 
-# Install Homebrew (for mkcert installation on Linux)
-# See: https://docs.brew.sh/Homebrew-on-Linux
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc && \
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-    brew --version
+# Switch back to root for remaining setup
+USER root
 
-# Install mkcert for locally-trusted TLS certificates
-# See: https://github.com/FiloSottile/mkcert
-# Also add Homebrew to vscode user's shell configs for consistency
-RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-    brew install mkcert && \
-    mkcert -version && \
-    mkcert -install && \
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/vscode/.bashrc && \
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/vscode/.zshrc 2>/dev/null || true
+# Install Doppler CLI
+RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" \
+    'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' \
+    | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" \
+    | tee /etc/apt/sources.list.d/doppler-cli.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends doppler \
+    && doppler --version \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Supabase CLI globally (no need for bunx prefix inside devcontainer)
-RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-    brew install supabase/tap/supabase && \
-    supabase --version
+# Install global npm packages
+RUN npm install -g npm-check-updates vercel netlify-cli
+
+# Add convenient aliases
+RUN echo 'alias ll="ls -lah"' >> /etc/bash.bashrc \
+    && echo 'alias gs="git status"' >> /etc/bash.bashrc \
+    && echo 'alias dc="docker compose"' >> /etc/bash.bashrc \
+    && echo 'alias sb="supabase"' >> /etc/bash.bashrc \
+    && echo 'alias bt="bun test"' >> /etc/bash.bashrc \
+    && echo 'alias bd="bun dev"' >> /etc/bash.bashrc
+
+# Set up cache directories with proper permissions
+RUN mkdir -p /home/vscode/.cache /home/vscode/.npm /home/vscode/.bun \
+    && chown -R vscode:vscode /home/vscode/.cache /home/vscode/.npm /home/vscode/.bun
+
+# Initialize Git LFS
+RUN git lfs install
 
 # Set working directory
 WORKDIR /workspace
 
-# Set up git (will be overridden by devcontainer user setup)
+# Mark workspace as safe directory for git
 RUN git config --global --add safe.directory /workspace
+
+# Set default shell to zsh for vscode user
+RUN chsh -s /bin/zsh vscode || true
+
+# Add vscode user to docker group for socket access
+RUN groupadd -f docker && usermod -aG docker vscode || true
