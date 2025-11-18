@@ -171,3 +171,6 @@ supabase/seed/.snaplet/
 
 # Test lock files (file-based locking for integration tests)
 .test-locks/
+
+.bun-cache/
+bun

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev:env": "bash docs/dev/.devOps/scripts/sync.sh || echo 'Failed to sync'",
-    "dev": "doppler run -- bun --hot ProjectSourceCode/src/index.ts",
+    "dev": "bash scripts/dev.sh",
     "build": "bun run build:css && bun run build:server",
     "build:css": "postcss ProjectSourceCode/src/public/css/input.css -o ProjectSourceCode/src/public/css/output.css",
     "build:server": "bun build ProjectSourceCode/src/index.ts --outdir=dist --target=node --sourcemap",
@@ -19,9 +19,10 @@
     "test:ci": "bun test --bail",
     "test:unit": "bun test tests/unit",
     "test:unit:watch": "bun test tests/unit --watch",
-    "test:integration": "bun test tests/integration --concurrent 1",
+    "test:integration": "bun test tests/integration",
     "test:integration:parallel": "bun test tests/integration",
     "test:e2e": "playwright test",
+    "validate:mvp": "bun run scripts/validate-mvp-test-setup.ts",
     "test:all": "bun run test:unit && bun run test:integration && bun run test:e2e",
     "test:watch": "bun test --watch",
     "db:start": "bunx supabase start",
@@ -55,7 +56,6 @@
     "e2e:visual": "UPDATE_SNAPSHOTS=1 playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
-
     "docs:validate": "bun run docs/dev/.devOps/scripts/docs-validate.ts"
   },
   "dependencies": {

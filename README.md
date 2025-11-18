@@ -28,7 +28,7 @@ A gamified project management application with Trello-like boards, team collabor
 ```bash
 # Install dependencies
 bun install
-
+  
 # Start development environment (Supabase + dev server)
 bun run start
 
@@ -48,6 +48,62 @@ All seeded users have password `password123`:
 - **Admin**: `admin@example.com` (display name: Ada Admin)
 - **Manager**: `manager@example.com` (display name: Alice Manager), `bob.manager@example.com` (display name: Bob Manager)
 - **Member**: `member@example.com` (display name: Ivy Member), `noah.member@example.com` (display name: Noah Member)
+
+## Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+bun test
+
+# Run specific test suites
+bun run test:unit              # Unit tests only
+bun run test:integration       # Integration tests (serial, more reliable)
+bun run test:integration:parallel  # Integration tests (parallel, faster)
+bun run test:e2e               # End-to-end tests with Playwright
+
+# Run all test suites
+bun run test:all
+```
+
+### Test Architecture (MVP)
+
+**Fresh Users Per Test**: Each test automatically creates unique users using `generateTestEmail()`. This eliminates shared authentication state and ensures full test isolation.
+
+**Real Login Flow**: Tests use the actual `/api/auth/login` endpoint, ensuring realistic behavior that matches production.
+
+**Configurable Auth Sync Delay**: After user creation and login, a fixed delay allows Supabase Auth to sync session state. Default is 500ms, configurable via environment variable:
+
+```bash
+# Increase delay for slower environments
+TEST_AUTH_SYNC_DELAY=1000 bun test
+
+# Decrease delay for faster iteration (may cause flakiness)
+TEST_AUTH_SYNC_DELAY=200 bun test
+```
+
+**Test Bypass (Local Development Only)**: For rapid iteration, you can use the test bypass option to skip session validation:
+
+```typescript
+// In your test file
+const { cookies, bypassHeaders } = await loginAsUser(email, password, { bypass: true });
+
+// Use bypass headers instead of cookies
+const response = await request(app)
+  .get("/api/protected")
+  .set(bypassHeaders || {});
+```
+
+**Note**: Test bypass is only available in `NODE_ENV=test` and should not be used in CI.
+
+**Serial Execution**: Integration tests run serially by default (`--concurrent 1`) for reliability. Use `test:integration:parallel` for faster runs if your environment supports it.
+
+### Troubleshooting
+
+- **401 Unauthorized errors**: Increase `TEST_AUTH_SYNC_DELAY` or use test bypass for local development
+- **Flaky tests**: Run with `--concurrent 1` or use `test:integration` script
+- **Slow test runs**: Use test bypass or run tests in parallel if stable
 
 ## Documentation
 
