@@ -95,10 +95,13 @@ router.patch(
   validate(reorderListsSchema),
   async (req, res, next) => {
     try {
-      await (await getListService(req)).reorderLists({
-        board_id: req.body.board_id,
-        list_positions: req.body.list_positions,
-      });
+      await (await getListService(req)).reorderLists(
+        {
+          board_id: req.body.board_id,
+          list_positions: req.body.list_positions,
+        },
+        req.user?.id,  // Pass user_id explicitly for RPC function
+      );
       res.status(204).send();
     } catch (error) {
       next(error);

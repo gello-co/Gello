@@ -3,6 +3,7 @@ import {
   DuplicateUserError,
   InvalidCredentialsError,
   UserNotFoundError,
+  ValidationError,
 } from "../../lib/errors/app.errors.js";
 import { logger } from "../lib/logger.js";
 
@@ -22,6 +23,8 @@ export const errorHandler: ErrorRequestHandler = (
     status = 401;
   } else if (UserNotFoundError.isUserNotFoundError(err)) {
     status = 404;
+  } else if (ValidationError.isValidationError(err)) {
+    status = 400;
   } else if (err.name === "ZodError" || err.issues) {
     status = 400;
   } else if (err.status === 404 || err.statusCode === 404) {
@@ -78,6 +81,14 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
+  if (ValidationError.isValidationError(err)) {
+    // Validation errors (custom ValidationError)
+    return res.status(status).json({
+      error: "Validation error",
+      message: err.message,
+    });
+  }
+
   if (err.name === "ZodError" || err.issues) {
     // Validation errors (Zod errors)
     return res.status(status).json({
@@ -95,9 +106,15 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
-  // Authorization errors
-  if (err.status === 403 || err.statusCode === 403) {
-    return res.status(status).json({
+  // Authorization errors - check both status code and message
+  if (
+    err.status === 403 ||
+    err.statusCode === 403 ||
+    err.message?.includes("Unauthorized") ||
+    err.message?.includes("Forbidden")
+  ) {
+    const authStatus = err.status === 403 || err.statusCode === 403 ? 403 : 403;
+    return res.status(authStatus).json({
       error: "Access denied",
       message: err.message,
     });

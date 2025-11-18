@@ -86,8 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Hide error on successful login (before redirect)
       hideError();
 
-      // Redirect to home page on success
-      window.location.href = "/";
+      // Redirect to boards page on success (authenticated area)
+      window.location.href = "/boards";
     } catch (error) {
       // Show error message inline
       showError(error.message || "Login failed. Please try again.");

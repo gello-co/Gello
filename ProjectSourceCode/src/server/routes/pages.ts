@@ -35,7 +35,11 @@ function getPointsService(userId?: string) {
   return new PointsService(getSupabaseClient(), userId);
 }
 
-router.get("/", (_req, res) => {
+router.get("/", (req, res) => {
+  // Redirect authenticated users to boards page
+  if (req.user) {
+    return res.redirect("/boards");
+  }
   res.render("pages/home", {
     title: "Gello",
     layout: "main",
