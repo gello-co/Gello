@@ -90,9 +90,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Request logging middleware (structured logging)
+import { devAutoAuth } from "./middleware/dev-auto-auth.js";
 import { requestLogger } from "./middleware/request-logger.js";
 
 app.use(requestLogger);
+app.use(devAutoAuth);
 
 // CSRF protection deferred to v0.2.0
 // import { csrfProtection, csrfTokenToLocals } from "./middleware/csrf.js";
