@@ -20,13 +20,19 @@ async function setupTemplateDatabase() {
   await mainClient.connect();
 
   try {
+    // Validate template database name to prevent SQL injection
+    if (!/^[A-Za-z0-9_]+$/.test(TEMPLATE_DB_NAME)) {
+      throw new Error(`Invalid template database name: ${TEMPLATE_DB_NAME}`);
+    }
+
     // Drop existing template if it exists
     console.log(`🗑️  Dropping existing template database if exists...`);
-    await mainClient.query(`DROP DATABASE IF EXISTS ${TEMPLATE_DB_NAME}`);
+    // Use parameterized query for safety (PostgreSQL identifiers must be quoted)
+    await mainClient.query(`DROP DATABASE IF EXISTS "${TEMPLATE_DB_NAME}"`);
 
     // Create template database
     console.log(`✨ Creating template database: ${TEMPLATE_DB_NAME}`);
-    await mainClient.query(`CREATE DATABASE ${TEMPLATE_DB_NAME}`);
+    await mainClient.query(`CREATE DATABASE "${TEMPLATE_DB_NAME}"`);
 
     await mainClient.end();
 
@@ -39,13 +45,7 @@ async function setupTemplateDatabase() {
     await templateClient.connect();
 
     console.log("📋 Applying migrations to template database...");
-    // Migrations are already in main DB, copy schema
-    await templateClient.query(`
-      -- Copy schema from main database
-      -- This assumes migrations have been applied to main DB
-      -- We'll just use pg_dump approach instead
-    `);
-
+    // Schema will be copied via pg_dump below
     await templateClient.end();
 
     // Actually, use Supabase CLI to apply migrations to template
@@ -78,8 +78,18 @@ async function setupTemplateDatabase() {
 
     // Seed the template database
     console.log("🌱 Seeding template database...");
-    process.env.DB_URL = templateDbUrl;
-    await runSeed({ dryRun: false, skipReset: true });
+    const originalDbUrl = process.env.DB_URL;
+    try {
+      process.env.DB_URL = templateDbUrl;
+      await runSeed({ dryRun: false, skipReset: true });
+    } finally {
+      // Restore original DB_URL
+      if (originalDbUrl) {
+        process.env.DB_URL = originalDbUrl;
+      } else {
+        delete process.env.DB_URL;
+      }
+    }
 
     console.log("✅ Template database ready!");
     console.log(`📌 Template: ${TEMPLATE_DB_NAME}`);

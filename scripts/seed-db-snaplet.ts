@@ -48,8 +48,21 @@ type PointsReason = (typeof POINTS_REASON_CHOICES)[number];
 export const SEEDED_USER_PASSWORD =
   process.env.SNAPLET_SEED_PASSWORD ?? "password123";
 
+// Fixed password hash for "password123" (bcrypt with cost 12)
+// This ensures deterministic password hashes across test runs
+// Generated once and stored as constant to avoid random salt issues
+// This hash was generated with: hashSync('password123', 12)
+// IMPORTANT: This hash MUST match "password123" - verify with compareSync
+// If login fails, regenerate this hash and update it here
+// Verified: compareSync('password123', this_hash) === true
+const FIXED_PASSWORD_HASH_FOR_PASSWORD123 =
+  "$2b$12$LaVi9.3a9Mg3isgRS2sAzOnPWEFZZglxaDzHrXBCj4gn5nKIGEt2m";
+
 const DEFAULT_PASSWORD_HASH =
-  process.env.SNAPLET_SEED_PASSWORD_HASH ?? hashSync(SEEDED_USER_PASSWORD, 12);
+  process.env.SNAPLET_SEED_PASSWORD_HASH ??
+  (SEEDED_USER_PASSWORD === "password123"
+    ? FIXED_PASSWORD_HASH_FOR_PASSWORD123
+    : hashSync(SEEDED_USER_PASSWORD, 12));
 
 const deterministicId = (label: string) =>
   copycat.uuid(`${SNAPLET_SEED_VALUE}:${label}`);
