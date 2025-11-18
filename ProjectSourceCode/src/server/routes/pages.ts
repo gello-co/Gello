@@ -41,6 +41,10 @@ router.get("/", (_req, res) => {
   });
 });
 
+router.get("/register", (req, res) => {
+  res.render("pages/auth/register");
+});
+
 router.get("/login", (_req, res) => {
   res.redirect("/login/admin");
 });
@@ -239,6 +243,10 @@ router.get("/profile", requireAuth, async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+router.get("/points-shop", async (req, res, next) =>{
+  res.render("pages/points-shop/index");
 });
 
 export default router;
