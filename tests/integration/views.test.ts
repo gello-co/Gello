@@ -3,13 +3,13 @@
  * Tests that page routes return correct Handlebars templates with proper data
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import request from "supertest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
   getCsrfToken,
-  loginAsAdmin,
   loginAsUser,
   prepareTestDb,
   setCsrfHeadersIfEnabled,
@@ -58,16 +58,11 @@ describe("View Rendering", () => {
     });
 
     it("should render teams list for authenticated user", async () => {
-      const userEmail = `teams-view-${Date.now()}@test.com`;
+      const userEmail = generateTestEmail("teams-view");
       await createTestUser(userEmail, "password123", "member", "Test User");
-      const session = await loginAsUser(userEmail, "password123");
+      const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
-      const response = await request(app)
-        .get("/teams")
-        .set("Cookie", [
-          `sb-access-token=${session.access_token}`,
-          `sb-refresh-token=${session.refresh_token}`,
-        ]);
+      const response = await request(app).get("/teams").set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -83,18 +78,16 @@ describe("View Rendering", () => {
     });
 
     it("should render team detail page for authenticated user", async () => {
-      const userEmail = `team-detail-${Date.now()}@test.com`;
+      const userEmail = generateTestEmail("team-detail");
       await createTestUser(userEmail, "password123", "member", "Test User");
-      const session = await loginAsUser(userEmail, "password123");
+      const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
-      // Create a team first
-      const adminSession = await loginAsAdmin();
-      const adminCookies = [
-        `sb-access-token=${adminSession.access_token}`,
-        `sb-refresh-token=${adminSession.refresh_token}`,
-      ];
-      const { token: csrfToken } = await getCsrfToken(adminCookies);
-      let req = request(app).post("/api/teams").set("Cookie", adminCookies);
+      // Create a team first (use manager instead of admin)
+      const managerEmail = generateTestEmail("team-detail-manager");
+      await createTestUser(managerEmail, "password123", "manager", "Manager User");
+      const { cookieHeader: managerCookieHeader } = await loginAsUser(managerEmail, "password123");
+      const { token: csrfToken } = await getCsrfToken(managerCookieHeader);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookieHeader);
       req = setCsrfHeadersIfEnabled(req, csrfToken);
       const teamResponse = await req.send({ name: "Test Team" });
 
@@ -102,10 +95,7 @@ describe("View Rendering", () => {
 
       const response = await request(app)
         .get(`/teams/${teamId}`)
-        .set("Cookie", [
-          `sb-access-token=${session.access_token}`,
-          `sb-refresh-token=${session.refresh_token}`,
-        ]);
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -121,16 +111,11 @@ describe("View Rendering", () => {
     });
 
     it("should render boards list for authenticated user", async () => {
-      const userEmail = `boards-view-${Date.now()}@test.com`;
+      const userEmail = generateTestEmail("boards-view");
       await createTestUser(userEmail, "password123", "member", "Test User");
-      const session = await loginAsUser(userEmail, "password123");
+      const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
-      const response = await request(app)
-        .get("/boards")
-        .set("Cookie", [
-          `sb-access-token=${session.access_token}`,
-          `sb-refresh-token=${session.refresh_token}`,
-        ]);
+      const response = await request(app).get("/boards").set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -146,27 +131,25 @@ describe("View Rendering", () => {
     });
 
     it("should render board detail page for authenticated user", async () => {
-      const userEmail = `board-detail-${Date.now()}@test.com`;
+      const userEmail = generateTestEmail("board-detail");
       await createTestUser(userEmail, "password123", "member", "Test User");
-      const session = await loginAsUser(userEmail, "password123");
+      const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
-      // Create a team and board first
-      const adminSession = await loginAsAdmin();
-      const adminCookies = [
-        `sb-access-token=${adminSession.access_token}`,
-        `sb-refresh-token=${adminSession.refresh_token}`,
-      ];
-      const { token: csrfToken } = await getCsrfToken(adminCookies);
-      let req = request(app).post("/api/teams").set("Cookie", adminCookies);
+      // Create a team and board first (use manager instead of admin)
+      const managerEmail = generateTestEmail("board-detail-manager");
+      await createTestUser(managerEmail, "password123", "manager", "Manager User");
+      const { cookieHeader: managerCookieHeader } = await loginAsUser(managerEmail, "password123");
+      const { token: csrfToken } = await getCsrfToken(managerCookieHeader);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookieHeader);
       req = setCsrfHeadersIfEnabled(req, csrfToken);
       const teamResponse = await req.send({ name: "Test Team" });
 
       const teamId = teamResponse.body.id;
 
-      const { token: boardCsrfToken } = await getCsrfToken(adminCookies);
+      const { token: boardCsrfToken } = await getCsrfToken(managerCookieHeader);
       let boardReq = request(app)
         .post("/api/boards")
-        .set("Cookie", adminCookies);
+        .set("Cookie", managerCookieHeader);
       boardReq = setCsrfHeadersIfEnabled(boardReq, boardCsrfToken);
       const boardResponse = await boardReq.send({
         name: "Test Board",
@@ -178,10 +161,7 @@ describe("View Rendering", () => {
 
       const response = await request(app)
         .get(`/boards/${boardId}`)
-        .set("Cookie", [
-          `sb-access-token=${session.access_token}`,
-          `sb-refresh-token=${session.refresh_token}`,
-        ]);
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -197,16 +177,13 @@ describe("View Rendering", () => {
     });
 
     it("should render leaderboard for authenticated user", async () => {
-      const userEmail = `leaderboard-${Date.now()}@test.com`;
+      const userEmail = generateTestEmail("leaderboard");
       await createTestUser(userEmail, "password123", "member", "Test User");
-      const session = await loginAsUser(userEmail, "password123");
+      const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
       const response = await request(app)
         .get("/leaderboard")
-        .set("Cookie", [
-          `sb-access-token=${session.access_token}`,
-          `sb-refresh-token=${session.refresh_token}`,
-        ]);
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -222,16 +199,13 @@ describe("View Rendering", () => {
     });
 
     it("should render profile page for authenticated user", async () => {
-      const userEmail = `profile-${Date.now()}@test.com`;
+      const userEmail = generateTestEmail("profile");
       await createTestUser(userEmail, "password123", "member", "Test User");
-      const session = await loginAsUser(userEmail, "password123");
+      const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
       const response = await request(app)
         .get("/profile")
-        .set("Cookie", [
-          `sb-access-token=${session.access_token}`,
-          `sb-refresh-token=${session.refresh_token}`,
-        ]);
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");

@@ -11,7 +11,7 @@ vi.mock("../../../ProjectSourceCode/src/lib/database/users.db.js", () => ({
   updateUser: vi.fn(),
 }));
 vi.mock("@supabase/supabase-js", () => ({
-    createClient: vi.fn(),
+  createClient: vi.fn(),
 }));
 
 describe("AuthService (bun)", () => {
@@ -173,15 +173,15 @@ describe("AuthService (bun)", () => {
 
     it("should throw error if user already exists", async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
-      
+
       // Configure service role client to return existing user
       mockFn(mockServiceRoleClient.from).mockReturnValue({
         select: vi.fn((columns: string) => ({
           eq: vi.fn((column: string, value: string) => ({
             maybeSingle: vi.fn().mockResolvedValue({
-          data: { id: "existing-id", email: uniqueEmail },
-          error: null,
-        }),
+              data: { id: "existing-id", email: uniqueEmail },
+              error: null,
+            }),
           })),
         })),
       } as any);
@@ -298,10 +298,10 @@ describe("AuthService (bun)", () => {
       mockFn(mockServiceRoleClient.from).mockReturnValue({
         insert: vi.fn((data: any) => ({
           select: vi.fn((columns: string) => ({
-              single: vi.fn().mockResolvedValue({
-                data: null,
-                error: { message: "Failed to create profile" },
-              }),
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: "Failed to create profile" },
+            }),
           })),
         })),
       } as any);

@@ -34,8 +34,12 @@ describe("TeamService (bun)", () => {
 
   describe("getTeam", () => {
     it("should get team by id", async () => {
-      const mockTeam = { id: "team-1", name: "Test Team" };
-      mockFn(teamsDb.getTeamById).mockResolvedValue(mockTeam as any);
+      const mockTeam: teamsDb.Team = {
+        id: "team-1",
+        name: "Test Team",
+        created_at: new Date().toISOString(),
+      };
+      mockFn(teamsDb.getTeamById).mockResolvedValue(mockTeam);
 
       const result = await service.getTeam("team-1");
 
@@ -46,11 +50,19 @@ describe("TeamService (bun)", () => {
 
   describe("getAllTeams", () => {
     it("should get all teams", async () => {
-      const mockTeams = [
-        { id: "team-1", name: "Team 1" },
-        { id: "team-2", name: "Team 2" },
+      const mockTeams: teamsDb.Team[] = [
+        {
+          id: "team-1",
+          name: "Team 1",
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "team-2",
+          name: "Team 2",
+          created_at: new Date().toISOString(),
+        },
       ];
-      mockFn(teamsDb.getAllTeams).mockResolvedValue(mockTeams as any);
+      mockFn(teamsDb.getAllTeams).mockResolvedValue(mockTeams);
 
       const result = await service.getAllTeams();
 
@@ -62,8 +74,12 @@ describe("TeamService (bun)", () => {
   describe("createTeam", () => {
     it("should create a team", async () => {
       const input = { name: "New Team", description: "Description" };
-      const mockTeam = { id: "team-1", ...input };
-      mockFn(teamsDb.createTeam).mockResolvedValue(mockTeam as any);
+      const mockTeam: teamsDb.Team = {
+        id: "team-1",
+        name: input.name,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(teamsDb.createTeam).mockResolvedValue(mockTeam);
 
       const result = await service.createTeam(input);
 
@@ -75,8 +91,12 @@ describe("TeamService (bun)", () => {
   describe("updateTeam", () => {
     it("should update a team", async () => {
       const input = { id: "team-1", name: "Updated Team" };
-      const mockTeam = { id: "team-1", name: "Updated Team" };
-      mockFn(teamsDb.updateTeam).mockResolvedValue(mockTeam as any);
+      const mockTeam: teamsDb.Team = {
+        id: "team-1",
+        name: "Updated Team",
+        created_at: new Date().toISOString(),
+      };
+      mockFn(teamsDb.updateTeam).mockResolvedValue(mockTeam);
 
       const result = await service.updateTeam(input);
 
@@ -97,11 +117,31 @@ describe("TeamService (bun)", () => {
 
   describe("getTeamMembers", () => {
     it("should get team members", async () => {
-      const mockUsers = [
-        { id: "user-1", email: "user1@example.com" },
-        { id: "user-2", email: "user2@example.com" },
+      const mockUsers: usersDb.User[] = [
+        {
+          id: "user-1",
+          email: "user1@example.com",
+          password_hash: "hash1",
+          display_name: "User 1",
+          role: "member",
+          team_id: "team-1",
+          total_points: 0,
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "user-2",
+          email: "user2@example.com",
+          password_hash: "hash2",
+          display_name: "User 2",
+          role: "member",
+          team_id: "team-1",
+          total_points: 0,
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+        },
       ];
-      mockFn(usersDb.getUsersByTeam).mockResolvedValue(mockUsers as any);
+      mockFn(usersDb.getUsersByTeam).mockResolvedValue(mockUsers);
 
       const result = await service.getTeamMembers("team-1");
 
@@ -112,11 +152,28 @@ describe("TeamService (bun)", () => {
 
   describe("addMemberToTeam", () => {
     it("should add member to team", async () => {
-      const mockTeam = { id: "team-1", name: "Team 1" };
-      const mockUser = { id: "user-1", team_id: "team-1" };
-      mockFn(teamsDb.getTeamById).mockResolvedValue(mockTeam as any);
-      mockFn(usersDb.getUserById).mockResolvedValue({ id: "user-1" } as any);
-      mockFn(usersDb.updateUser).mockResolvedValue(mockUser as any);
+      const mockTeam: teamsDb.Team = {
+        id: "team-1",
+        name: "Team 1",
+        created_at: new Date().toISOString(),
+      };
+      const mockUser: usersDb.User = {
+        id: "user-1",
+        email: "user1@example.com",
+        password_hash: "hash1",
+        display_name: "User 1",
+        role: "member",
+        team_id: "team-1",
+        total_points: 0,
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(teamsDb.getTeamById).mockResolvedValue(mockTeam);
+      mockFn(usersDb.getUserById).mockResolvedValue({
+        ...mockUser,
+        team_id: null,
+      });
+      mockFn(usersDb.updateUser).mockResolvedValue(mockUser);
 
       const result = await service.addMemberToTeam("user-1", "team-1");
 
@@ -132,9 +189,22 @@ describe("TeamService (bun)", () => {
 
   describe("removeMemberFromTeam", () => {
     it("should remove member from team", async () => {
-      const mockUser = { id: "user-1", team_id: null };
-      mockFn(usersDb.getUserById).mockResolvedValue({ id: "user-1" } as any);
-      mockFn(usersDb.updateUser).mockResolvedValue(mockUser as any);
+      const mockUser: usersDb.User = {
+        id: "user-1",
+        email: "user1@example.com",
+        password_hash: "hash1",
+        display_name: "User 1",
+        role: "member",
+        team_id: null,
+        total_points: 0,
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(usersDb.getUserById).mockResolvedValue({
+        ...mockUser,
+        team_id: "team-1",
+      });
+      mockFn(usersDb.updateUser).mockResolvedValue(mockUser);
 
       const result = await service.removeMemberFromTeam("user-1");
 

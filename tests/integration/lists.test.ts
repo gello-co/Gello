@@ -16,8 +16,8 @@ import {
 } from "../setup/helpers/index.js";
 
 describe("Lists API", () => {
-  let managerCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let managerCookies: string = "";
+  let memberCookies: string = "";
   let managerEmail: string;
   let memberEmail: string;
   let teamId: string;
@@ -37,17 +37,17 @@ describe("Lists API", () => {
     );
     await createTestUser(memberEmail, "password123", "member", "Member User");
 
-    const managerSession = await loginAsUser(managerEmail, "password123");
-    managerCookies = [
-      `sb-access-token=${managerSession.access_token}`,
-      `sb-refresh-token=${managerSession.refresh_token}`,
-    ];
+    const { cookieHeader: managerCookieHeader } = await loginAsUser(
+      managerEmail,
+      "password123",
+    );
+    managerCookies = managerCookieHeader;
 
-    const memberSession = await loginAsUser(memberEmail, "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
 
     // Create team and board for lists
     const { token: csrfToken } = await getCsrfToken(managerCookies);

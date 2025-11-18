@@ -44,11 +44,25 @@ describe("BoardService (bun)", () => {
 
   describe("getBoardsByTeam", () => {
     it("should get boards by team", async () => {
-      const mockBoards = [
-        { id: "board-1", name: "Board 1" },
-        { id: "board-2", name: "Board 2" },
+      const mockBoards: boardsDb.Board[] = [
+        {
+          id: "board-1",
+          name: "Board 1",
+          description: null,
+          team_id: "team-1",
+          created_by: null,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "board-2",
+          name: "Board 2",
+          description: null,
+          team_id: "team-1",
+          created_by: null,
+          created_at: new Date().toISOString(),
+        },
       ];
-      mockFn(boardsDb.getBoardsByTeam).mockResolvedValue(mockBoards as any);
+      mockFn(boardsDb.getBoardsByTeam).mockResolvedValue(mockBoards);
 
       const result = await service.getBoardsByTeam("team-1");
 
@@ -63,8 +77,15 @@ describe("BoardService (bun)", () => {
   describe("createBoard", () => {
     it("should create a board", async () => {
       const input = { name: "New Board", team_id: "team-1" };
-      const mockBoard = { id: "board-1", ...input };
-      mockFn(boardsDb.createBoard).mockResolvedValue(mockBoard as any);
+      const mockBoard: boardsDb.Board = {
+        id: "board-1",
+        name: input.name,
+        description: null,
+        team_id: input.team_id,
+        created_by: null,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(boardsDb.createBoard).mockResolvedValue(mockBoard);
 
       const result = await service.createBoard(input);
 

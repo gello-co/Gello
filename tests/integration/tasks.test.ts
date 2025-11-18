@@ -8,6 +8,7 @@ import request from "supertest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
   getCsrfToken,
   loginAsUser,
   prepareTestDb,
@@ -15,8 +16,8 @@ import {
 } from "../setup/helpers/index.js";
 
 describe("Tasks API", () => {
-  let managerCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let managerCookies: string = "";
+  let memberCookies: string = "";
   let teamId: string;
   let boardId: string;
   let listId: string;
@@ -25,14 +26,18 @@ describe("Tasks API", () => {
   beforeAll(async () => {
     await prepareTestDb();
 
+    // Create fresh users for this test file
+    const managerEmail = generateTestEmail("tasks-manager");
+    const memberEmail = generateTestEmail("tasks-member");
+
     const manager = await createTestUser(
-      "manager@test.com",
+      managerEmail,
       "password123",
       "manager",
       "Manager User",
     );
     const member = await createTestUser(
-      "member@test.com",
+      memberEmail,
       "password123",
       "member",
       "Member User",
@@ -40,17 +45,17 @@ describe("Tasks API", () => {
 
     userId = member.user.id;
 
-    const managerSession = await loginAsUser("manager@test.com", "password123");
-    managerCookies = [
-      `sb-access-token=${managerSession.access_token}`,
-      `sb-refresh-token=${managerSession.refresh_token}`,
-    ];
+    const { cookieHeader: managerCookieHeader } = await loginAsUser(
+      managerEmail,
+      "password123",
+    );
+    managerCookies = managerCookieHeader;
 
-    const memberSession = await loginAsUser("member@test.com", "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
 
     // Create team, board, and list for tasks
     const { token: csrfToken } = await getCsrfToken(managerCookies);
@@ -314,6 +319,14 @@ describe("Tasks API", () => {
       });
 
       taskId = createResponse.body.id;
+
+      // Assign task to member so they can complete it
+      const { token: assignCsrfToken } = await getCsrfToken(managerCookies);
+      let assignReq = request(app)
+        .patch(`/api/tasks/${taskId}/assign`)
+        .set("Cookie", managerCookies);
+      assignReq = setCsrfHeadersIfEnabled(assignReq, assignCsrfToken);
+      await assignReq.send({ assigned_to: userId });
     });
 
     it("should complete task and award points", async () => {

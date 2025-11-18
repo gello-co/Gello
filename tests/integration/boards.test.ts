@@ -8,6 +8,7 @@ import request from "supertest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
   getCsrfToken,
   loginAsUser,
   prepareTestDb,
@@ -15,37 +16,36 @@ import {
 } from "../setup/helpers/index.js";
 
 describe("Boards API", () => {
-  let managerCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let managerCookies: string = "";
+  let memberCookies: string = "";
   let teamId: string;
 
   beforeAll(async () => {
     await prepareTestDb();
 
+    // Create fresh users for this test file
+    const managerEmail = generateTestEmail("boards-manager");
+    const memberEmail = generateTestEmail("boards-member");
+
     await createTestUser(
-      "manager@test.com",
+      managerEmail,
       "password123",
       "manager",
       "Manager User",
     );
-    await createTestUser(
-      "member@test.com",
+    await createTestUser(memberEmail, "password123", "member", "Member User");
+
+    const { cookieHeader: managerCookieHeader } = await loginAsUser(
+      managerEmail,
       "password123",
-      "member",
-      "Member User",
     );
+    managerCookies = managerCookieHeader;
 
-    const managerSession = await loginAsUser("manager@test.com", "password123");
-    managerCookies = [
-      `sb-access-token=${managerSession.access_token}`,
-      `sb-refresh-token=${managerSession.refresh_token}`,
-    ];
-
-    const memberSession = await loginAsUser("member@test.com", "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
 
     // Create a team for boards
     const { token: csrfToken } = await getCsrfToken(managerCookies);

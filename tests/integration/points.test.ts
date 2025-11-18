@@ -8,6 +8,7 @@ import request from "supertest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
   getCsrfToken,
   loginAsUser,
   prepareTestDb,
@@ -15,21 +16,25 @@ import {
 } from "../setup/helpers/index.js";
 
 describe("Points API", () => {
-  let adminCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let adminCookies: string = "";
+  let memberCookies: string = "";
   let userId: string;
 
   beforeAll(async () => {
     await prepareTestDb();
 
+    // Create fresh users for this test file
+    const adminEmail = generateTestEmail("points-admin");
+    const memberEmail = generateTestEmail("points-member");
+
     const admin = await createTestUser(
-      "admin@test.com",
+      adminEmail,
       "password123",
       "admin",
       "Admin User",
     );
     const member = await createTestUser(
-      "member@test.com",
+      memberEmail,
       "password123",
       "member",
       "Member User",
@@ -37,17 +42,17 @@ describe("Points API", () => {
 
     userId = member.user.id;
 
-    const adminSession = await loginAsUser("admin@test.com", "password123");
-    adminCookies = [
-      `sb-access-token=${adminSession.access_token}`,
-      `sb-refresh-token=${adminSession.refresh_token}`,
-    ];
+    const { cookieHeader: adminCookieHeader } = await loginAsUser(
+      adminEmail,
+      "password123",
+    );
+    adminCookies = adminCookieHeader;
 
-    const memberSession = await loginAsUser("member@test.com", "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
   }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/points/leaderboard", () => {

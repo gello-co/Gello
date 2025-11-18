@@ -8,6 +8,7 @@ import request from "supertest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
   getCsrfToken,
   loginAsAdmin,
   loginAsUser,
@@ -16,52 +17,57 @@ import {
 } from "../setup/helpers/index.js";
 
 describe("Teams API", () => {
-  let adminCookies: string[] = [];
-  let managerCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let adminCookies: string = "";
+  let managerCookies: string = "";
+  let memberCookies: string = "";
   let teamId: string;
 
   beforeAll(async () => {
     await prepareTestDb();
 
-    // Create users with different roles
-    await createTestUser(
-      "admin@test.com",
+    // Create fresh users with different roles for this test file
+    // Using generateTestEmail ensures unique users per test run
+    const adminEmail = generateTestEmail("teams-admin");
+    const managerEmail = generateTestEmail("teams-manager");
+    const memberEmail = generateTestEmail("teams-member");
+
+    const adminUser = await createTestUser(
+      adminEmail,
       "password123",
       "admin",
       "Admin User",
     );
-    await createTestUser(
-      "manager@test.com",
+    const managerUser = await createTestUser(
+      managerEmail,
       "password123",
       "manager",
       "Manager User",
     );
-    await createTestUser(
-      "member@test.com",
+    const memberUser = await createTestUser(
+      memberEmail,
       "password123",
       "member",
       "Member User",
     );
 
-    // Get session cookies for each role
-    const adminSession = await loginAsUser("admin@test.com", "password123");
-    adminCookies = [
-      `sb-access-token=${adminSession.access_token}`,
-      `sb-refresh-token=${adminSession.refresh_token}`,
-    ];
+    // Login via app endpoint and get cookies
+    const { cookieHeader: adminCookieHeader } = await loginAsUser(
+      adminEmail,
+      "password123",
+    );
+    adminCookies = adminCookieHeader;
 
-    const managerSession = await loginAsUser("manager@test.com", "password123");
-    managerCookies = [
-      `sb-access-token=${managerSession.access_token}`,
-      `sb-refresh-token=${managerSession.refresh_token}`,
-    ];
+    const { cookieHeader: managerCookieHeader } = await loginAsUser(
+      managerEmail,
+      "password123",
+    );
+    managerCookies = managerCookieHeader;
 
-    const memberSession = await loginAsUser("member@test.com", "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
   }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/teams", () => {
@@ -296,8 +302,9 @@ describe("Teams API", () => {
       teamId = createResponse.body.id;
 
       // Create a user to add to team
+      const newMemberEmail = generateTestEmail("teams-newmember");
       const user = await createTestUser(
-        "newmember@test.com",
+        newMemberEmail,
         "password123",
         "member",
         "New Member",
@@ -361,8 +368,9 @@ describe("Teams API", () => {
       teamId = createResponse.body.id;
 
       // Create and add user to team
+      const removeMemberEmail = generateTestEmail("teams-removemember");
       const user = await createTestUser(
-        "removemember@test.com",
+        removeMemberEmail,
         "password123",
         "member",
         "Remove Member",
