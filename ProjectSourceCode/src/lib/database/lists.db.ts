@@ -103,6 +103,7 @@ export async function reorderLists(
   client: SupabaseClient,
   boardId: string,
   listPositions: Array<{ id: string; position: number }>,
+  userId?: string,  // Add optional user_id parameter
 ): Promise<void> {
   // Validate input: must have at least one list position
   if (listPositions.length === 0) {
@@ -154,11 +155,13 @@ export async function reorderLists(
   }));
 
   // Call the RPC function for atomic update
+  // Pass user_id if provided (workaround for Supabase local session validation issues)
   const { data: updatedCount, error: rpcError } = await client.rpc(
     "reorder_lists",
     {
       p_board_id: boardId,
       p_list_positions: listPositionsJson,
+      p_user_id: userId ?? null,  // Pass user_id, null will fallback to auth.uid()
     },
   );
 

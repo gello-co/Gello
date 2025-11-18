@@ -23,7 +23,7 @@ export const createPointsHistorySchema = z.object({
 });
 
 export const manualAwardSchema = z.object({
-  user_id: z.uuid(),
+  // user_id comes from URL parameter, not request body
   points_earned: z.number().int().min(1),
   notes: z.string().nullable().optional(),
 });

@@ -9,13 +9,13 @@ export const listSchema = z.object({
 });
 
 export const createListSchema = z.object({
-  board_id: z.uuid(),
+  // board_id comes from URL parameter, not request body
   name: z.string().min(1),
   position: z.number().int().min(0).optional(),
 });
 
 export const updateListSchema = z.object({
-  id: z.uuid(),
+  // id comes from URL parameter, not request body
   name: z.string().min(1).optional(),
   position: z.number().int().min(0).optional(),
 });

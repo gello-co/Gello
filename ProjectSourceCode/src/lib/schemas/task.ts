@@ -14,7 +14,7 @@ export const taskSchema = z.object({
 });
 
 export const createTaskSchema = z.object({
-  list_id: z.uuid(),
+  // list_id comes from URL parameter, not request body
   title: z.string().min(1),
   description: z.string().nullable().optional(),
   story_points: z.number().int().min(1).optional(),
@@ -24,7 +24,7 @@ export const createTaskSchema = z.object({
 });
 
 export const updateTaskSchema = z.object({
-  id: z.uuid(),
+  // id comes from URL parameter, not request body
   list_id: z.uuid().optional(),
   title: z.string().min(1).optional(),
   description: z.string().nullable().optional(),
@@ -36,13 +36,13 @@ export const updateTaskSchema = z.object({
 });
 
 export const moveTaskSchema = z.object({
-  id: z.uuid(),
+  // id comes from URL parameter, not request body
   list_id: z.uuid(),
   position: z.number().int().min(0),
 });
 
 export const assignTaskSchema = z.object({
-  id: z.uuid(),
+  // id comes from URL parameter, not request body
   assigned_to: z.uuid().nullable(),
 });
 

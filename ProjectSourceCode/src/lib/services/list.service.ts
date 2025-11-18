@@ -33,8 +33,8 @@ export class ListService {
     return updateList(this.client, input);
   }
 
-  async reorderLists(input: ReorderListsInput): Promise<void> {
-    return reorderLists(this.client, input.board_id, input.list_positions);
+  async reorderLists(input: ReorderListsInput, userId?: string): Promise<void> {
+    return reorderLists(this.client, input.board_id, input.list_positions, userId);
   }
 
   async deleteList(id: string): Promise<void> {
