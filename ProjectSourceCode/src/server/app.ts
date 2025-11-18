@@ -46,12 +46,17 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie parser for Supabase Auth sessions (httpOnly, secure cookies)
 app.use(cookieParser());
 
+import { devBypassAuth } from "./middleware/devBypass.js";
+
 import apiRoutes from "./routes/api.js";
 import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+
+// Dev bypass auth - must be before routes to bypass all authentication
+app.use(devBypassAuth);
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);

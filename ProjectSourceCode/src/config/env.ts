@@ -1,6 +1,7 @@
 export type AppEnv = {
   NODE_ENV: string | undefined;
   PORT: string | undefined;
+  DEV_BYPASS_AUTH?: string;
   SUPABASE_URL?: string;
   SUPABASE_PUBLISHABLE_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
@@ -14,6 +15,7 @@ function pick(...candidates: Array<string | undefined>) {
 export const env: AppEnv = {
   NODE_ENV: process.env.NODE_ENV,
   PORT: process.env.PORT,
+  DEV_BYPASS_AUTH: process.env.DEV_BYPASS_AUTH,
   SUPABASE_URL: pick(
     // Local Supabase (for testing) takes priority
     process.env.SUPABASE_LOCAL_URL,
