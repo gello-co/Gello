@@ -9,32 +9,28 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- Truncate in reverse dependency order
-  -- CASCADE ensures dependent data is also cleared
-  -- RESTART IDENTITY resets sequences to avoid duplicate key errors
-  TRUNCATE TABLE points_history RESTART IDENTITY CASCADE;
-  TRUNCATE TABLE tasks RESTART IDENTITY CASCADE;
-  TRUNCATE TABLE lists RESTART IDENTITY CASCADE;
-  TRUNCATE TABLE boards RESTART IDENTITY CASCADE;
-  TRUNCATE TABLE teams RESTART IDENTITY CASCADE;
-  TRUNCATE TABLE users RESTART IDENTITY CASCADE;
-  TRUNCATE TABLE user_context RESTART IDENTITY CASCADE;
-  
-  -- Delete auth users and identities (known test user IDs from Snaplet Seed)
+  -- Delete all auth users and identities for test cleanup
   -- Must delete identities first due to foreign key constraint
-  DELETE FROM auth.identities 
-  WHERE user_id IN (
-    '52e3e95f-4eb5-5447-8ae5-32e002112cdd',  -- admin@test.com
-    'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7',  -- manager@test.com  
-    '83abb662-cbef-5518-aab9-d407f85c2def'   -- member@test.com
-  );
+  -- WHERE TRUE is required by PostgREST for DELETE statements
+  DELETE FROM auth.identities WHERE TRUE;
+  DELETE FROM auth.users WHERE TRUE;
   
-  DELETE FROM auth.users 
-  WHERE id IN (
-    '52e3e95f-4eb5-5447-8ae5-32e002112cdd',
-    'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7',
-    '83abb662-cbef-5518-aab9-d407f85c2def'
-  );
+  -- Delete all test data from dependent tables
+  -- WHERE TRUE is required by PostgREST for DELETE statements
+  DELETE FROM points_history WHERE TRUE;
+  DELETE FROM tasks WHERE TRUE;
+  DELETE FROM lists WHERE TRUE;
+  DELETE FROM boards WHERE TRUE;
+  DELETE FROM teams WHERE TRUE;
+  DELETE FROM user_context WHERE TRUE;
+  DELETE FROM users WHERE TRUE;
+  
+  -- Reset sequences to avoid duplicate key errors on next insert
+  ALTER SEQUENCE IF EXISTS points_history_id_seq RESTART WITH 1;
+  ALTER SEQUENCE IF EXISTS tasks_id_seq RESTART WITH 1;
+  ALTER SEQUENCE IF EXISTS lists_id_seq RESTART WITH 1;
+  ALTER SEQUENCE IF EXISTS boards_id_seq RESTART WITH 1;
+  ALTER SEQUENCE IF EXISTS teams_id_seq RESTART WITH 1;
 END;
 $$;
 

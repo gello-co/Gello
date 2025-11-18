@@ -85,8 +85,8 @@ SELECT
     u.team_id
 FROM public.users AS u
 ON CONFLICT (user_id) DO UPDATE
-SET role = EXCLUDED.role,
-team_id = EXCLUDED.team_id;
+SET role = excluded.role,
+team_id = excluded.team_id;
 
 CREATE OR REPLACE FUNCTION public.current_user_role()
 RETURNS public.user_role
@@ -273,9 +273,8 @@ USING (
 
 CREATE POLICY users_service_role ON public.users
 FOR ALL
-TO service_role
-USING (TRUE)
-WITH CHECK (TRUE);
+USING (auth.uid() IS NULL)
+WITH CHECK (auth.uid() IS NULL);
 
 --------------------------------------------------------------------------------
 -- TEAMS
@@ -305,9 +304,8 @@ USING (
 
 CREATE POLICY teams_service_role ON public.teams
 FOR ALL
-TO service_role
-USING (TRUE)
-WITH CHECK (TRUE);
+USING (auth.uid() IS NULL)
+WITH CHECK (auth.uid() IS NULL);
 
 --------------------------------------------------------------------------------
 -- BOARDS
@@ -337,9 +335,8 @@ USING (
 
 CREATE POLICY boards_service_role ON public.boards
 FOR ALL
-TO service_role
-USING (TRUE)
-WITH CHECK (TRUE);
+USING (auth.uid() IS NULL)
+WITH CHECK (auth.uid() IS NULL);
 
 --------------------------------------------------------------------------------
 -- LISTS
@@ -369,9 +366,8 @@ USING (
 
 CREATE POLICY lists_service_role ON public.lists
 FOR ALL
-TO service_role
-USING (TRUE)
-WITH CHECK (TRUE);
+USING (auth.uid() IS NULL)
+WITH CHECK (auth.uid() IS NULL);
 
 --------------------------------------------------------------------------------
 -- TASKS
@@ -415,9 +411,8 @@ WITH CHECK (
 
 CREATE POLICY tasks_service_role ON public.tasks
 FOR ALL
-TO service_role
-USING (TRUE)
-WITH CHECK (TRUE);
+USING (auth.uid() IS NULL)
+WITH CHECK (auth.uid() IS NULL);
 
 --------------------------------------------------------------------------------
 -- POINTS HISTORY
@@ -447,6 +442,5 @@ USING (
 
 CREATE POLICY points_history_service_role ON public.points_history
 FOR ALL
-TO service_role
-USING (TRUE)
-WITH CHECK (TRUE);
+USING (auth.uid() IS NULL)
+WITH CHECK (auth.uid() IS NULL);

@@ -19,10 +19,12 @@ max_rows = 1000
 
 [api.tls]
 # Enable HTTPS endpoints locally using a self-signed certificate.
-enabled = true
-# Paths to self-signed certificate pair.
-cert_path = "./certs/local-test-cert.pem"
-key_path = "./certs/local-test-key.pem"
+# DISABLED: Using HTTP for local development to avoid WSL2/Docker TLS handshake issues
+# See: .agents/tmp/mkcert-implementation-status.md for details
+enabled = false
+# Paths to self-signed certificate pair (not used when enabled = false).
+# cert_path = "./certs/local-test-cert.pem"
+# key_path = "./certs/local-test-key.pem"
 
 [db]
 # Port to use for the local database URL.
@@ -129,11 +131,11 @@ enabled = true
 site_url = "env(AUTH_SITE_URL)"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 # Note: Supabase config.toml doesn't support array env vars directly.
-# For local development, this defaults to HTTPS version of site_url.
+# Updated for HTTP local development (TLS disabled)
 # For production/staging, manually update this array with your actual redirect URLs.
 # To use environment variable, you can set AUTH_ADDITIONAL_REDIRECT_URLS and manually parse it,
 # or update this array directly in the config file.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["http://127.0.0.1:3000", "https://127.0.0.1:3000"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # Path to JWT signing key. DO NOT commit your signing keys file to git.
