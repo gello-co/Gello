@@ -1,0 +1,18 @@
+# Enforce LF line endings for shell scripts (prevents Windows CRLF issues)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Ensure other text files use LF by default
+* text=auto eol=lf
+
+# Explicitly set binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
