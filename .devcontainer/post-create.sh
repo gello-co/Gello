@@ -380,7 +380,7 @@ if [ -f "$METRICS_FILE" ]; then
 fi
 
 echo ""
-echo "✅ Development environment setup complete!"
+echo "✅ Environment setup complete"
 echo ""
 echo "Test User Credentials:"
 echo "  Admin:    admin@example.com / password123"

@@ -4,6 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": "."
   },
+  "runArgs": ["--init"],
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
@@ -11,7 +12,6 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        // Existing extensions
         "oven.bun-vscode",
         "biomejs.biome",
         "ms-playwright.playwright",
@@ -90,12 +90,8 @@
     }
   },
 
-  // Lifecycle hooks - runs in this order
-  "initializeCommand": "bash .devcontainer/initialize.sh",
-  "onCreateCommand": "bash .devcontainer/on-create.sh",
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "bash .devcontainer/post-start.sh",
-  "postAttachCommand": "echo '✨ Gello dev container ready! Run: bun dev'",
+  "postCreateCommand": "bash .devcontainer/bootstrap.sh",
+  "postAttachCommand": "echo '🤖 Gello dev container ready. Run: bun run dev'",
 
   "remoteUser": "vscode",
   "mounts": [
