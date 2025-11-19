@@ -1,11 +1,19 @@
+import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Board } from "../../../ProjectSourceCode/src/lib/database/boards.db.js";
 import * as boardsDb from "../../../ProjectSourceCode/src/lib/database/boards.db.js";
 import { BoardService } from "../../../ProjectSourceCode/src/lib/services/board.service.js";
+import { mockFn } from "../../setup/helpers/mock.js";
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/boards.db.js");
+vi.mock("../../../ProjectSourceCode/src/lib/database/boards.db.js", () => ({
+  getBoardById: vi.fn(),
+  getBoardsByTeam: vi.fn(),
+  createBoard: vi.fn(),
+  updateBoard: vi.fn(),
+  deleteBoard: vi.fn(),
+}));
 
-describe("BoardService", () => {
+describe("BoardService (bun)", () => {
   let service: BoardService;
   let mockClient: SupabaseClient;
 
@@ -17,8 +25,15 @@ describe("BoardService", () => {
 
   describe("getBoard", () => {
     it("should get board by id", async () => {
-      const mockBoard = { id: "board-1", name: "Test Board" };
-      vi.mocked(boardsDb.getBoardById).mockResolvedValue(mockBoard as any);
+      const mockBoard: Board = {
+        id: "board-1",
+        name: "Test Board",
+        description: "Test",
+        team_id: "team-1",
+        created_by: "user-1",
+        created_at: new Date().toISOString(),
+      };
+      mockFn(boardsDb.getBoardById).mockResolvedValue(mockBoard as any);
 
       const result = await service.getBoard("board-1");
 
@@ -29,11 +44,25 @@ describe("BoardService", () => {
 
   describe("getBoardsByTeam", () => {
     it("should get boards by team", async () => {
-      const mockBoards = [
-        { id: "board-1", name: "Board 1" },
-        { id: "board-2", name: "Board 2" },
+      const mockBoards: boardsDb.Board[] = [
+        {
+          id: "board-1",
+          name: "Board 1",
+          description: null,
+          team_id: "team-1",
+          created_by: null,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "board-2",
+          name: "Board 2",
+          description: null,
+          team_id: "team-1",
+          created_by: null,
+          created_at: new Date().toISOString(),
+        },
       ];
-      vi.mocked(boardsDb.getBoardsByTeam).mockResolvedValue(mockBoards as any);
+      mockFn(boardsDb.getBoardsByTeam).mockResolvedValue(mockBoards);
 
       const result = await service.getBoardsByTeam("team-1");
 
@@ -48,8 +77,15 @@ describe("BoardService", () => {
   describe("createBoard", () => {
     it("should create a board", async () => {
       const input = { name: "New Board", team_id: "team-1" };
-      const mockBoard = { id: "board-1", ...input };
-      vi.mocked(boardsDb.createBoard).mockResolvedValue(mockBoard as any);
+      const mockBoard: boardsDb.Board = {
+        id: "board-1",
+        name: input.name,
+        description: null,
+        team_id: input.team_id,
+        created_by: null,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(boardsDb.createBoard).mockResolvedValue(mockBoard);
 
       const result = await service.createBoard(input);
 
@@ -62,7 +98,7 @@ describe("BoardService", () => {
     it("should update a board", async () => {
       const input = { id: "board-1", name: "Updated Board" };
       const mockBoard = { id: "board-1", name: "Updated Board" };
-      vi.mocked(boardsDb.updateBoard).mockResolvedValue(mockBoard as any);
+      mockFn(boardsDb.updateBoard).mockResolvedValue(mockBoard as any);
 
       const result = await service.updateBoard(input);
 
@@ -73,7 +109,7 @@ describe("BoardService", () => {
 
   describe("deleteBoard", () => {
     it("should delete a board", async () => {
-      vi.mocked(boardsDb.deleteBoard).mockResolvedValue(undefined);
+      mockFn(boardsDb.deleteBoard).mockResolvedValue(undefined);
 
       await service.deleteBoard("board-1");
 

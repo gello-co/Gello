@@ -1,5 +1,10 @@
 import express from "express";
-import { errorHandler } from "../middleware/errorHandler.js";
+// CSRF routes deferred to v0.2.0
+// import {
+//   csrfProtection,
+//   generateCsrfToken,
+//   getCsrfToken,
+// } from "../middleware/csrf.js";
 import authRoutes from "./api/auth.js";
 import boardsRoutes from "./api/boards.js";
 import listsRoutes from "./api/lists.js";
@@ -10,6 +15,11 @@ import sseRoutes from "./sse.js";
 
 const router = express.Router();
 
+// CSRF routes deferred to v0.2.0
+// router.get("/csrf-token", getCsrfToken);
+// router.get("/csrf-debug", ...);
+
+// API routes
 router.get("/health", (_req, res) => {
   res.json({ ok: true });
 });

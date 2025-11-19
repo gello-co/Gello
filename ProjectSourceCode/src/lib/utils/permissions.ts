@@ -27,31 +27,39 @@ export function isMember(role: UserRole | string): boolean {
 }
 
 /**
+ * Internal helper to check if role can manage resources (admin or manager)
+ * Used by canManage* functions to avoid duplication
+ */
+function canManageResource(role: UserRole | string): boolean {
+  return role === "admin" || role === "manager";
+}
+
+/**
  * Check if role can manage teams (admin or manager)
  */
 export function canManageTeam(role: UserRole | string): boolean {
-  return role === "admin" || role === "manager";
+  return canManageResource(role);
 }
 
 /**
  * Check if role can manage boards (admin or manager)
  */
 export function canManageBoard(role: UserRole | string): boolean {
-  return role === "admin" || role === "manager";
+  return canManageResource(role);
 }
 
 /**
  * Check if role can manage lists (admin or manager)
  */
 export function canManageList(role: UserRole | string): boolean {
-  return role === "admin" || role === "manager";
+  return canManageResource(role);
 }
 
 /**
  * Check if role can manage tasks (admin or manager)
  */
 export function canManageTask(role: UserRole | string): boolean {
-  return role === "admin" || role === "manager";
+  return canManageResource(role);
 }
 
 /**

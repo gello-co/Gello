@@ -11,17 +11,29 @@ export const userSchema = z.object({
   team_id: z.uuid().nullable(),
   total_points: z.number().int().min(0),
   avatar_url: z.string().nullable(),
-  created_at: z.string(),
+  created_at: z.coerce.date(),
 });
 
-export const createUserSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8),
-  display_name: z.string().min(1),
-  role: userRoleSchema.optional(),
-  team_id: z.uuid().nullable().optional(),
-  avatar_url: z.string().nullable().optional(),
-});
+export const createUserSchema = z
+  .object({
+    email: z.email(),
+    password: z.string().min(8),
+    passwordConfirm: z.string().min(8),
+    display_name: z.string().min(1),
+    role: userRoleSchema.optional(),
+    team_id: z.uuid().nullable().optional(),
+    avatar_url: z.string().nullable().optional(),
+    total_points: z.number().int().min(0).optional(),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: "Passwords do not match",
+    path: ["passwordConfirm"],
+  })
+  .transform((data) => {
+    // Remove passwordConfirm before passing to service
+    const { passwordConfirm, ...rest } = data;
+    return rest;
+  });
 
 export const updateUserSchema = z.object({
   id: z.uuid(),

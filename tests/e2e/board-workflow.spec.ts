@@ -1,7 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/helpers.js";
+import {
+  createTestUser,
+  loginAsUser,
+  resetTestDb,
+} from "../setup/helpers/index.js";
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+const DEFAULT_TIMEOUT = 3000; // Timeout for element visibility/wait checks
+const NAVIGATION_TIMEOUT = 5000; // Timeout for waitForURL/navigation waits
 
 test.describe("Board Workflow", () => {
   test.beforeEach(async () => {
@@ -54,7 +60,7 @@ test.describe("Board Workflow", () => {
     // Step 2: Create a board
     await page.goto(`${BASE_URL}/teams/${team.id}/boards`);
     await expect(page.locator("text=Boards")).toBeVisible();
-    
+
     // Visual snapshot: Boards list page
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("boards-list.png");
@@ -75,18 +81,18 @@ test.describe("Board Workflow", () => {
 
     // Wait for board to be created and redirected
     await page.waitForURL((url) => url.pathname.includes("/boards/"), {
-      timeout: 5000,
+      timeout: NAVIGATION_TIMEOUT,
     });
 
     // Extract board ID from URL
     const boardUrl = page.url();
-    const boardIdMatch = boardUrl.match(/\/boards\/([^\/]+)/);
+    const boardIdMatch = boardUrl.match(/\/boards\/([^/]+)/);
     expect(boardIdMatch).toBeTruthy();
     const boardId = boardIdMatch![1];
 
     // Step 3: Add a list to the board
     await expect(page.locator("text=Test Board")).toBeVisible();
-    
+
     // Visual snapshot: Board detail page (empty)
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("board-detail-empty.png");
@@ -116,7 +122,9 @@ test.describe("Board Workflow", () => {
     }
 
     await page.reload();
-    await expect(page.locator("text=To Do")).toBeVisible({ timeout: 3000 });
+    await expect(page.locator("text=To Do")).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
 
     // Step 4: Add a task to the list
     const addTaskButton = page.locator(
@@ -155,7 +163,9 @@ test.describe("Board Workflow", () => {
     }
 
     await page.reload();
-    await expect(page.locator("text=Test Task")).toBeVisible({ timeout: 3000 });
+    await expect(page.locator("text=Test Task")).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
 
     // Step 5: Complete the task
     const completeButton = page.locator(
@@ -165,8 +175,21 @@ test.describe("Board Workflow", () => {
       await completeButton.first().click();
     } else {
       // Use API if no UI
+      // First fetch lists to get the list ID
+      const listsResponse = await request.get(
+        `${BASE_URL}/api/lists/boards/${boardId}/lists`,
+        {
+          headers: {
+            Cookie: `sb-access-token=${session.access_token}`,
+          },
+        },
+      );
+      const lists = await listsResponse.json();
+      const listId = lists[0].id;
+
+      // Then fetch tasks for that list
       const tasksResponse = await request.get(
-        `${BASE_URL}/api/tasks?list_id=${boardId}`,
+        `${BASE_URL}/api/tasks/lists/${listId}/tasks`,
         {
           headers: {
             Cookie: `sb-access-token=${session.access_token}`,
@@ -190,13 +213,13 @@ test.describe("Board Workflow", () => {
     // Step 6: Verify points were awarded
     await page.goto(`${BASE_URL}/leaderboard`);
     await expect(page.locator("text=Leaderboard")).toBeVisible({
-      timeout: 3000,
+      timeout: DEFAULT_TIMEOUT,
     });
 
     // Check if user appears on leaderboard with points
     const userPoints = page.locator(`text=${testUser.user.display_name}`);
-    await expect(userPoints).toBeVisible({ timeout: 3000 });
-    
+    await expect(userPoints).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+
     // Visual snapshot: Leaderboard
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("leaderboard.png");

@@ -7,8 +7,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../../config/env.js";
 import { getUserById, type User } from "../database/users.db.js";
 import {
-	DuplicateUserError,
-	InvalidCredentialsError,
+  DuplicateUserError,
+  InvalidCredentialsError,
 } from "../errors/app.errors.js";
 import type { CreateUserInput, LoginInput } from "../schemas/user.js";
 
@@ -31,23 +31,55 @@ export type SessionUser = {
 };
 
 export class AuthService {
-  constructor(private client: SupabaseClient) {}
+  private readonly serviceRoleClient: SupabaseClient | null;
+
+  // Cached service-role client (singleton pattern) for production use
+  private static serviceRoleClientCache: SupabaseClient | null = null;
+
+  constructor(
+    private client: SupabaseClient,
+    serviceRoleClient?: SupabaseClient,
+  ) {
+    // Allow injecting service role client for testing
+    // If not provided, will be created lazily via getServiceRoleClient()
+    this.serviceRoleClient = serviceRoleClient ?? null;
+  }
 
   /**
    * Get service role client for admin operations
+   * Returns injected client if provided, otherwise a cached singleton instance
    */
   private getServiceRoleClient(): SupabaseClient {
+    // Use injected client if provided (for testing)
+    if (this.serviceRoleClient) {
+      return this.serviceRoleClient;
+    }
+
+    // Return cached client if it exists
+    if (AuthService.serviceRoleClientCache) {
+      return AuthService.serviceRoleClientCache;
+    }
+
+    // Validate environment variables
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error(
         "Service role key required for user management operations",
       );
     }
-    return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+
+    // Create and cache the service-role client
+    AuthService.serviceRoleClientCache = createClient(
+      env.SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
       },
-    });
+    );
+
+    return AuthService.serviceRoleClientCache;
   }
 
   /**
@@ -55,12 +87,21 @@ export class AuthService {
    * Creates auth user and syncs to public.users table
    */
   async register(input: CreateUserInput): Promise<AuthResult> {
-    // Check if user already exists
-    const { data: existingUser } = await this.client
+    const serviceClient = this.getServiceRoleClient();
+
+    // Check if user already exists (needs service role due to RLS)
+    const { data: existingUser, error: existingUserError } = await serviceClient
       .from("users")
       .select("id, email")
       .eq("email", input.email)
-      .single();
+      .maybeSingle();
+
+    // Handle errors other than "not found"
+    if (existingUserError && existingUserError.code !== "PGRST116") {
+      throw new Error(
+        `Failed to check for existing user: ${existingUserError.message}`,
+      );
+    }
 
     if (existingUser) {
       throw new DuplicateUserError("User with this email already exists");
@@ -78,15 +119,19 @@ export class AuthService {
       },
     });
 
+    // Detect duplicate registration by checking response data structure
+    // When signUp resolves without error but data.user.identities is empty,
+    // it means the email is already registered
+    if (
+      !authError &&
+      authData.user &&
+      (!authData.user.identities || authData.user.identities.length === 0)
+    ) {
+      throw new DuplicateUserError("User with this email already exists");
+    }
+
     if (authError) {
-      // Map Supabase Auth errors to custom error classes
-      if (
-        authError.message.includes("already registered") ||
-        authError.message.includes("already exists") ||
-        authError.message.includes("User already registered")
-      ) {
-        throw new DuplicateUserError("User with this email already exists");
-      }
+      // Map other Supabase Auth errors
       throw new Error(`Registration failed: ${authError.message}`);
     }
 
@@ -95,7 +140,6 @@ export class AuthService {
     }
 
     // Create corresponding record in public.users table with auth.users.id
-    const serviceClient = this.getServiceRoleClient();
     const { data: newUser, error: userError } = await serviceClient
       .from("users")
       .insert({
@@ -106,6 +150,7 @@ export class AuthService {
         role: input.role ?? "member",
         team_id: input.team_id ?? null,
         avatar_url: input.avatar_url ?? null,
+        total_points: input.total_points ?? 0,
       })
       .select()
       .single();
@@ -149,11 +194,13 @@ export class AuthService {
       throw new InvalidCredentialsError("Invalid email or password");
     }
 
-    // Get user from public.users table
+    // After signInWithPassword, the client has the session and RLS will work
+    // Use the authenticated client to respect RLS policies
     let user = await getUserById(this.client, authData.user.id);
     if (!user) {
       // User exists in auth but not in public.users - create profile
       // This can happen if user was created directly in auth or profile was deleted
+      // Use service-role client only for the INSERT operation to bypass RLS
       const serviceClient = this.getServiceRoleClient();
       const { data: newUser, error: userError } = await serviceClient
         .from("users")

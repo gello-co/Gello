@@ -1,34 +1,55 @@
 /**
- * Integration tests for authentication API
- * Tests complete auth flow: register, login, session, logout
- * Uses Supabase Auth with cookie-based sessions
+ * Integration tests for authentication API using Bun test runner.
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/helpers.js";
+import {
+  createTestUser,
+  generateTestEmail,
+  getCsrfToken,
+  prepareTestDb,
+  setCsrfHeadersIfEnabled,
+} from "../setup/helpers/index.js";
 
-describe("Auth API", () => {
-  beforeEach(async () => {
-    await resetTestDb();
-  });
+async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
+  const csrfResponse = await request(app).get("/api/csrf-token");
+  if (csrfResponse.status === 404) {
+    return { token: "", cookie: "" };
+  }
+  return {
+    token: csrfResponse.body.csrfToken || "",
+    cookie: csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "",
+  };
+}
+
+describe("Auth API (bun)", () => {
+  beforeAll(async () => {
+    await prepareTestDb();
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("POST /api/auth/register", () => {
     it("should register a new user", async () => {
-      const response = await request(app).post("/api/auth/register").send({
-        email: "test@example.com",
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/register");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const testEmail = generateTestEmail("register");
+      const response = await req.send({
+        email: testEmail,
         password: "password123",
+        passwordConfirm: "password123",
         display_name: "Test User",
       });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("user");
       expect(response.body.user).toHaveProperty("id");
-      expect(response.body.user.email).toBe("test@example.com");
+      expect(response.body.user.email).toBe(testEmail);
       expect(response.body.user.display_name).toBe("Test User");
       expect(response.body.user).not.toHaveProperty("password_hash");
-      // Check for session cookies
       expect(response.headers["set-cookie"]).toBeDefined();
       const cookies = response.headers["set-cookie"];
       expect(Array.isArray(cookies)).toBe(true);
@@ -40,11 +61,18 @@ describe("Auth API", () => {
     });
 
     it("should reject duplicate email", async () => {
-      await createTestUser("duplicate@example.com", "password123");
+      const duplicateEmail = generateTestEmail("duplicate");
+      await createTestUser(duplicateEmail, "password123");
 
-      const response = await request(app).post("/api/auth/register").send({
-        email: "duplicate@example.com",
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/register");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: duplicateEmail,
         password: "password123",
+        passwordConfirm: "password123",
         display_name: "Duplicate User",
       });
 
@@ -54,9 +82,15 @@ describe("Auth API", () => {
     });
 
     it("should validate required fields", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/register");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
         email: "invalid-email",
         password: "short",
+        passwordConfirm: "short",
         display_name: "",
       });
 
@@ -65,25 +99,27 @@ describe("Auth API", () => {
   });
 
   describe("POST /api/auth/login", () => {
+    let loginEmail: string;
+
     beforeEach(async () => {
-      await createTestUser(
-        "login@example.com",
-        "password123",
-        "member",
-        "Login User",
-      );
+      loginEmail = generateTestEmail("login");
+      await createTestUser(loginEmail, "password123", "member", "Login User");
     });
 
     it("should login with valid credentials and set session cookies", async () => {
-      const response = await request(app).post("/api/auth/login").send({
-        email: "login@example.com",
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: loginEmail,
         password: "password123",
       });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("user");
-      expect(response.body.user.email).toBe("login@example.com");
-      // Check for session cookies
+      expect(response.body.user.email).toBe(loginEmail);
       expect(response.headers["set-cookie"]).toBeDefined();
       const cookies = response.headers["set-cookie"];
       expect(Array.isArray(cookies)).toBe(true);
@@ -95,7 +131,12 @@ describe("Auth API", () => {
     });
 
     it("should reject invalid email", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
         email: "nonexistent@example.com",
         password: "password123",
       });
@@ -106,8 +147,13 @@ describe("Auth API", () => {
     });
 
     it("should reject invalid password", async () => {
-      const response = await request(app).post("/api/auth/login").send({
-        email: "login@example.com",
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
+        email: loginEmail,
         password: "wrongpassword",
       });
 
@@ -117,7 +163,12 @@ describe("Auth API", () => {
     });
 
     it("should validate required fields", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/login");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req.send({
         email: "",
         password: "",
       });
@@ -127,9 +178,12 @@ describe("Auth API", () => {
   });
 
   describe("GET /api/auth/session", () => {
+    let sessionEmail: string;
+
     beforeEach(async () => {
+      sessionEmail = generateTestEmail("session");
       await createTestUser(
-        "session@example.com",
+        sessionEmail,
         "password123",
         "member",
         "Session User",
@@ -137,9 +191,13 @@ describe("Auth API", () => {
     });
 
     it("should return user session with valid session cookies", async () => {
-      // Login first to get cookies
-      const loginResponse = await request(app).post("/api/auth/login").send({
-        email: "session@example.com",
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let loginReq = request(app).post("/api/auth/login");
+      loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+      const loginResponse = await loginReq.send({
+        email: sessionEmail,
         password: "password123",
       });
 
@@ -149,16 +207,18 @@ describe("Auth API", () => {
         throw new Error("No cookies returned from login");
       }
 
-      // Extract cookie name=value pairs from Set-Cookie headers
-      // Format: "name=value; Path=/; HttpOnly" -> "name=value"
-      const cookieString = setCookies
+      // Extract cookie values and join as single Cookie header string
+      // Supertest can accept either array or string, but string format is more reliable
+      const cookieStrings = setCookies
         .map((cookie: string) => cookie.split(";")[0])
-        .join("; ");
+        .filter((c): c is string => typeof c === "string" && c.length > 0);
 
-      // Use cookies for session request
+      // Join cookies with "; " (semicolon + space) as per HTTP Cookie header spec
+      const cookieHeader = cookieStrings.join("; ");
+
       const response = await request(app)
         .get("/api/auth/session")
-        .set("Cookie", cookieString);
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("user");
@@ -175,19 +235,21 @@ describe("Auth API", () => {
   });
 
   describe("POST /api/auth/logout", () => {
+    let logoutEmail: string;
+
     beforeEach(async () => {
-      await createTestUser(
-        "logout@example.com",
-        "password123",
-        "member",
-        "Logout User",
-      );
+      logoutEmail = generateTestEmail("logout");
+      await createTestUser(logoutEmail, "password123", "member", "Logout User");
     });
 
     it("should accept logout request with valid session cookies", async () => {
-      // Login first to get cookies
-      const loginResponse = await request(app).post("/api/auth/login").send({
-        email: "logout@example.com",
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let loginReq = request(app).post("/api/auth/login");
+      loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+      const loginResponse = await loginReq.send({
+        email: logoutEmail,
         password: "password123",
       });
 
@@ -196,18 +258,22 @@ describe("Auth API", () => {
         throw new Error("No cookies returned from login");
       }
 
-      // Extract cookie name=value pairs from Set-Cookie headers
-      const cookieString = setCookies
+      const cookieStrings = setCookies
         .map((cookie: string) => cookie.split(";")[0])
-        .join("; ");
+        .filter((c): c is string => typeof c === "string" && c.length > 0);
 
-      const response = await request(app)
+      const cookieHeader = cookieStrings.join("; ");
+      const { token: logoutCsrfToken } = await getCsrfToken(cookieStrings);
+
+      let logoutReq = request(app)
         .post("/api/auth/logout")
-        .set("Cookie", cookieString);
+        .set("Cookie", cookieHeader);
+      logoutReq = setCsrfHeadersIfEnabled(logoutReq, logoutCsrfToken);
+
+      const response = await logoutReq;
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("message");
-      // Check that cookies are cleared
       const clearedCookies = response.headers["set-cookie"];
       if (clearedCookies && Array.isArray(clearedCookies)) {
         expect(
@@ -217,7 +283,12 @@ describe("Auth API", () => {
     });
 
     it("should reject logout without session cookies", async () => {
-      const response = await request(app).post("/api/auth/logout");
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let req = request(app).post("/api/auth/logout");
+      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+
+      const response = await req;
 
       expect(response.status).toBe(401);
     });
@@ -225,56 +296,66 @@ describe("Auth API", () => {
 
   describe("Complete Auth Flow", () => {
     it("should complete full flow: register → login → session → logout", async () => {
-      // Register
-      const registerResponse = await request(app)
-        .post("/api/auth/register")
-        .send({
-          email: "flow@example.com",
-          password: "password123",
-          display_name: "Flow User",
-        });
+      const flowEmail = generateTestEmail("flow");
+      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+
+      let registerReq = request(app).post("/api/auth/register");
+      registerReq = setCsrfHeadersIfEnabled(registerReq, csrfToken, csrfCookie);
+
+      const registerResponse = await registerReq.send({
+        email: flowEmail,
+        password: "password123",
+        passwordConfirm: "password123",
+        display_name: "Flow User",
+      });
 
       expect(registerResponse.status).toBe(201);
       const userId = registerResponse.body.user.id;
       const registerCookies = registerResponse.headers["set-cookie"];
 
-      // Login (if register didn't create session)
-      let cookieString = "";
+      let cookieStrings: string[] = [];
       if (
         registerCookies &&
         Array.isArray(registerCookies) &&
         registerCookies.length > 0
       ) {
-        cookieString = registerCookies
+        cookieStrings = registerCookies
           .map((cookie: string) => cookie.split(";")[0])
-          .join("; ");
+          .filter((c): c is string => typeof c === "string" && c.length > 0);
       } else {
-        const loginResponse = await request(app).post("/api/auth/login").send({
-          email: "flow@example.com",
+        let loginReq = request(app).post("/api/auth/login");
+        loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
+
+        const loginResponse = await loginReq.send({
+          email: flowEmail,
           password: "password123",
         });
 
         expect(loginResponse.status).toBe(200);
         const loginCookies = loginResponse.headers["set-cookie"];
         if (loginCookies && Array.isArray(loginCookies)) {
-          cookieString = loginCookies
+          cookieStrings = loginCookies
             .map((cookie: string) => cookie.split(";")[0])
-            .join("; ");
+            .filter((c): c is string => typeof c === "string" && c.length > 0);
         }
       }
 
-      // Get Session
+      const cookieHeader = cookieStrings.join("; ");
       const sessionResponse = await request(app)
         .get("/api/auth/session")
-        .set("Cookie", cookieString);
+        .set("Cookie", cookieHeader);
 
       expect(sessionResponse.status).toBe(200);
       expect(sessionResponse.body.user.id).toBe(userId);
 
-      // Logout
-      const logoutResponse = await request(app)
+      const { token: logoutCsrfToken } = await getCsrfToken(cookieStrings);
+
+      let logoutReq = request(app)
         .post("/api/auth/logout")
-        .set("Cookie", cookieString);
+        .set("Cookie", cookieHeader);
+      logoutReq = setCsrfHeadersIfEnabled(logoutReq, logoutCsrfToken);
+
+      const logoutResponse = await logoutReq;
 
       expect(logoutResponse.status).toBe(200);
     });

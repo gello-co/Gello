@@ -1,7 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
-// Placeholder to keep CI green without importing Bun-specific modules.
-describe("placeholder", () => {
+describe("placeholder (bun)", () => {
   it("passes trivially", () => {
     expect(true).toBe(true);
   });

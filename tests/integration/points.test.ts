@@ -3,27 +3,38 @@
  * Tests leaderboard, user points, and manual point awards
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
-import { createTestUser, loginAsUser, resetTestDb } from "../setup/helpers.js";
+import {
+  createTestUser,
+  generateTestEmail,
+  getCsrfToken,
+  loginAsUser,
+  prepareTestDb,
+  setCsrfHeadersIfEnabled,
+} from "../setup/helpers/index.js";
 
 describe("Points API", () => {
-  let adminCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let adminCookies: string = "";
+  let memberCookies: string = "";
   let userId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
+
+    // Create fresh users for this test file
+    const adminEmail = generateTestEmail("points-admin");
+    const memberEmail = generateTestEmail("points-member");
 
     const admin = await createTestUser(
-      "admin@test.com",
+      adminEmail,
       "password123",
       "admin",
       "Admin User",
     );
     const member = await createTestUser(
-      "member@test.com",
+      memberEmail,
       "password123",
       "member",
       "Member User",
@@ -31,18 +42,18 @@ describe("Points API", () => {
 
     userId = member.user.id;
 
-    const adminSession = await loginAsUser("admin@test.com", "password123");
-    adminCookies = [
-      `sb-access-token=${adminSession.access_token}`,
-      `sb-refresh-token=${adminSession.refresh_token}`,
-    ];
+    const { cookieHeader: adminCookieHeader } = await loginAsUser(
+      adminEmail,
+      "password123",
+    );
+    adminCookies = adminCookieHeader;
 
-    const memberSession = await loginAsUser("member@test.com", "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
-  });
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/points/leaderboard", () => {
     it("should return leaderboard for authenticated user", async () => {
@@ -93,14 +104,16 @@ describe("Points API", () => {
 
   describe("POST /api/points/users/:id/points", () => {
     it("should award points manually as admin", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(adminCookies);
+      let req = request(app)
         .post(`/api/points/users/${userId}/points`)
-        .set("Cookie", adminCookies)
-        .send({
-          points_earned: 10,
-          reason: "bonus",
-          notes: "Test bonus points",
-        });
+        .set("Cookie", adminCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({
+        points_earned: 10,
+        reason: "bonus",
+        notes: "Test bonus points",
+      });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("id");
@@ -109,22 +122,26 @@ describe("Points API", () => {
     });
 
     it("should reject manual award by member", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .post(`/api/points/users/${userId}/points`)
-        .set("Cookie", memberCookies)
-        .send({
-          points_earned: 10,
-          reason: "bonus",
-        });
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({
+        points_earned: 10,
+        reason: "bonus",
+      });
 
       expect(response.status).toBe(403);
     });
 
     it("should validate required fields", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(adminCookies);
+      let req = request(app)
         .post(`/api/points/users/${userId}/points`)
-        .set("Cookie", adminCookies)
-        .send({});
+        .set("Cookie", adminCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({});
 
       expect(response.status).toBe(400);
     });

@@ -13,7 +13,7 @@ test.describe("Auth Flow", () => {
     // Step 1: Register
     await page.goto(`${BASE_URL}/register`);
     await expect(page.locator('input[name="email"]')).toBeVisible();
-    
+
     // Visual snapshot: Register page
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("register-page.png");
@@ -23,9 +23,9 @@ test.describe("Auth Flow", () => {
     await page.fill('input[name="display_name"]', testDisplayName);
     await page.click('button[type="submit"]');
 
-    // Should redirect to login or dashboard after registration
+    // Should redirect to login or home after registration
     await page.waitForURL(
-      (url) => url.pathname === "/login" || url.pathname === "/dashboard",
+      (url) => url.pathname === "/login" || url.pathname === "/",
       { timeout: 5000 },
     );
 
@@ -34,21 +34,24 @@ test.describe("Auth Flow", () => {
       // Visual snapshot: Login page
       await page.waitForLoadState("networkidle");
       await expect(page).toHaveScreenshot("login-page.png");
-      
+
       await page.fill('input[name="email"]', testEmail);
       await page.fill('input[name="password"]', testPassword);
       await page.click('button[type="submit"]');
     }
 
-    // Should be logged in and redirected to dashboard
-    await page.waitForURL((url) => url.pathname.includes("/dashboard"), {
+    // Should be logged in and redirected to home page
+    await page.waitForURL((url) => url.pathname === "/", {
       timeout: 5000,
     });
-    await expect(page.locator("text=Dashboard")).toBeVisible();
-    
-    // Visual snapshot: Dashboard
+    // Verify we're on the home page (not expecting "Dashboard" text)
+    await expect(
+      page.locator("text=Welcome to Gello").or(page.locator("text=Boards")),
+    ).toBeVisible();
+
+    // Visual snapshot: Home page after login
     await page.waitForLoadState("networkidle");
-    await expect(page).toHaveScreenshot("dashboard.png");
+    await expect(page).toHaveScreenshot("home-after-login.png");
 
     // Step 3: Verify session (check for user info in page)
     await expect(page.locator(`text=${testDisplayName}`)).toBeVisible();
@@ -73,7 +76,7 @@ test.describe("Auth Flow", () => {
 
   test("should handle invalid login credentials", async ({ page }) => {
     await page.goto(`${BASE_URL}/login`);
-    
+
     // Visual snapshot: Login page (before error)
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("login-page-error-state.png");
@@ -86,7 +89,7 @@ test.describe("Auth Flow", () => {
     await expect(
       page.locator("text=Invalid email or password, text=Error, text=Failed"),
     ).toBeVisible({ timeout: 3000 });
-    
+
     // Visual snapshot: Login page with error
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("login-page-with-error.png");

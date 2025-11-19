@@ -24,13 +24,13 @@ router.post("/register", validate(createUserSchema), async (req, res, next) => {
       res.cookie("sb-access-token", result.session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
         maxAge: 3600000, // 1 hour
       });
       res.cookie("sb-refresh-token", result.session.refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
         maxAge: 604800000, // 7 days
       });
     }
@@ -53,13 +53,13 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
       res.cookie("sb-access-token", result.session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
         maxAge: 3600000, // 1 hour
       });
       res.cookie("sb-refresh-token", result.session.refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
         maxAge: 604800000, // 7 days
       });
     }

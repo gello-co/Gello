@@ -9,18 +9,38 @@
     {{/if}}
   </div>
   <div class="row">
-    {{#each boards}}
-      <div class="col-md-4 mb-4">
+    {{#if (length boards)}}
+      {{#each boards}}
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{name}}</h5>
+              {{#if description}}
+                <p class="card-text">{{description}}</p>
+              {{/if}}
+              <a href="/boards/{{id}}" class="btn btn-primary">Open Board</a>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <div class="col-12">
         <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">{{name}}</h5>
-            {{#if description}}
-              <p class="card-text">{{description}}</p>
+          <div class="card-body text-center py-5">
+            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted mb-3">No boards yet</h4>
+            {{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+              <p class="text-muted mb-3">Get started by creating your first board.</p>
+              <button class="btn btn-primary" onclick="createBoard()">
+                <i class="fas fa-plus"></i>
+                Create Board
+              </button>
+            {{else}}
+              <p class="text-muted">Contact an administrator or manager to create a board.</p>
             {{/if}}
-            <a href="/boards/{{id}}" class="btn btn-primary">Open Board</a>
           </div>
         </div>
       </div>
-    {{/each}}
+    {{/if}}
   </div>
 </div>

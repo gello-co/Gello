@@ -160,3 +160,17 @@ bin/
 playwright-report/
 test-results/
 gello-worktrees/
+
+# Supabase CLI development artifacts
+supabase/.branches/
+# Supabase local certificates (auto-generated, not committed)
+supabase/certs/
+# Snaplet generated metadata
+.snaplet/
+supabase/seed/.snaplet/
+
+# Test lock files (file-based locking for integration tests)
+.test-locks/
+
+.bun-cache/
+bun

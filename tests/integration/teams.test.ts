@@ -3,64 +3,72 @@
  * Tests CRUD operations and team member management
  */
 
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
   createTestUser,
+  generateTestEmail,
+  getCsrfToken,
   loginAsAdmin,
   loginAsUser,
-  resetTestDb,
-} from "../setup/helpers.js";
+  prepareTestDb,
+  setCsrfHeadersIfEnabled,
+} from "../setup/helpers/index.js";
 
 describe("Teams API", () => {
-  let adminCookies: string[] = [];
-  let managerCookies: string[] = [];
-  let memberCookies: string[] = [];
+  let adminCookies: string = "";
+  let managerCookies: string = "";
+  let memberCookies: string = "";
   let teamId: string;
 
-  beforeEach(async () => {
-    await resetTestDb();
+  beforeAll(async () => {
+    await prepareTestDb();
 
-    // Create users with different roles
-    await createTestUser(
-      "admin@test.com",
+    // Create fresh users with different roles for this test file
+    // Using generateTestEmail ensures unique users per test run
+    const adminEmail = generateTestEmail("teams-admin");
+    const managerEmail = generateTestEmail("teams-manager");
+    const memberEmail = generateTestEmail("teams-member");
+
+    const adminUser = await createTestUser(
+      adminEmail,
       "password123",
       "admin",
       "Admin User",
     );
-    await createTestUser(
-      "manager@test.com",
+    const managerUser = await createTestUser(
+      managerEmail,
       "password123",
       "manager",
       "Manager User",
     );
-    await createTestUser(
-      "member@test.com",
+    const memberUser = await createTestUser(
+      memberEmail,
       "password123",
       "member",
       "Member User",
     );
 
-    // Get session cookies for each role
-    const adminSession = await loginAsUser("admin@test.com", "password123");
-    adminCookies = [
-      `sb-access-token=${adminSession.access_token}`,
-      `sb-refresh-token=${adminSession.refresh_token}`,
-    ];
+    // Login via app endpoint and get cookies
+    const { cookieHeader: adminCookieHeader } = await loginAsUser(
+      adminEmail,
+      "password123",
+    );
+    adminCookies = adminCookieHeader;
 
-    const managerSession = await loginAsUser("manager@test.com", "password123");
-    managerCookies = [
-      `sb-access-token=${managerSession.access_token}`,
-      `sb-refresh-token=${managerSession.refresh_token}`,
-    ];
+    const { cookieHeader: managerCookieHeader } = await loginAsUser(
+      managerEmail,
+      "password123",
+    );
+    managerCookies = managerCookieHeader;
 
-    const memberSession = await loginAsUser("member@test.com", "password123");
-    memberCookies = [
-      `sb-access-token=${memberSession.access_token}`,
-      `sb-refresh-token=${memberSession.refresh_token}`,
-    ];
-  });
+    const { cookieHeader: memberCookieHeader } = await loginAsUser(
+      memberEmail,
+      "password123",
+    );
+    memberCookies = memberCookieHeader;
+  }, 15000); // 15 seconds should be plenty for local Supabase
 
   describe("GET /api/teams", () => {
     it("should return all teams for authenticated user", async () => {
@@ -82,10 +90,10 @@ describe("Teams API", () => {
   describe("GET /api/teams/:id", () => {
     beforeEach(async () => {
       // Create a team for testing
-      const createResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "Test Team" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({ name: "Test Team" });
 
       teamId = createResponse.body.id;
     });
@@ -117,10 +125,10 @@ describe("Teams API", () => {
 
   describe("POST /api/teams", () => {
     it("should create team as manager", async () => {
-      const response = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "New Team" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ name: "New Team" });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("id");
@@ -128,29 +136,29 @@ describe("Teams API", () => {
     });
 
     it("should create team as admin", async () => {
-      const response = await request(app)
-        .post("/api/teams")
-        .set("Cookie", adminCookies)
-        .send({ name: "Admin Team" });
+      const { token: csrfToken } = await getCsrfToken(adminCookies);
+      let req = request(app).post("/api/teams").set("Cookie", adminCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ name: "Admin Team" });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("name", "Admin Team");
     });
 
     it("should reject team creation by member", async () => {
-      const response = await request(app)
-        .post("/api/teams")
-        .set("Cookie", memberCookies)
-        .send({ name: "Member Team" });
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app).post("/api/teams").set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ name: "Member Team" });
 
       expect(response.status).toBe(403);
     });
 
     it("should validate required fields", async () => {
-      const response = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({});
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({});
 
       expect(response.status).toBe(400);
     });
@@ -166,29 +174,33 @@ describe("Teams API", () => {
 
   describe("PUT /api/teams/:id", () => {
     beforeEach(async () => {
-      const createResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "Original Team" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({ name: "Original Team" });
 
       teamId = createResponse.body.id;
     });
 
     it("should update team as manager", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .put(`/api/teams/${teamId}`)
-        .set("Cookie", managerCookies)
-        .send({ name: "Updated Team" });
+        .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ name: "Updated Team" });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("name", "Updated Team");
     });
 
     it("should reject update by member", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .put(`/api/teams/${teamId}`)
-        .set("Cookie", memberCookies)
-        .send({ name: "Hacked Team" });
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ name: "Hacked Team" });
 
       expect(response.status).toBe(403);
     });
@@ -204,34 +216,43 @@ describe("Teams API", () => {
 
   describe("DELETE /api/teams/:id", () => {
     beforeEach(async () => {
-      const createResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "Team to Delete" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({ name: "Team to Delete" });
 
       teamId = createResponse.body.id;
     });
 
     it("should delete team as admin", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(adminCookies);
+      let req = request(app)
         .delete(`/api/teams/${teamId}`)
         .set("Cookie", adminCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(204);
     });
 
     it("should reject delete by manager", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .delete(`/api/teams/${teamId}`)
         .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(403);
     });
 
     it("should reject delete by member", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .delete(`/api/teams/${teamId}`)
         .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(403);
     });
@@ -245,10 +266,10 @@ describe("Teams API", () => {
 
   describe("GET /api/teams/:id/members", () => {
     beforeEach(async () => {
-      const createResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "Team with Members" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({ name: "Team with Members" });
 
       teamId = createResponse.body.id;
     });
@@ -273,16 +294,17 @@ describe("Teams API", () => {
     let userId: string;
 
     beforeEach(async () => {
-      const createResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "Team for Members" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({ name: "Team for Members" });
 
       teamId = createResponse.body.id;
 
       // Create a user to add to team
+      const newMemberEmail = generateTestEmail("teams-newmember");
       const user = await createTestUser(
-        "newmember@test.com",
+        newMemberEmail,
         "password123",
         "member",
         "New Member",
@@ -291,10 +313,12 @@ describe("Teams API", () => {
     });
 
     it("should add member to team as manager", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .post(`/api/teams/${teamId}/members`)
-        .set("Cookie", managerCookies)
-        .send({ user_id: userId });
+        .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ user_id: userId });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("id", userId);
@@ -302,19 +326,23 @@ describe("Teams API", () => {
     });
 
     it("should reject adding member by regular member", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .post(`/api/teams/${teamId}/members`)
-        .set("Cookie", memberCookies)
-        .send({ user_id: userId });
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({ user_id: userId });
 
       expect(response.status).toBe(403);
     });
 
     it("should validate user_id is required", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .post(`/api/teams/${teamId}/members`)
-        .set("Cookie", managerCookies)
-        .send({});
+        .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req.send({});
 
       expect(response.status).toBe(400);
     });
@@ -332,32 +360,39 @@ describe("Teams API", () => {
     let userId: string;
 
     beforeEach(async () => {
-      const createResponse = await request(app)
-        .post("/api/teams")
-        .set("Cookie", managerCookies)
-        .send({ name: "Team for Removal" });
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app).post("/api/teams").set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const createResponse = await req.send({ name: "Team for Removal" });
 
       teamId = createResponse.body.id;
 
       // Create and add user to team
+      const removeMemberEmail = generateTestEmail("teams-removemember");
       const user = await createTestUser(
-        "removemember@test.com",
+        removeMemberEmail,
         "password123",
         "member",
         "Remove Member",
       );
       userId = user.user.id;
 
-      await request(app)
+      const { token: addMemberCsrfToken, cookies: addMemberCookies } =
+        await getCsrfToken(managerCookies);
+      let addMemberReq = request(app)
         .post(`/api/teams/${teamId}/members`)
-        .set("Cookie", managerCookies)
-        .send({ user_id: userId });
+        .set("Cookie", addMemberCookies);
+      addMemberReq = setCsrfHeadersIfEnabled(addMemberReq, addMemberCsrfToken);
+      await addMemberReq.send({ user_id: userId });
     });
 
     it("should remove member from team as manager", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(managerCookies);
+      let req = request(app)
         .delete(`/api/teams/${teamId}/members/${userId}`)
         .set("Cookie", managerCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("id", userId);
@@ -365,9 +400,12 @@ describe("Teams API", () => {
     });
 
     it("should reject removal by regular member", async () => {
-      const response = await request(app)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
         .delete(`/api/teams/${teamId}/members/${userId}`)
         .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
 
       expect(response.status).toBe(403);
     });

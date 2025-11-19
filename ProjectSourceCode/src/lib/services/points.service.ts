@@ -9,6 +9,7 @@ import {
 } from "../database/points.db.js";
 import { getTaskById } from "../database/tasks.db.js";
 import { getUserById } from "../database/users.db.js";
+import { ResourceNotFoundError } from "../errors/app.errors.js";
 import type {
   CreatePointsHistoryInput,
   ManualAwardInput,
@@ -27,7 +28,7 @@ export class PointsService {
   ): Promise<PointsHistory> {
     const task = await getTaskById(this.client, taskId);
     if (!task) {
-      throw new Error("Task not found");
+      throw new ResourceNotFoundError("Task not found");
     }
 
     if (task.completed_at) {
@@ -55,7 +56,7 @@ export class PointsService {
 
     const user = await getUserById(this.client, input.user_id);
     if (!user) {
-      throw new Error("User not found");
+      throw new ResourceNotFoundError("User not found");
     }
 
     return createPointsHistory(this.client, {

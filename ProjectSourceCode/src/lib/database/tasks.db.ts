@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ResourceNotFoundError } from "../errors/app.errors.js";
 
 export type Task = {
   id: string;
@@ -161,17 +162,28 @@ export async function completeTask(
   client: SupabaseClient,
   taskId: string,
 ): Promise<Task> {
-  const { data, error } = await client
-    .from("tasks")
-    .update({
-      completed_at: new Date().toISOString(),
-    })
-    .eq("id", taskId)
-    .select()
-    .single();
+  // Call a Postgres function that sets completed_at using database timestamp
+  const { data, error } = await client.rpc("complete_task_atomic", {
+    p_task_id: taskId,
+  });
 
   if (error) {
+    // Check for specific error codes instead of fragile string matching
+    // Postgres exceptions raised in RPC functions use SQLSTATE codes
+    // P0001 is the default SQLSTATE for user-defined exceptions
+    // We also check details field which may contain structured error information
+    if (
+      error.code === "P0001" ||
+      error.details?.includes("task_not_found") ||
+      (error.details && error.details.includes("Task not found"))
+    ) {
+      throw new ResourceNotFoundError(`Task not found: ${taskId}`);
+    }
     throw new Error(`Failed to complete task: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Failed to complete task: No data returned");
   }
 
   return data as Task;

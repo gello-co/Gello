@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import express from "express";
 import {
   createListSchema,
@@ -5,15 +6,16 @@ import {
   updateListSchema,
 } from "../../../lib/schemas/list.js";
 import { ListService } from "../../../lib/services/list.service.js";
-import { getSupabaseClient } from "../../../lib/supabase.js";
+import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 import { requireManager } from "../../middleware/requireManager.js";
 import { validate } from "../../middleware/validation.js";
 
 const router = express.Router();
 
-function getListService() {
-  return new ListService(getSupabaseClient());
+async function getListService(req: Request) {
+  const client = await getSupabaseClientForRequest(req);
+  return new ListService(client);
 }
 
 router.get("/boards/:boardId/lists", requireAuth, async (req, res, next) => {
@@ -22,7 +24,7 @@ router.get("/boards/:boardId/lists", requireAuth, async (req, res, next) => {
     if (!boardId) {
       return res.status(400).json({ error: "boardId parameter is required" });
     }
-    const lists = await getListService().getListsByBoard(boardId);
+    const lists = await (await getListService(req)).getListsByBoard(boardId);
     res.json(lists);
   } catch (error) {
     next(error);
@@ -39,7 +41,7 @@ router.post(
       if (!boardId) {
         return res.status(400).json({ error: "boardId parameter is required" });
       }
-      const list = await getListService().createList({
+      const list = await (await getListService(req)).createList({
         ...req.body,
         board_id: boardId,
       });
@@ -56,7 +58,7 @@ router.get("/:id", requireAuth, async (req, res, next) => {
     if (!id) {
       return res.status(400).json({ error: "id parameter is required" });
     }
-    const list = await getListService().getList(id);
+    const list = await (await getListService(req)).getList(id);
     if (!list) {
       return res.status(404).json({ error: "List not found" });
     }
@@ -76,7 +78,7 @@ router.put(
       if (!id) {
         return res.status(400).json({ error: "id parameter is required" });
       }
-      const list = await getListService().updateList({
+      const list = await (await getListService(req)).updateList({
         ...req.body,
         id,
       });
@@ -93,10 +95,13 @@ router.patch(
   validate(reorderListsSchema),
   async (req, res, next) => {
     try {
-      await getListService().reorderLists({
-        board_id: req.body.board_id,
-        list_positions: req.body.list_positions,
-      });
+      await (await getListService(req)).reorderLists(
+        {
+          board_id: req.body.board_id,
+          list_positions: req.body.list_positions,
+        },
+        req.user?.id,  // Pass user_id explicitly for RPC function
+      );
       res.status(204).send();
     } catch (error) {
       next(error);
@@ -110,7 +115,7 @@ router.delete("/:id", requireManager, async (req, res, next) => {
     if (!id) {
       return res.status(400).json({ error: "id parameter is required" });
     }
-    await getListService().deleteList(id);
+    await (await getListService(req)).deleteList(id);
     res.status(204).send();
   } catch (error) {
     next(error);

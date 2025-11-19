@@ -2,7 +2,7 @@
 	<div class="task-header">
 		<h4>{{task.title}}</h4>
 		{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
-			<button class="btn btn-sm btn-link" onclick="editTask('{{task.id}}')">
+			<button class="btn btn-sm btn-link task-edit-btn" data-action="edit" data-task-id="{{task.id}}">
 				<i class="fas fa-edit"></i>
 			</button>
 		{{/if}}
@@ -23,7 +23,7 @@
 	{{/if}}
 	{{#unless task.completed_at}}
 		{{#if (or (eq user.role "admin") (eq user.role "manager") (eq task.assigned_to user.id))}}
-			<button class="btn btn-sm btn-success mt-2" onclick="completeTask('{{task.id}}')">
+			<button class="btn btn-sm btn-success mt-2 task-complete-btn" data-action="complete" data-task-id="{{task.id}}">
 				Complete
 			</button>
 		{{/if}}

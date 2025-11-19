@@ -24,9 +24,11 @@
               class="form-control login-input"
               id="password"
               name="password"
+              autocomplete="current-password"
               required
             />
           </div>
+          <div id="loginError" class="alert alert-danger d-none" role="alert"></div>
           <button type="submit" class="btn btn-signin w-100">Login</button>
         </form>
         <div class="text-center mt-4">
@@ -39,3 +41,4 @@
     </div>
   </div>
 </div>
+<script src="/js/login.js"></script>

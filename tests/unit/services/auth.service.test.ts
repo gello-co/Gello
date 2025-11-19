@@ -1,21 +1,23 @@
+import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as usersDb from "../../../ProjectSourceCode/src/lib/database/users.db.js";
 import { AuthService } from "../../../ProjectSourceCode/src/lib/services/auth.service.js";
+import { mockFn } from "../../setup/helpers/mock.js";
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/users.db.js");
-vi.mock("@supabase/supabase-js", async () => {
-  const actual = await vi.importActual("@supabase/supabase-js");
-  return {
-    ...actual,
-    createClient: vi.fn(),
-  };
-});
+vi.mock("../../../ProjectSourceCode/src/lib/database/users.db.js", () => ({
+  getUserById: vi.fn(),
+  createUser: vi.fn(),
+  updateUser: vi.fn(),
+}));
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(),
+}));
 
-describe("AuthService", () => {
+describe("AuthService (bun)", () => {
   let service: AuthService;
   let mockClient: SupabaseClient;
+  let mockServiceRoleClient: SupabaseClient;
   let mockAuth: {
     signUp: ReturnType<typeof vi.fn>;
     signInWithPassword: ReturnType<typeof vi.fn>;
@@ -25,7 +27,6 @@ describe("AuthService", () => {
       deleteUser: ReturnType<typeof vi.fn>;
     };
   };
-  let serviceRoleClientSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -51,33 +52,89 @@ describe("AuthService", () => {
       }),
     } as unknown as SupabaseClient;
 
-    service = new AuthService(mockClient);
-    serviceRoleClientSpy = vi.spyOn(service as any, "getServiceRoleClient");
+    // Create mock service role client with proper method chain support
+    mockServiceRoleClient = {
+      from: vi.fn((table: string) => {
+        if (table === "users") {
+          return {
+            select: vi.fn((columns: string) => ({
+              eq: vi.fn((column: string, value: string) => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: null,
+                }),
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: null,
+                }),
+              })),
+            })),
+            insert: vi.fn((data: any) => ({
+              select: vi.fn((columns: string) => ({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+        return {
+          select: vi.fn().mockReturnThis(),
+          insert: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn(),
+          maybeSingle: vi.fn(),
+        };
+      }),
+      auth: {
+        admin: {
+          deleteUser: vi.fn(),
+        },
+      },
+    } as unknown as SupabaseClient;
+
+    service = new AuthService(mockClient, mockServiceRoleClient);
   });
 
   describe("register", () => {
     it("should register a new user successfully", async () => {
+      const uniqueEmail = `test-${Date.now()}@example.com`;
       const mockAuthUser = {
         id: "auth-user-id",
-        email: "test@example.com",
-      };
+        email: uniqueEmail,
+        identities: [{ id: "identity-1" }],
+      } as any;
       const mockSession = {
         access_token: "access-token",
         refresh_token: "refresh-token",
       };
       const mockUser = {
         id: "auth-user-id",
-        email: "test@example.com",
+        email: uniqueEmail,
         display_name: "Test User",
         role: "member" as const,
         password_hash: "",
       };
 
-      vi.mocked(mockClient.from).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
-        insert: vi.fn().mockReturnThis(),
+      // Configure service role client mock for this test
+      mockFn(mockServiceRoleClient.from).mockReturnValue({
+        select: vi.fn((columns: string) => ({
+          eq: vi.fn((column: string, value: string) => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null, // User doesn't exist yet
+              error: null,
+            }),
+          })),
+        })),
+        insert: vi.fn((data: any) => ({
+          select: vi.fn((columns: string) => ({
+            single: vi.fn().mockResolvedValue({
+              data: mockUser,
+              error: null,
+            }),
+          })),
+        })),
       } as any);
 
       mockAuth.signUp.mockResolvedValue({
@@ -88,38 +145,17 @@ describe("AuthService", () => {
         error: null,
       });
 
-      const mockServiceRoleClient = {
-        from: vi.fn().mockReturnValue({
-          insert: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: mockUser,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-        auth: {
-          admin: {
-            deleteUser: vi.fn(),
-          },
-        },
-      };
-      serviceRoleClientSpy.mockReturnValue(
-        mockServiceRoleClient as unknown as SupabaseClient,
-      );
-
-      vi.mocked(usersDb.getUserById).mockResolvedValue(mockUser as any);
+      mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
 
       const result = await service.register({
-        email: "test@example.com",
+        email: uniqueEmail,
         password: "password123",
         display_name: "Test User",
         role: "member",
       });
 
       expect(mockAuth.signUp).toHaveBeenCalledWith({
-        email: "test@example.com",
+        email: uniqueEmail,
         password: "password123",
         options: {
           data: {
@@ -128,7 +164,7 @@ describe("AuthService", () => {
           },
         },
       });
-      expect(result.user.email).toBe("test@example.com");
+      expect(result.user.email).toBe(uniqueEmail);
       expect(result.session).toEqual({
         access_token: "access-token",
         refresh_token: "refresh-token",
@@ -136,18 +172,23 @@ describe("AuthService", () => {
     });
 
     it("should throw error if user already exists", async () => {
-      vi.mocked(mockClient.from).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { id: "existing-id", email: "test@example.com" },
-          error: null,
-        }),
+      const uniqueEmail = `test-${Date.now()}@example.com`;
+
+      // Configure service role client to return existing user
+      mockFn(mockServiceRoleClient.from).mockReturnValue({
+        select: vi.fn((columns: string) => ({
+          eq: vi.fn((column: string, value: string) => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: "existing-id", email: uniqueEmail },
+              error: null,
+            }),
+          })),
+        })),
       } as any);
 
       await expect(
         service.register({
-          email: "test@example.com",
+          email: uniqueEmail,
           password: "password123",
           display_name: "Test User",
         }),
@@ -155,10 +196,16 @@ describe("AuthService", () => {
     });
 
     it("should throw error if auth signup fails", async () => {
-      vi.mocked(mockClient.from).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      // Configure service role client to return no existing user
+      mockFn(mockServiceRoleClient.from).mockReturnValue({
+        select: vi.fn((columns: string) => ({
+          eq: vi.fn((column: string, value: string) => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          })),
+        })),
       } as any);
 
       mockAuth.signUp.mockResolvedValue({
@@ -202,7 +249,7 @@ describe("AuthService", () => {
         error: null,
       });
 
-      vi.mocked(usersDb.getUserById).mockResolvedValue(mockUser as any);
+      mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
 
       const result = await service.login({
         email: "test@example.com",
@@ -245,29 +292,19 @@ describe("AuthService", () => {
         error: null,
       });
 
-      vi.mocked(usersDb.getUserById).mockResolvedValue(null);
+      mockFn(usersDb.getUserById).mockResolvedValue(null);
 
-      // Mock service role client for profile creation attempt
-      const mockServiceRoleClient = {
-        from: vi.fn().mockReturnValue({
-          insert: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: null,
-                error: { message: "Failed to create profile" },
-              }),
+      // Configure service role client to fail user creation
+      mockFn(mockServiceRoleClient.from).mockReturnValue({
+        insert: vi.fn((data: any) => ({
+          select: vi.fn((columns: string) => ({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: "Failed to create profile" },
             }),
-          }),
-        }),
-        auth: {
-          admin: {
-            deleteUser: vi.fn(),
-          },
-        },
-      };
-      serviceRoleClientSpy.mockReturnValue(
-        mockServiceRoleClient as unknown as SupabaseClient,
-      );
+          })),
+        })),
+      } as any);
 
       await expect(
         service.login({
@@ -300,7 +337,7 @@ describe("AuthService", () => {
         error: null,
       });
 
-      vi.mocked(usersDb.getUserById).mockResolvedValue(mockUser as any);
+      mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
 
       const result = await service.getSession();
 
@@ -338,7 +375,7 @@ describe("AuthService", () => {
         error: null,
       });
 
-      vi.mocked(usersDb.getUserById).mockResolvedValue(null);
+      mockFn(usersDb.getUserById).mockResolvedValue(null);
 
       const result = await service.getSession();
 

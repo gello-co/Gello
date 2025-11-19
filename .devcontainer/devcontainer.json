@@ -1,19 +1,44 @@
 {
   "name": "Gello Development",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
-    }
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
       "extensions": [
+        // Existing extensions
         "oven.bun-vscode",
         "biomejs.biome",
         "ms-playwright.playwright",
-        "ms-vscode.vscode-typescript-next"
+        "mkcert.mkcert",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.remote-ssh",
+        "editorconfig.editorconfig",
+        "ms-vscode.vscode-typescript-next",
+        "christian-kohler.npm-intellisense",
+        "MylesMurphy.prettify-ts",
+        "timonwong.shellcheck",
+        "dorzey.vscode-sqlfluff",
+        "bradlc.vscode-tailwindcss",
+        "yzhang.markdown-all-in-one",
+        "docker.docker",
+        "pranaygp.vscode-css-peek",
+
+        // Enhanced extensions
+        "supabase.supabase-vscode",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "usernamehw.errorlens",
+        "eamodio.gitlens",
+        "streetsidesoftware.code-spell-checker",
+        "davidanson.vscode-markdownlint",
+        "gruntfuggly.todo-tree"
       ],
       "settings": {
         "editor.defaultFormatter": "biomejs.biome",
@@ -23,18 +48,66 @@
         },
         "[javascript]": {
           "editor.defaultFormatter": "biomejs.biome"
-        }
+        },
+        "[json]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "files.exclude": {
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/node_modules": false
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.devcontainer": true
+        },
+
+        // Enhanced settings
+        "sqltools.connections": [
+          {
+            "name": "Supabase Local",
+            "driver": "PostgreSQL",
+            "server": "localhost",
+            "port": 54322,
+            "database": "postgres",
+            "username": "postgres",
+            "password": "postgres",
+            "connectionTimeout": 30
+          }
+        ],
+        "tailwindCSS.experimental.classRegex": [
+          ["class:\\s*?[\"'`]([^\"'`]*).*?[\"'`]", "[\"'`]([^\"'`]*).*?[\"'`]"]
+        ],
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+        "gitlens.codeLens.enabled": false,
+        "gitlens.currentLine.enabled": false
       }
     }
   },
+
+  // Lifecycle hooks - runs in this order
+  "initializeCommand": "bash .devcontainer/initialize.sh",
+  "onCreateCommand": "bash .devcontainer/on-create.sh",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "bun install",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "postAttachCommand": "echo '✨ Gello dev container ready! Run: bun dev'",
+
   "remoteUser": "vscode",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localEnv:HOME}/.local/share/mkcert,target=/home/vscode/.local/share/mkcert,type=bind",
+    "source=gello-node-modules,target=/workspace/node_modules,type=volume"
   ],
   "workspaceFolder": "/workspace",
-  "forwardPorts": [3000, 54321, 54322, 54323, 54324, 54325],
+
+  // Forward all necessary ports
+  "forwardPorts": [3000, 54321, 54322, 54323, 54324, 54325, 54326],
   "portsAttributes": {
     "3000": {
       "label": "App Server",
@@ -59,6 +132,26 @@
     "54325": {
       "label": "Supabase Storage",
       "onAutoForward": "silent"
+    },
+    "54326": {
+      "label": "Supabase Auth",
+      "onAutoForward": "silent"
     }
+  },
+
+  // Environment variables
+  "containerEnv": {
+    "SHELL": "/bin/zsh",
+    "ALLOW_TEST_BYPASS": "true",
+    "AUTO_DEV_LOGIN_EMAIL": "admin@example.com",
+    "AUTO_DEV_LOGIN_PASSWORD": "password123",
+    "NODE_ENV": "development",
+    "TZ": "UTC",
+    "SUPABASE_URL": "http://127.0.0.1:54321",
+    "DATABASE_URL": "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+    "BUN_INSTALL_CACHE_DIR": "/workspace/.bun-cache",
+    "FULL_SETUP_ON_CREATE": "${localEnv:FULL_SETUP_ON_CREATE:false}",
+    "FULL_SETUP_METRICS": "${localEnv:FULL_SETUP_METRICS:true}",
+    "DOPPLER_TOKEN": "${localEnv:DOPPLER_TOKEN}"
   }
 }

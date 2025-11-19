@@ -1,155 +1,21 @@
--- Seed data for local development.
--- Establishes a minimal set of teams, users, boards, lists, tasks, and
--- points history entries so the application has meaningful data on first run.
--- Emails are unique to avoid colliding with test fixtures (e.g. admin@test.com).
-
-begin;
-
-truncate table public.points_history restart identity cascade;
-truncate table public.tasks restart identity cascade;
-truncate table public.lists restart identity cascade;
-truncate table public.boards restart identity cascade;
-truncate table public.users restart identity cascade;
-truncate table public.teams restart identity cascade;
-
-do $$
-declare
-    v_team uuid;
-    v_admin uuid;
-    v_manager uuid;
-    v_member uuid;
-    v_board uuid;
-    v_list_backlog uuid;
-    v_list_in_progress uuid;
-    v_list_done uuid;
-    v_task uuid;
-begin
-    insert into public.teams (name)
-    values ('Seed Team Alpha')
-    returning id into v_team;
-
-    insert into public.users (
-        id,
-        email,
-        password_hash,
-        display_name,
-        role,
-        team_id,
-        total_points,
-        avatar_url
-    )
-    values (
-        gen_random_uuid(),
-        'seed.admin@example.com',
-        '',
-        'Seed Admin',
-        'admin',
-        v_team,
-        50,
-        null
-    )
-    returning id into v_admin;
-
-    insert into public.users (
-        id,
-        email,
-        password_hash,
-        display_name,
-        role,
-        team_id,
-        total_points,
-        avatar_url
-    )
-    values (
-        gen_random_uuid(),
-        'seed.manager@example.com',
-        '',
-        'Seed Manager',
-        'manager',
-        v_team,
-        35,
-        null
-    )
-    returning id into v_manager;
-
-    insert into public.users (
-        id,
-        email,
-        password_hash,
-        display_name,
-        role,
-        team_id,
-        total_points,
-        avatar_url
-    )
-    values (
-        gen_random_uuid(),
-        'seed.member@example.com',
-        '',
-        'Seed Member',
-        'member',
-        v_team,
-        20,
-        null
-    )
-    returning id into v_member;
-
-    insert into public.boards (name, description, team_id, created_by)
-    values (
-        'Seed Board',
-        'Example board with lists and tasks for local development.',
-        v_team,
-        v_manager
-    )
-    returning id into v_board;
-
-    insert into public.lists (board_id, name, position)
-    values (v_board, 'Backlog', 0)
-    returning id into v_list_backlog;
-
-    insert into public.lists (board_id, name, position)
-    values (v_board, 'In Progress', 1)
-    returning id into v_list_in_progress;
-
-    insert into public.lists (board_id, name, position)
-    values (v_board, 'Done', 2)
-    returning id into v_list_done;
-
-    insert into public.tasks (
-        list_id,
-        title,
-        description,
-        story_points,
-        assigned_to,
-        position
-    )
-    values (
-        v_list_in_progress,
-        'Seed Task: Build onboarding flow',
-        'Demonstration task created by database seed.',
-        3,
-        v_member,
-        0
-    )
-    returning id into v_task;
-
-    insert into public.points_history (
-        user_id,
-        points_earned,
-        reason,
-        task_id,
-        awarded_by,
-        notes
-    )
-    values (
-        v_member,
-        3,
-        'task_complete',
-        v_task,
-        v_admin,
-        'Seed data: points awarded for completing the sample task.'
-    );
-end
-$$;
-
-commit;
+INSERT INTO public.teams (id, name, created_at) VALUES ('8f3f8e1b-c3f6-5d3f-814b-fc9fcb808954', 'Alpha Team', DEFAULT), ('ef474405-70d6-54be-bca3-00ada64ece19', 'Beta Team', DEFAULT);
+INSERT INTO public.users (id, email, password_hash, display_name, role, team_id, total_points, avatar_url, created_at) VALUES ('52e3e95f-4eb5-5447-8ae5-32e002112cdd', 'admin@test.com', '$2b$12$JGMUPQc40hjDDQx8ZAl5COC9EwcQo50Yptm87xs.SEigDvB6Xp/Za', 'System Admin', 'admin', NULL, 0, NULL, DEFAULT), ('e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7', 'manager@test.com', '$2b$12$JGMUPQc40hjDDQx8ZAl5COC9EwcQo50Yptm87xs.SEigDvB6Xp/Za', 'Delivery Manager', 'manager', NULL, 5, NULL, DEFAULT), ('83abb662-cbef-5518-aab9-d407f85c2def', 'member@test.com', '$2b$12$JGMUPQc40hjDDQx8ZAl5COC9EwcQo50Yptm87xs.SEigDvB6Xp/Za', 'Beta IC', 'member', NULL, 15, NULL, DEFAULT);
+UPDATE public.users SET team_id = '8f3f8e1b-c3f6-5d3f-814b-fc9fcb808954' WHERE id = 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7';
+UPDATE public.users SET team_id = 'ef474405-70d6-54be-bca3-00ada64ece19' WHERE id = '83abb662-cbef-5518-aab9-d407f85c2def';
+INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, invited_at, confirmation_token, confirmation_sent_at, recovery_token, recovery_sent_at, email_change_token_new, email_change, email_change_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, phone_change, phone_change_token, phone_change_sent_at, email_change_token_current, email_change_confirm_status, banned_until, reauthentication_token, reauthentication_sent_at, is_sso_user, deleted_at, is_anonymous) VALUES ('3739b87e-0b36-5882-9581-d89c0de92cb6', '52e3e95f-4eb5-5447-8ae5-32e002112cdd', 'authenticated', 'authenticated', 'admin@test.com', '$2b$12$JGMUPQc40hjDDQx8ZAl5COC9EwcQo50Yptm87xs.SEigDvB6Xp/Za', '2025-11-17T18:46:03.169Z', '2020-06-22T17:45:06.000Z', 'Loque ad sit dicem omnino us est, et probaret deteriora qui sempercipit sum de.', '2020-05-17T04:54:29.000Z', 'Quaerim per causa ulit profecto ne proficare.', '2020-07-19T06:55:57.000Z', 'Quaedamus ad graecis quid seiungi eos dicundius contrariis, doloram ini quia si modo primum vitae.', 'Quae triariusto sed missummum ait possunt.', '2020-01-13T12:21:25.000Z', '2025-11-17T18:46:03.169Z', '{"provider":"email","providers":["email"]}', '{"display_name":"System Admin","role":"admin"}', 'f', '2025-11-17T18:46:03.169Z', '2020-03-19T14:08:29.000Z', DEFAULT, '2020-07-07T06:20:19.000Z', DEFAULT, DEFAULT, '2020-04-16T03:23:25.000Z', DEFAULT, DEFAULT, '2020-04-28T15:45:52.000Z', DEFAULT, '2020-05-17T04:10:20.000Z', DEFAULT, '2020-06-22T05:16:12.000Z', DEFAULT), ('f9d2c64c-d110-5461-9ab0-066a24b07bad', 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7', 'authenticated', 'authenticated', 'manager@test.com', '$2b$12$JGMUPQc40hjDDQx8ZAl5COC9EwcQo50Yptm87xs.SEigDvB6Xp/Za', '2025-11-17T18:46:03.169Z', '2020-10-06T09:58:37.000Z', 'Dolore suspicio caret subtiliuste iudicia a non elab.', '2020-09-01T20:27:28.000Z', 'Quae efficil multaviter uti extremum paene igit, itationis traditernat isdemoccul stulti voluptate.', '2020-10-18T21:12:05.000Z', 'Aliquo nisi primus aut ut caret pore molestum.', 'Sint cum ipsum nostra sum instituendar ad philosopor, ipsa hocles non bonum nullam.', '2020-02-06T13:25:54.000Z', '2025-11-17T18:46:03.169Z', '{"provider":"email","providers":["email"]}', '{"display_name":"Delivery Manager","role":"manager"}', 't', '2025-11-17T18:46:03.169Z', '2020-06-10T06:09:08.000Z', DEFAULT, '2020-05-01T16:35:56.000Z', DEFAULT, DEFAULT, '2020-11-15T10:20:30.000Z', DEFAULT, DEFAULT, '2020-08-20T19:44:15.000Z', DEFAULT, '2020-11-11T10:23:35.000Z', DEFAULT, '2020-01-25T12:07:38.000Z', DEFAULT), ('ed07cdee-d2d9-54b4-bece-e2c4f0da1366', '83abb662-cbef-5518-aab9-d407f85c2def', 'authenticated', 'authenticated', 'member@test.com', '$2b$12$JGMUPQc40hjDDQx8ZAl5COC9EwcQo50Yptm87xs.SEigDvB6Xp/Za', '2025-11-17T18:46:03.169Z', '2020-09-25T08:58:58.000Z', 'Autem ob alest qua omnesciunt sisse, mandare vivent omne posset autem.', '2020-01-17T12:40:01.000Z', 'Curate physicis ne aut magis concertamen.', '2020-06-22T05:42:25.000Z', 'Nihilis iudicura spatio occulta est quaeso ano, ut viven corrigere firmavit nostros sed.', 'Viverror putatem omit qua dicet cum, ore nisi constantia grata desiditur adhaesionis aut primum.', '2020-08-04T19:46:27.000Z', '2025-11-17T18:46:03.169Z', '{"provider":"email","providers":["email"]}', '{"display_name":"Beta IC","role":"member"}', 'f', '2025-11-17T18:46:03.169Z', '2020-11-15T22:59:24.000Z', DEFAULT, '2020-11-03T22:59:47.000Z', DEFAULT, DEFAULT, '2020-06-22T18:03:58.000Z', DEFAULT, DEFAULT, '2020-12-24T12:10:35.000Z', DEFAULT, '2020-11-19T22:42:00.000Z', DEFAULT, '2020-01-13T00:33:39.000Z', DEFAULT);
+INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at, id) VALUES ('admin@test.com', '52e3e95f-4eb5-5447-8ae5-32e002112cdd', '{"sub":"52e3e95f-4eb5-5447-8ae5-32e002112cdd","email":"admin@test.com","email_verified":true,"phone_verified":false}', 'email', '2025-11-17T18:46:03.178Z', '2025-11-17T18:46:03.178Z', '2025-11-17T18:46:03.178Z', '472a4797-9129-5e22-8da7-c73c2bc793c1'), ('manager@test.com', 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7', '{"sub":"e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7","email":"manager@test.com","email_verified":true,"phone_verified":false}', 'email', '2025-11-17T18:46:03.178Z', '2025-11-17T18:46:03.178Z', '2025-11-17T18:46:03.178Z', '57ee80d9-f6e7-514d-a522-aaca77943d2a'), ('member@test.com', '83abb662-cbef-5518-aab9-d407f85c2def', '{"sub":"83abb662-cbef-5518-aab9-d407f85c2def","email":"member@test.com","email_verified":true,"phone_verified":false}', 'email', '2025-11-17T18:46:03.178Z', '2025-11-17T18:46:03.178Z', '2025-11-17T18:46:03.178Z', '4049cd7e-eb4b-56f0-abb0-815b984b47f3');
+INSERT INTO public.boards (id, name, description, team_id, created_by, created_at) VALUES ('870a61a2-7415-5b5a-8b1b-50b6d22a7810', 'Alpha Delivery Roadmap', 'Quarterly roadmap for delivery priorities.', '8f3f8e1b-c3f6-5d3f-814b-fc9fcb808954', NULL, DEFAULT), ('a0cd64e8-e912-54ed-853a-05929ea56eb5', 'Beta Operations Board', 'Day-to-day Beta team visibility.', 'ef474405-70d6-54be-bca3-00ada64ece19', NULL, DEFAULT);
+UPDATE public.boards SET created_by = 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7' WHERE id = '870a61a2-7415-5b5a-8b1b-50b6d22a7810';
+UPDATE public.boards SET created_by = '83abb662-cbef-5518-aab9-d407f85c2def' WHERE id = 'a0cd64e8-e912-54ed-853a-05929ea56eb5';
+INSERT INTO public.lists (id, board_id, name, position, created_at) VALUES ('b4444015-b76b-5bf8-b225-b2469dacc320', '870a61a2-7415-5b5a-8b1b-50b6d22a7810', 'Backlog', 1, DEFAULT), ('66621d96-7f1a-5f93-96c4-f9f2aee5dbd6', '870a61a2-7415-5b5a-8b1b-50b6d22a7810', 'In Progress', 2, DEFAULT), ('0e7756d6-fb4b-52fa-91b3-af52c1fbf4ff', '870a61a2-7415-5b5a-8b1b-50b6d22a7810', 'Done', 3, DEFAULT), ('5d960f74-c6cd-588a-8d27-a4455c41e554', 'a0cd64e8-e912-54ed-853a-05929ea56eb5', 'To Do', 1, DEFAULT), ('7a40e36a-c21e-5de1-873b-d4fb33c3e159', 'a0cd64e8-e912-54ed-853a-05929ea56eb5', 'In Flight', 2, DEFAULT), ('701803cf-e624-5219-8653-c269f7a289f4', 'a0cd64e8-e912-54ed-853a-05929ea56eb5', 'Review', 3, DEFAULT);
+INSERT INTO public.tasks (id, list_id, title, description, story_points, assigned_to, position, due_date, completed_at, created_at) VALUES ('ece30cb3-efa7-56fe-8b13-bc2074499ea0', '66621d96-7f1a-5f93-96c4-f9f2aee5dbd6', 'Ship CSAT dashboard', 'Wire real-time CSAT metrics into the leadership dashboard.', 5, NULL, 1, '2025-11-20T18:46:03.181Z', NULL, DEFAULT), ('8520310d-ce17-5dc8-acd6-dcc1c38e127d', '0e7756d6-fb4b-52fa-91b3-af52c1fbf4ff', 'Patch websocket reconnection bug', 'Fix race condition in SSE reconnection loop.', 3, NULL, 1, '2025-11-15T18:46:03.181Z', '2025-11-16T18:46:03.181Z', DEFAULT), ('766f742c-e20c-5b7c-9acb-35e63dd6a8e2', '5d960f74-c6cd-588a-8d27-a4455c41e554', 'Document on-call runbook', 'Capture incident response steps for the Beta team.', 2, NULL, 1, '2025-11-22T18:46:03.181Z', NULL, DEFAULT), ('45ba330b-140a-58c4-89ba-c4c4d6661e54', '7a40e36a-c21e-5de1-873b-d4fb33c3e159', 'Stabilize on-call rotations', 'Automate alerts and update ownership in PagerDuty.', 3, NULL, 1, '2025-11-19T18:46:03.181Z', NULL, DEFAULT), ('cd53cd39-4b5d-5f3d-bf96-a46ba5909890', '701803cf-e624-5219-8653-c269f7a289f4', 'Write retro summary', 'Publish highlights and action items from the Beta retro.', 2, NULL, 1, '2025-11-16T18:46:03.181Z', '2025-11-17T18:46:03.181Z', DEFAULT);
+UPDATE public.tasks SET assigned_to = 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7' WHERE id = 'ece30cb3-efa7-56fe-8b13-bc2074499ea0';
+UPDATE public.tasks SET assigned_to = 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7' WHERE id = '8520310d-ce17-5dc8-acd6-dcc1c38e127d';
+UPDATE public.tasks SET assigned_to = '83abb662-cbef-5518-aab9-d407f85c2def' WHERE id = '766f742c-e20c-5b7c-9acb-35e63dd6a8e2';
+UPDATE public.tasks SET assigned_to = '83abb662-cbef-5518-aab9-d407f85c2def' WHERE id = '45ba330b-140a-58c4-89ba-c4c4d6661e54';
+UPDATE public.tasks SET assigned_to = '83abb662-cbef-5518-aab9-d407f85c2def' WHERE id = 'cd53cd39-4b5d-5f3d-bf96-a46ba5909890';
+INSERT INTO public.points_history (id, user_id, points_earned, reason, task_id, awarded_by, notes, created_at) VALUES ('9d03ea49-716b-584d-8b65-16b9fd09d043', '83abb662-cbef-5518-aab9-d407f85c2def', 10, 'task_complete', NULL, NULL, 'Completed Beta retro and shared learnings cross-team.', DEFAULT), ('68b29a5a-d2f6-5907-9a32-94e9fa5ce41a', '83abb662-cbef-5518-aab9-d407f85c2def', 5, 'manual_award', NULL, NULL, 'Jumped into Alpha incident even though off rotation.', DEFAULT), ('d77d8770-0b46-5897-a713-f7b1e686bceb', 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7', 5, 'manual_award', NULL, NULL, 'Mentored Beta squad through accountability review.', DEFAULT);
+UPDATE public.points_history SET task_id = 'cd53cd39-4b5d-5f3d-bf96-a46ba5909890', awarded_by = 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7' WHERE id = '9d03ea49-716b-584d-8b65-16b9fd09d043';
+UPDATE public.points_history SET awarded_by = 'e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7' WHERE id = '68b29a5a-d2f6-5907-9a32-94e9fa5ce41a';
+UPDATE public.points_history SET awarded_by = '52e3e95f-4eb5-5447-8ae5-32e002112cdd' WHERE id = 'd77d8770-0b46-5897-a713-f7b1e686bceb';
+INSERT INTO public.user_context (user_id, role, team_id) VALUES ('52e3e95f-4eb5-5447-8ae5-32e002112cdd', 'admin', NULL), ('e042dcd7-6802-5c10-a6ef-e2b2b97f8ce7', 'manager', '8f3f8e1b-c3f6-5d3f-814b-fc9fcb808954'), ('83abb662-cbef-5518-aab9-d407f85c2def', 'member', 'ef474405-70d6-54be-bca3-00ada64ece19');

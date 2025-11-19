@@ -1,12 +1,13 @@
 {
   "name": "gello-app",
+  "version": "0.1.0-rc.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "dev:env": "bash ../.devOps/scripts/sync.sh || echo 'Failed to sync'",
     "build": "bun run build:css && bun run build:server",
-    "build:css": "postcss src/public/css/input.css -o src/public/css/output.css",
+    "build:css": "NODE_ENV=production postcss src/public/css/input.css -o src/public/css/output.css --minify",
     "build:server": "bun build src/index.ts --outdir=dist --target=node",
     "start": "NODE_ENV=production bun src/index.ts",
     "commit": "commit",
@@ -25,6 +26,7 @@
     "alpinejs": "^3.15.1",
     "bootstrap": "^5.3.8",
     "cookie-parser": "^1.4.7",
+    "csrf-csrf": "^4.0.3",
     "express": "^5.1.0",
     "express-handlebars": "^8.0.3",
     "express-rate-limit": "^8.2.1",
