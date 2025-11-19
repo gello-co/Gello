@@ -21,17 +21,20 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   },
 });
 
+// Test users password (exported for test helpers)
+export const SEEDED_USER_PASSWORD = "password123";
+
 // Test users data
 const testUsers = [
   {
     email: "admin@test.com",
-    password: "password123",
+    password: SEEDED_USER_PASSWORD,
     role: "admin" as const,
     name: "Admin User",
   },
   {
     email: "member@test.com",
-    password: "password123",
+    password: SEEDED_USER_PASSWORD,
     role: "member" as const,
     name: "Member User",
   },

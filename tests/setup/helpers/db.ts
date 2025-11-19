@@ -2,7 +2,6 @@ import { spawn } from "node:child_process";
 import crypto from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
-import { runSeed } from "../../../scripts/seed-db-snaplet";
 import { cleanupTestData } from "./db-cleanup.js";
 import { acquireDbLock } from "./db-lock.js";
 
@@ -440,9 +439,55 @@ export async function seedTestData(): Promise<void> {
       {
         requestId,
       },
-      "[db] Running Snaplet seed",
+      "[db] Running seed script",
     );
-    await runSeed({ dryRun: false, skipReset: true });
+    // Run seed-simple.ts script via bun spawn
+    await new Promise<void>((resolve, reject) => {
+      const seedProcess = spawn("bun", ["run", "scripts/seed-simple.ts"], {
+        env: process.env,
+        cwd: process.cwd(),
+      });
+
+      let stdout = "";
+      let stderr = "";
+
+      seedProcess.stdout?.on("data", (data) => {
+        stdout += data.toString();
+      });
+
+      seedProcess.stderr?.on("data", (data) => {
+        stderr += data.toString();
+      });
+
+      seedProcess.on("close", (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          const message = `Seed script failed with code ${code}\nstdout: ${stdout}\nstderr: ${stderr}`;
+          logger.error(
+            {
+              requestId,
+              exitCode: code,
+              stdoutLength: stdout.length,
+              stderrLength: stderr.length,
+            },
+            `[db] ${message}`,
+          );
+          reject(new Error(message));
+        }
+      });
+
+      seedProcess.on("error", (err) => {
+        logger.error(
+          {
+            requestId,
+            error: err.message,
+          },
+          "[db] Seed script spawn error",
+        );
+        reject(err);
+      });
+    });
     const duration = Date.now() - startTime;
     logger.info(
       {
