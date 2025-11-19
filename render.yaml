@@ -11,13 +11,21 @@ projects:
             plan: free
             region: ohio
             buildCommand: bun install && bun run build
-            startCommand: doppler run -- bun run start:prd
+            startCommand: bun run start:prd
             healthCheckPath: /api/health
             envVars:
               - key: NODE_ENV
                 value: production
-              - key: DOPPLER_TOKEN
+              - key: SUPABASE_URL
                 sync: false
+              - key: SUPABASE_ANON_KEY
+                sync: false
+              - key: SUPABASE_SERVICE_ROLE_KEY
+                sync: false
+              - key: SESSION_SECRET
+                generateValue: true
+              - key: PORT
+                value: "3000"
             domains:
               - www.gello.co
               - gello.co
