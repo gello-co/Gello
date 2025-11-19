@@ -4,9 +4,14 @@
     "dockerfile": "Dockerfile",
     "context": "."
   },
+  "runArgs": ["--init", "--privileged", "--network=host"],
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": false
+    }
   },
   "customizations": {
     "vscode": {
@@ -100,7 +105,7 @@
   "remoteUser": "vscode",
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    //"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     "source=${localEnv:HOME}/.local/share/mkcert,target=/home/vscode/.local/share/mkcert,type=bind",
     "source=gello-node-modules,target=/workspace/node_modules,type=volume"
   ],
