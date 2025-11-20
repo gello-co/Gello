@@ -8,6 +8,7 @@ import { TaskService } from "../../lib/services/task.service.js";
 import { TeamService } from "../../lib/services/team.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
 import { requireAuth } from "../middleware/requireAuth.js";
+import { ResourceNotFoundError } from "@/lib/errors/app.errors.js";
 
 const router = express.Router();
 
@@ -272,4 +273,9 @@ router.get("/tasks-admin-test",async (req, res) => {
   res.render("pages/tasks-team");
   //TODO: Delete router after logins are fixed
 });
+
+router.get("/points-shop",async (req, res) => {
+  res.render("pages/points-shop/index");
+  //TODO: Delete router after logins are fixed
+})
 export default router;
