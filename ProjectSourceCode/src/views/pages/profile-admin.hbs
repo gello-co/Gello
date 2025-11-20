@@ -1,6 +1,7 @@
 <div class="profile">
 	<div class="container-fluid px-4">
 		<div class="row g-4">
+			<!-- Card 1 — User / Tasks -->
 			<div class="col-md-6">
 				<div class="profile-card">
 					<div class="login-card-body">
@@ -9,47 +10,67 @@
 						<p>Tasks Assigned</p>
 						<div class="tasks">
 							{{#if tasks}}
-								{{#each tasks}}
-									<div>
-										<input type="checkbox" id="task{{@index}}" name="task{{@index}}" {{#if completed}}checked{{/if}} />
-										<label for="task{{@index}}">{{title}}</label>
-									</div>
-								{{/each}}
+							{{#each tasks}}
+							<div>
+								<input type="checkbox" id="task{{@index}}" name="task{{@index}}" {{#if
+									completed}}checked{{/if}} />
+								<label for="task{{@index}}">{{title}}</label>
+							</div>
+							{{/each}}
 							{{else}}
-								<div>
-									<input type="checkbox" id="task1" name="task1" />
-									<label for="task1">Task 1</label>
-								</div>
-								<div>
-									<input type="checkbox" id="task2" name="task2" />
-									<label for="task2">Task 2</label>
-								</div>
-								<div>
-									<input type="checkbox" id="task3" name="task3" />
-									<label for="task3">Task 3</label>
-								</div>
+							<div>
+								<input type="checkbox" id="task1" name="task1" />
+								<label for="task1">Task 1</label>
+							</div>
+							<div>
+								<input type="checkbox" id="task2" name="task2" />
+								<label for="task2">Task 2</label>
+							</div>
+							<div>
+								<input type="checkbox" id="task3" name="task3" />
+								<label for="task3">Task 3</label>
+							</div>
 							{{/if}}
 						</div>
 						<a class="prof-link" href="/tasks/admin">See all tasks</a>
 					</div>
 				</div>
 			</div>
+
+			<!-- Card 2 — Leaderboard -->
 			<div class="col-md-6">
 				<a href="/leaderboard" style="text-decoration: none; color: inherit">
 					<div class="profile-card">
 						<div class="login-card-body">
 							<h3>Leaderboard</h3>
 							{{#if leaderboard}}
-								<p>{{leaderboard}}</p>
+							<p>{{leaderboard}}</p>
 							{{else}}
-								<p>placeholder</p>
+							<p>placeholder</p>
 							{{/if}}
 							<a class="prof-link" href="/leaderboard">View leaderboard and use points</a>
 						</div>
 					</div>
 				</a>
 			</div>
-		</div>
-	</div>
-</div>
+			<!-- Card 3 — Team ID -->
+			<div class="col-md-6">
+				<div class="profile-card">
+					<div class="login-card-body">
+						<h3>Team ID</h3>
+						<p>placeholder auto generated</p>
+					</div>
+				</div>
+			</div>
 
+			<!-- Card 4 — Admin Permissions -->
+			<div class="col-md-6">
+				<div class="profile-card">
+					<h3>Admin<br>Permissions</h3>
+					<a href="./admin-permissions.hbs">
+						<button>
+							Continue
+						</button>
+					</a>
+				</div>
+			</div>

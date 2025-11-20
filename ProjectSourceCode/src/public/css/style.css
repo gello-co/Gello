@@ -465,3 +465,27 @@ body {
   color: #5a2410;
   font-size: 1.1rem;
 }
+
+/* 2X Points Toggle Button Styles */
+
+.points2x-btn {
+    background-color: #333; /* Default dark color */
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 10px; 
+    transition: background-color 0.3s ease;
+}
+
+/* Green when Active */
+.points2x.active-green {
+    background-color: #4CAF50;
+}
+
+/* Red when Inactive */
+.points2x.inactive-red {
+    background-color: #f44336; 
+}
