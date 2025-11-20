@@ -239,7 +239,7 @@ router.get("/tasks-admin-test",async (req, res) => {
 });
 
 
-router.get("/tasks-admin-test",async (req, res) => {
+router.get("/tasks-team-test",async (req, res) => {
   res.render("pages/tasks-team");
   //TODO: Delete router after logins are fixed
 });
