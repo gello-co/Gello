@@ -130,6 +130,10 @@ router.get("/boards", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/boards-test", async (req, res, next) => {
+    res.render("pages/boards/index");
+});
+
 router.get("/boards/:id", requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -198,7 +202,8 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/leaderboard-test", requireAuth, async (req, res, next) => {
+router.get("/leaderboard-test", async (req, res) => {
+  //TODO: delete this
   res.render("pages/leaderboard/index");
 });
 
