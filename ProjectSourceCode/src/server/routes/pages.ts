@@ -198,6 +198,10 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/leaderboard-test", requireAuth, async (req, res, next) => {
+  res.render("pages/leaderboard/index");
+});
+
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
@@ -217,6 +221,11 @@ router.get("/profile", requireAuth, async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+router.get("/profile-test", async (req, res) => {
+  res.render("pages/profile/index");
+  //TODO: Delete route after logins are fixed
 });
 
 export default router;
