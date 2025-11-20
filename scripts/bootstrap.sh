@@ -51,7 +51,8 @@ reset_and_seed() {
   echo -e "${YELLOW}🗄️  Resetting database...${NC}"
   bunx supabase db reset --no-seed
   echo -e "${YELLOW}🌱 Seeding test data...${NC}"
-  cd ProjectSourceCode && bun ../scripts/seed-simple.ts
+  cd ProjectSourceCode
+  bun ../scripts/seed-simple.ts
   cd ..  # Return to root directory for subsequent functions
   echo -e "${GREEN}✓${NC} Database ready"
 }
@@ -82,7 +83,7 @@ fi
 # Setup environment variables before seeding (seed script needs them)
 setup_environment
 
-if [ "${RESET_DB:-false}" = "true" ]; then
+if [ "${RESET_DB:-true}" = "true" ]; then
   reset_and_seed
 fi
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 
 import { createClient } from "@supabase/supabase-js";
-import { hashSync } from "bcryptjs";
+import { hashSync } from "bcrypt";
+import { AuthService } from "@/lib/services/auth.service";
 
 // Initialize Supabase client with service role key
 const supabaseUrl = process.env.SUPABASE_URL!;
@@ -131,7 +132,7 @@ async function createTestUsers(): Promise<UserRecord[]> {
         .insert({
           id: authUser.user.id,
           email: userData.email,
-          password_hash: hashSync(userData.password, 10), // Use cost 10 for compatibility
+          password_hash: hashSync(userData.password, 12), // Use cost 12 for compatibility
           display_name: userData.name,
           role: userData.role,
           team_id: team.id,
