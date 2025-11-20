@@ -1,0 +1,228 @@
+[33m18de47a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfix-hbs[m[33m, [m[1;31morigin/no-auth-routes[m[33m, [m[1;32mno-auth-routes[m[33m)[m :/
+[33m91ef8f2[m deleted redundant routes in api.ts
+[33m6304a3d[m deleted one of the packages.json that looked out of date and was the smaller of the 2 files
+[33mb839bc1[m created routes for old profile pages
+[33m76d9b57[m updated tasks-team endpoint error
+[33mf482f90[m Added routes for tasks-admin and tasks-team
+[33mf1d3273[m Merge branch 'fix-hbs' into no-auth-routes
+[33m8ef0a8d[m[33m ([m[1;31morigin/fix-hbs[m[33m)[m re-add tasks pages for team member and admin
+[33m52ea3ea[m fix admin and team member login pages
+[33m0e3c551[m added the home page and partials to dos on the localserver
+[33meb04566[m implemented tests routes for boards, leaderboards, profiles. No user id however.
+[33m16e9c9c[m profile and leaderboard authentication removed
+[33mea4d972[m[33m ([m[1;31morigin/release/0.1.0a[m[33m, [m[1;32mrelease/0.1.0a[m[33m)[m docker windows fix
+[33me46aa38[m refactor: improve test suite with optional runs
+[33mec09141[m chore: update dependencies and add environment template
+[33m1d820d1[m chore: remove obsolete generate-seed-sql script
+[33m4e4a543[m refactor: simplify devcontainer setup
+[33m3ad02c7[m refactor: consolidate scripts to single bootstrap script
+[33m4d5267d[m refactor: remove requirement from deployment
+[33mbed81ad[m feat(dev): simplify seed script and remove Snaplet
+[33md85f75a[m docs: update readme
+[33m1e1f661[m chore: add .gitattributes to enforce LF line endings and define binary file types
+[33m73ec13b[m chore: update devOps submodule after merge
+[33m2c5e2a1[m chore: update devOps submodule
+[33m1ef5625[m chore: merge branch 'release/0.1.0a' of github.com:gello-co/Gello into release/0.1.0a
+[33m00dc39d[m feat(dev): add comprehensive devcontainer scripts for setup, health checks, and testing
+[33md6bf921[m chore: update package config and documentation
+[33m7901efe[m refactor: update database seeding scripts
+[33mb2e21c9[m refactor: update routes and error handling
+[33mb42043a[m refactor: update list schemas and service
+[33m6d378da[m fix: update database migrations and config
+[33m6d5a155[m chore: update devcontainer configuration
+[33m14c5fa8[m refactor: update tests to use improved helpers
+[33mfe85d07[m refactor: improve test helpers and setup
+[33m05bc5c9[m refactor: improve Supabase client and auth middleware
+[33m04052f6[m feat(dev): add dev script and auto-auth middleware
+[33mad328e5[m docs: defer update
+[33mba913cc[m refactor: update application code for new logging and test setup
+[33mfb6d2e2[m feat: add client-side board interactivity and test DOM environment
+[33m25fe0dd[m test: update E2E and health tests
+[33md85bbdb[m test: add pgTAP RLS policy tests
+[33m2ea7d6f[m feat: add Snaplet Seed configuration for deterministic test data
+[33m01d1645[m feat: add RLS policy migrations for manager roles and user context
+[33m73e30ae[m test: update unit tests for AuthService dependency injection
+[33me23f405[m refactor: add dependency injection to AuthService for testing
+[33m5819585[m test: update integration tests to use TRUNCATE-based cleanup
+[33m3539e8c[m fix: remove duplicate user_context insert in Snaplet seed
+[33m4c874bd[m test: add test setup helpers for TRUNCATE-based cleanup
+[33mf39edc1[m feat: add TRUNCATE-based test database cleanup function
+[33m9553977[m feat: add structured JSON logging with Pino
+[33ma52b79c[m chore: update devOps submodule to latest commit
+[33mffaeeaa[m chore: remove Vitest configuration and old test setup files
+[33m4be35a8[m docs: remove CHANGELOG.md and update devOps submodule
+[33mdfbab89[m chore: update references from seed-db.ts to seed-db-snaplet.ts
+[33mecda9e9[m chore: add Supabase CLI and PostgreSQL client tools
+[33m742fe49[m ci: update workflow to use Bun test runner with Supabase setup
+[33m57edc11[m git: add Snaplet metadata to gitignore and remove gitmessage template
+[33m2ba0ef4[m deps: migrate from Vitest to Bun test runner and add Snaplet Seed
+[33m47085a6[m config: add Bun test configuration with preload and timeout
+[33mea9b8d4[m chore: remove example environment configuration file
+[33md5f2257[m chore: update package dependencies and documentation
+[33m769e3a2[m refactor: update views and templates
+[33m7f1ef37[m refactor: update middleware and routes
+[33m4b13f77[m refactor: update schemas and services
+[33m0eac190[m refactor: update database layer
+[33mee996b8[m refactor: update integration and E2E tests
+[33m4488ec8[m refactor: update test helpers and setup
+[33md7965d6[m feat: add CSRF and admin verification E2E tests
+[33md40b49f[m feat: add test and setup scripts
+[33m678305b[m feat: add server utilities
+[33m476fc1d[m feat: add client-side JavaScript files
+[33m663c9fc[m chore: update development scripts
+[33m7f6ec86[m chore: remove obsolete documentation scripts
+[33me3f5945[m chore: update devcontainer configuration
+[33m09fbc4c[m chore: update submodule URL in .gitmodules to use SSH
+[33m3c30b94[m chore: update vitest configuration
+[33mc5b4ea4[m chore: update project config
+[33m374d462[m chore: update .gitignore to include Supabase CLI artifacts and local certificates
+[33m5020544[m chore: update subproject commit reference in .devOps
+[33m50e27c9[m chore: clean up biome.ignore
+[33m1675777[m Merge branch 'dev' of github.com:wistb/Gello into dev
+[33mb4d8d1e[m chore: merge branch 'dev' of github.com:wistb/Gello into dev
+[33m5df2a01[m Merge branch 'dev' of github.com:wistb/Gello into dev
+[33me5081e3[m chore: enhance ShellCheck script validation in CI workflow
+[33m2d0a239[m chore: add database migrations and update Supabase config
+[33m84d5226[m chore: merge origin/dev into fork/dev - include leaderboard images
+[33m4adfee8[m add leaderboard images + remove bg on icon images (#160)
+[33m0066c0e[m chore: simplify Bun installation in Dockerfile
+[33m5fba64c[m chore: remove current branch file from Supabase branches
+[33m1e1ae11[m docs: update README for v0.1.0-rc.1
+[33me33316a[m chore: update devOps submodule with testing and release checklist
+[33m1a36241[m docs: move testing and release notes
+[33mf3bf519[m chore: add MDX format for testing
+[33ma281391[m docs: update GitHub release instructions for release candidates
+[33m8ce1502[m docs: add release candidate tagging instructions to release checklist
+[33mf4fa4ee[m docs: update release checklist for release candidate workflow
+[33m2a90585[m chore: mark v0.1.0 as release candidate (rc.1) requiring manual verification
+[33mc4cd86f[m chore: update devOps submodule with v0.1.0 documentation updates
+[33m92113f1[m chore: complete v0.1.0 release preparation
+[33m7399d7a[m chore: add Python project configuration
+[33m2d6065b[m chore: add Python project configuration
+[33m8d2aa3f[m style: format test files
+[33m78930ce[m style: format seed script
+[33m111311a[m style: format auth middleware
+[33mf24e998[m style: format error handling files
+[33mc79d4a5[m style: format database types
+[33mc89636f[m fix: delete plaintext before database insertion
+[33m7d5a72a[m fix: update bcrypt salt rounds from 10 to 12 (security best practice)
+[33m1d50e5c[m test: verify v0.1.0 workflow
+[33m82a3638[m fix: prepare v0.1.0 postcreate
+[33m4962b6d[m fix: resolve final merge conflicts - use existing auth.service and docs README
+[33maa80bf0[m fix(dev): resolve devcontainer merge conflicts - use feat/dev-devcontainer-setup version
+[33m3597b04[m fix: resolve merge conflicts from fix/auth-csp
+[33m112c884[m Merge branch 'fix/dev-supabase-env' into HEAD
+[33m22307cb[m fix(auth): add TypeScript type augmentation for req.csrfToken
+[33mff8429b[m fix(dev): complete CodeRabbit review fixes for seed script
+[33maa1ea7f[m fix(dev): ensure metrics JSON is always closed regardless of flag values
+[33m0190c30[m fix(dev): update CI lint job to use Bun setup while keeping ShellCheck
+[33m9e87004[m fix(auth): address PR review comments
+[33m36eb3e1[m fix(dev): address PR review comments
+[33m9fda348[m feat(dev): load test credentials from .env.local with fallbacks to seed defaults
+[33ma52d899[m feat(dev): make restart delay configurable with env var and CLI args, add polling option
+[33m86ee864[m fix(dev): replace unused loop variable with underscore in stop-dev.sh
+[33madda1fd[m docs(dev): document post-start.sh and add minimal startup verification tasks
+[33m21a817b[m fix(dev): remove error-hiding from mise and oh-my-zsh installations
+[33mfd9e8a0[m fix(dev): separate local declarations from command substitutions to fix ShellCheck SC2155
+[33mbfa8228[m fix(dev): wrap bare URLs in markdown and add checkout step to CI lint job
+[33m542822d[m docs(dev): add git branch and commit conventions
+[33m30d6e5a[m fix(dev): scope Doppler token to current directory and add OIDC comment
+[33m9d25461[m feat(dev): add devcontainer setup with Dockerfile, Doppler, and metrics
+[33mf7e299b[m docs(dev): update devcontainer setup and metrics documentation
+[33m84701e7[m fix(auth): add CSRF protection and improve CSP configuration
+[33mec0af72[m fix(dev): replace SQL injection vulnerability with Supabase auth admin API
+[33mb3c7c54[m chore: delete .DS_Store
+[33m5c81c66[m style: remove Bootstrap color theme override
+[33m5a88f08[m chore: update devOps submodule
+[33m749ca6c[m Merge branch 'refactor/test-suite' of github.com:gello-co/Gello into fork-dev-merge-2
+[33m03a3e0a[m chore: devcontainer initial setup with dockerfile (#162)
+[33mf230284[m chore: merge origin/dev into fork/dev to include all team changes
+[33m3fb3082[m Add Week 4 meeting notes to MEETINGS.md
+[33m079f9f9[m[33m ([m[1;31morigin/refactor/test-suite[m[33m)[m add images to bradley's branch
+[33mfc0569d[m feat: enhance devcontainer setup with Dockerfile and Doppler integration
+[33m090e5fd[m[33m ([m[1;32mrefactor/test-suite[m[33m)[m chore: update .gitignore to include test-results and worktrees directory
+[33mf3b50f8[m chore: add test utilities and update dependencies
+[33m456ce8f[m fix: improve error handling and auth middleware
+[33m68749d8[m feat: add database migrations and seed data
+[33mdb065dc[m feat: add devcontainer setup with automated test verification
+[33me2ef7c1[m fix: improve test helpers with connection management and WSL2 compatibility
+[33mbb481de[m delete: remove pre-commit hook for formatting and linting checks
+[33m8c9042d[m chore: add playwright-report directory to .gitignore
+[33m8090d5f[m delete: remove migrated frontend files
+[33m4ec86ac[m fix: improve test helpers with retry logic and WSL2 compatibility
+[33m0082d69[m fix: improve test helpers with retry logic and WSL2 compatibility
+[33m9047d4a[m changed the paths for the home hbs
+[33m8829d18[m Merge branch 'docs/devops-wiki' into dev
+[33mbb70795[m Merge branch 'dev' of github.com:gello-co/Gello into dev
+[33mfdaaaa6[m docs: DevOps wiki and database seeding
+[33m2b7d8bd[m chore: merge dev branch into refactor/test-suite
+[33m6a3d15e[m add hbs and css files for admin and member tasks page
+[33md08ceb0[m Merge branch 'dev' of https://github.com/gello-co/Gello into dev
+[33m33de3e5[m chore(deps): bump oven/bun from 1.3.1 to 1.3.2 in /ProjectSourceCode (#143)
+[33m4c959d8[m 106 feat create board crud api endpoints (#156)
+[33mb74c397[m Merge remote-tracking branch 'origin/dev' into 106-feat-create-board-crud-api-endpoints
+[33m20acbcb[m 150 test create unit tests for user crud routes (#154)
+[33mab9da1f[m x Merge remote-tracking branch 'origin/dev' into HEAD
+[33m1d7e6f8[m changed navs to hbs
+[33mb39048d[m made the footers and the nav bar partials and the general handlebars and the home handlebars
+[33mb9367d4[m feat: add Supabase configuration
+[33mf983325[m feat: add developer scripts
+[33md9aa9f5[m feat: add testing infrastructure
+[33mbc94c68[m feat: add view layer
+[33m7cbffa1[m feat: restructure API routes
+[33m9aa1d34[m feat: add API middleware
+[33mf25ab63[m feat: add core business logic layer
+[33mc9e9615[m chore: move config files from ProjectSourceCode to root
+[33m6ce5ad4[m[33m ([m[1;31morigin/routes[m[33m)[m User routes (#152)
+[33meb90d8a[m added bcrypt as @type
+[33mb425c82[m import user router to app.ts
+[33me18c4be[m created users.ts routes
+[33mf768957[m fix: add TypeScript types to route handlers (Request, Response)
+[33m8d5ce50[m chore: update build scripts for PostCSS, Tailwind, and Express with Bun test runner
+[33m9a1aba2[m feat: add CRUD API endpoints for boards, lists, and tasks
+[33m13abbdf[m chore: disable release automation and remove related scripts
+[33m6516cfc[m chore: consolidate dependabot updates (#151)
+[33m25b6fc6[m[33m ([m[1;31morigin/106-feat-create-board-crud-api-endpoints[m[33m)[m created a register post route
+[33m2dd7b06[m[33m ([m[1;31morigin/150-test-create-unit-tests-for-user-crud-routes[m[33m)[m moved api tests from health.test.ts to their own file
+[33mb47cc60[m created login api test
+[33m0414fed[m created test case for registration
+[33m0ffe0af[m[33m ([m[1;32mhbs-swapping[m[33m)[m hbs for team member pages, links changed accordingly, new partials added for already signed in nav
+[33m68f00a9[m add handlebars for admin view pages
+[33m6878cf4[m Add Week 3 meeting notes to MEETINGS.md
+[33m59985a6[m created new branch for hbs swapping and structure now matches dev
+[33mb4b71a6[m created board.ts
+[33mdfa28dd[m Merging Login Pages with Profiles (#134)
+[33m582e3ac[m Merge branch 'dev' into login-page
+[33m715a2d0[m css styles
+[33mca3b460[m added in login pages to this branch
+[33mdfef1ba[m added profile page onto login-pages branch
+[33mcc3d852[m moved profile pages to different branch
+[33mc7504f0[m adding images to login page - wren's work
+[33m280774f[m added wren's images folder into this branch
+[33md23a145[m added image folder with icons and images for login options
+[33m2930dfc[m chore: remove obsolete tag workflow
+[33m82b6f4c[m chore/migrate-express-hbs (#132)
+[33m8831180[m[33m ([m[1;31morigin/login-page[m[33m)[m added a link on each of the login pages to go between admin and team member forms
+[33me74224a[m created profile page for team members, updated admin profile template, added to style.css for profile page
+[33m6ffaedb[m created template for admin and team profiles
+[33mcebdb38[m Merge branch 'dev' of github.com:gello-co/Gello into dev
+[33m31e0958[m[33m ([m[1;32mlogin-page[m[33m)[m cleaned up html structure on login pages and added the html forms for the registration pages and needed formatting
+[33me3af2b4[m updated the formatting of the login for the teammembers page as well and commiting the style.css page
+[33mb80fdc3[m  added some css styles to update the formatting of the login page, and added the card feature from bootstrap here
+[33md82c0ae[m fixed hrefs that needed to be edited/updated
+[33m5d2181f[m created directory structure and changed all hrefs accordingly
+[33m6de9c29[m add template for team member login page
+[33m196bcc2[m chore(deps-dev): bump @semantic-release/exec from 6.0.3 to 7.1.0 (#43)
+[33m2a27299[m add template for admin login page
+[33maecd4a7[m[33m ([m[1;31morigin/draft-webpages-frontend[m[33m)[m feat(ci): add issue and pull request workflows and update biome configs
+[33m2922f14[m feat(ci): testing and development workflows (#50)
+[33m81cbc81[m chore(deps-dev): bump @biomejs/biome from 2.3.1 to 2.3.2 (#31)
+[33mb51e2fc[m chore(deps-dev): update @semantic-release/github requirement from ^12.0.0 to ^12.0.1 (#32)
+[33m48c010d[m chore(deps-dev): update vitest requirement from ^4.0.4 to ^4.0.6 (#33)
+[33me547f00[m chore(deps): update hono requirement from ^4.10.3 to ^4.10.4 (#38)
+[33mfae0562[m chore(deps-dev): bump @biomejs/biome from 2.3.1 to 2.3.2 (#41)
+[33m911e9c0[m chore(deps): bump hono from 4.10.3 to 4.10.4 (#42)
+[33mc989c9e[m chore(deps-dev): bump vitest from 4.0.4 to 4.0.6 (#46)
+[33mc63e118[m added an ending </a> tag in home page to debug and also took out the !important in style.css
+[33m67297de[m added files for the frontend and different pages of the website. Created different files for admin view and the team member view
+[33m4cdfc8e[m chore(deps): bump peter-evans/create-or-update-comment from 4 to 5 (#37)
