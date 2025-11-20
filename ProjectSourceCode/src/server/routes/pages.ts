@@ -159,6 +159,10 @@ router.get("/boards", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/boards-test", async (req, res, next) => {
+    res.render("pages/boards/index");
+});
+
 router.get("/boards/:id", requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -227,6 +231,11 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/leaderboard-test", async (req, res) => {
+  //TODO: delete this
+  res.render("pages/leaderboard/index");
+});
+
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
@@ -248,8 +257,19 @@ router.get("/profile", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/points-shop", async (req, res, next) =>{
-  res.render("pages/points-shop/index");
+router.get("/profile-test", async (req, res) => {
+  res.render("pages/profile/index");
+  //TODO: Delete route after logins are fixed
 });
 
+router.get("/tasks-admin-test",async (req, res) => {
+  res.render("pages/tasks-admin");
+  //TODO: Delete router after logins are fixed
+});
+
+
+router.get("/tasks-admin-test",async (req, res) => {
+  res.render("pages/tasks-team");
+  //TODO: Delete router after logins are fixed
+});
 export default router;

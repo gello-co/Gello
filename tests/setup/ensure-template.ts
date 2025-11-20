@@ -5,7 +5,7 @@
 
 import { Client } from "pg";
 import { logger } from "../../ProjectSourceCode/src/server/lib/logger.js";
-import { runSeed } from "../../scripts/seed-db-snaplet";
+import { spawn } from "node:child_process";
 
 const TEMPLATE_DB_NAME = "gello_test_template";
 const MAIN_DB_URL =
@@ -90,7 +90,6 @@ export async function ensureTemplateExists(): Promise<void> {
         { requestId },
         "[template] Copying schema from postgres to template",
       );
-      const { spawn } = await import("node:child_process");
 
       await new Promise<void>((resolve, reject) => {
         const pgDump = spawn("pg_dump", [
@@ -157,12 +156,43 @@ export async function ensureTemplateExists(): Promise<void> {
       );
       logger.info({ requestId }, "[template] Seeding template database");
 
-      // Set environment for seeding
-      const originalDbUrl = process.env.DB_URL;
-      process.env.DB_URL = templateDbUrl;
-
+      // Note: seed-simple.ts uses Supabase client, not direct DB connection
+      // The seed script will use the current Supabase environment variables
+      // Template database is already set up with schema, seed will populate data
       try {
-        await runSeed({ dryRun: false, skipReset: true });
+        // Run seed script via bun (uses Supabase env vars from bun-setup.ts)
+        await new Promise<void>((resolve, reject) => {
+          const seedProcess = spawn("bun", ["run", "scripts/seed-simple.ts"], {
+            env: process.env,
+          });
+
+          let stdout = "";
+          let stderr = "";
+
+          seedProcess.stdout?.on("data", (data) => {
+            stdout += data.toString();
+          });
+
+          seedProcess.stderr?.on("data", (data) => {
+            stderr += data.toString();
+          });
+
+          seedProcess.on("close", (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(
+                new Error(
+                  `Seed script failed with code ${code}\nstdout: ${stdout}\nstderr: ${stderr}`,
+                ),
+              );
+            }
+          });
+
+          seedProcess.on("error", (err) => {
+            reject(err);
+          });
+        });
         logger.info(
           { requestId },
           "[template] Template database created and seeded successfully",
