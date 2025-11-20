@@ -233,4 +233,14 @@ router.get("/profile-test", async (req, res) => {
   //TODO: Delete route after logins are fixed
 });
 
+router.get("/tasks-admin-test",async (req, res) => {
+  res.render("pages/tasks-admin");
+  //TODO: Delete router after logins are fixed
+});
+
+
+router.get("/tasks-admin-test",async (req, res) => {
+  res.render("pages/tasks-team");
+  //TODO: Delete router after logins are fixed
+});
 export default router;
