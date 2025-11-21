@@ -1,9 +1,9 @@
 import express from "express";
-import pointsShopRouter from "./express-routes/points-shop.js";
-import leaderboardRouter from "./express-routes/leaderboard.js";
-import tasksRouter from "./express-routes/tasks.js";
-import adminPermissionsRouter from "./express-routes/admin-permissions.js";
 import { devAuth } from "./express-middleware/dev-auth.js";
+import adminPermissionsRouter from "./express-routes/admin-permissions.js";
+import leaderboardRouter from "./express-routes/leaderboard.js";
+import pointsShopRouter from "./express-routes/points-shop.js";
+import tasksRouter from "./express-routes/tasks.js";
 
 const expressApp = express.Router();
 

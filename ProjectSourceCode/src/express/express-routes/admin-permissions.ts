@@ -1,6 +1,6 @@
 import express from "express";
-import { requireAuth } from "../../server/middleware/requireAuth.js";
 import { requireAdmin } from "../../server/middleware/requireAdmin.js";
+import { requireAuth } from "../../server/middleware/requireAuth.js";
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;
