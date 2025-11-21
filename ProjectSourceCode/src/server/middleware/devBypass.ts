@@ -10,7 +10,7 @@ let bypassLogged = false;
  */
 export const devBypassAuth = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) => {
   if (env.DEV_BYPASS_AUTH === "true") {

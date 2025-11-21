@@ -1,11 +1,10 @@
-import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient.js";
 import bcrypt from "bcrypt";
 import express from "express";
 import { getSupabaseClient } from "../../lib/supabase.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", async (_req, res) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase.from("users").select("*");
   res.json(data);
@@ -14,8 +13,11 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   const supabase = getSupabaseClient();
 
-  const hash = await bcrypt.hash(req.body.password, 10); //TODO: change to a different number of salting.
+  // Use 12 rounds for bcrypt (recommended security standard as of 2024)
+  const hash = await bcrypt.hash(req.body.password, 12);
   req.body.password_hash = hash;
+  // Delete plaintext password to prevent it from being stored in the database
+  delete req.body.password;
 
   const { data } = await supabase
     .from("users")

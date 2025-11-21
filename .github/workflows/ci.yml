@@ -64,6 +64,36 @@ jobs:
 
       - name: Biome check (dry)
         run: bun run check:dry
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          # Check required directories exist
+          test -d .devcontainer || { echo "Error: Missing .devcontainer directory"; exit 1; }
+          test -d scripts || { echo "Error: Missing scripts directory"; exit 1; }
+
+          # Find shell scripts and capture output
+          shell_files=$(find .devcontainer scripts -name "*.sh" -type f)
+
+          # Fail if no shell files found
+          if [ -z "$shell_files" ]; then
+            echo "Error: No shell scripts found in .devcontainer or scripts directories"
+            exit 1
+          fi
+
+          # Run shellcheck on each file
+          exit_code=0
+          while read -r file; do
+            echo "Checking $file..."
+            shellcheck "$file" || exit_code=1
+          done <<< "$shell_files"
+          exit $exit_code
+
+
   cache:
     name: Cache
     runs-on: ubuntu-latest
@@ -74,8 +104,6 @@ jobs:
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.1
 
       - name: Restore Bun cache
         id: bun-cache
@@ -169,8 +197,6 @@ jobs:
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.1
 
       - name: Restore Bun cache
         id: bun-cache
@@ -238,8 +264,20 @@ jobs:
             ~/.bun/install/cache
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
 
-      - name: Run tests (CI)
-        run: bun run test:ci
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local instance
+        run: bunx supabase start
+
+      - name: Run tests with Bun
+        run: bun test --bail
+
+      - name: Stop Supabase
+        if: always()
+        run: bunx supabase stop
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v5
