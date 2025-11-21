@@ -13,9 +13,9 @@ projects:
             buildCommand: bun install && bun run build
             startCommand: bun run start:prd
             healthCheckPath: /api/health
-            envVars:
-              - key: DOPPLER_TOKEN_PRD
-                sync: false
+            # Environment variables are synced from Doppler automatically
+            # via the Doppler-Render native integration
+            envVars: []
             domains:
               - www.gello.co
               - gello.co
