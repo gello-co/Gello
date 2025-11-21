@@ -118,7 +118,6 @@ import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
-import { expressApp } from "../express/express-app.js";
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);
