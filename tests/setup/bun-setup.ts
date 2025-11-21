@@ -10,6 +10,10 @@ import { existsSync, readFileSync } from "node:fs";
  * - Validate required Supabase credentials before tests run
  */
 
+// Check if verbose logging is enabled
+const VERBOSE =
+  process.env.VERBOSE === "true" || process.env.VERBOSE_TESTS === "true";
+
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 2000;
 const RETRY_DELAY_MULTIPLIER = 1.5;
@@ -46,9 +50,11 @@ function configureLocalHttps(): void {
           // Also set NODE_EXTRA_CA_CERTS for Node.js compatibility
           process.env.NODE_EXTRA_CA_CERTS = rootCAPath;
 
-          console.log(
-            `[bun-setup] Configured mkcert root CA: ${rootCAPath} (loaded for Bun TLS)`,
-          );
+          if (VERBOSE) {
+            console.log(
+              `[bun-setup] Configured mkcert root CA: ${rootCAPath} (loaded for Bun TLS)`,
+            );
+          }
           return;
         }
       }
@@ -68,9 +74,11 @@ function configureLocalHttps(): void {
     };
     process.on("warning", warningHandler);
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-    console.log(
-      "[bun-setup] Using NODE_TLS_REJECT_UNAUTHORIZED=0 (mkcert not configured)",
-    );
+    if (VERBOSE) {
+      console.log(
+        "[bun-setup] Using NODE_TLS_REJECT_UNAUTHORIZED=0 (mkcert not configured)",
+      );
+    }
   }
 }
 
@@ -158,9 +166,11 @@ if (supabaseReady) {
     process.env.SUPABASE_PUBLISHABLE_KEY = process.env.ANON_KEY;
   }
 
-  console.log(
-    `[bun-setup] Loaded Supabase env: URL=${process.env.SUPABASE_URL ? "[set]" : "[missing]"}, PUBLISHABLE_KEY=${process.env.PUBLISHABLE_KEY ? "[set]" : "[missing]"}, SECRET_KEY=${process.env.SECRET_KEY ? "[set]" : "[missing]"}`,
-  );
+  if (VERBOSE) {
+    console.log(
+      `[bun-setup] Loaded Supabase env: URL=${process.env.SUPABASE_URL ? "[set]" : "[missing]"}, PUBLISHABLE_KEY=${process.env.PUBLISHABLE_KEY ? "[set]" : "[missing]"}, SECRET_KEY=${process.env.SECRET_KEY ? "[set]" : "[missing]"}`,
+    );
+  }
 } else {
   console.warn(
     "⚠️  Could not load Supabase environment variables from 'bunx supabase status -o env' after retries. Supabase may not be running.",

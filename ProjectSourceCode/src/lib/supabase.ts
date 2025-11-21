@@ -211,7 +211,7 @@ export async function getSupabaseClientForRequest(
   if (accessToken && refreshToken) {
     try {
       // Attempt to set the session
-      const { data, error } = await client.auth.setSession({
+      const { error } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });

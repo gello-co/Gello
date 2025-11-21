@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { hashSync } from "bcryptjs";
 
 // Initialize Supabase client with service role key
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   console.error("❌ Missing required environment variables:");
@@ -46,11 +46,6 @@ interface UserRecord {
   name: string;
   role: string;
   team_id: string | null;
-}
-
-interface TeamRecord {
-  id: string;
-  name: string;
 }
 
 async function truncateAllTables(): Promise<void> {
@@ -300,7 +295,11 @@ async function main() {
       );
     }
 
-    await createTestData(adminUser.team_id!, adminUser.id, memberUser.id);
+    if (!adminUser.team_id) {
+      throw new Error("Admin user does not have a team_id");
+    }
+
+    await createTestData(adminUser.team_id, adminUser.id, memberUser.id);
 
     console.log("");
     console.log("🎉 Seed completed successfully!");

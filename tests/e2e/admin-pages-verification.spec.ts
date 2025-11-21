@@ -28,7 +28,10 @@ test.describe("Admin Pages Access Verification", () => {
     await resetTestDb();
   });
 
-  test("admin can reach all pages visually", async ({ page, request }) => {
+  test("admin can reach all pages visually", async ({
+    page,
+    request: _request,
+  }) => {
     // Create admin user
     const adminUser = await createTestUser(
       "admin@example.com",
