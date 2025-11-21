@@ -1,40 +1,77 @@
-<div class="container my-5">
-	<h1 class="mb-4">Leaderboard</h1>
-	<div class="table-responsive">
-		<table class="table table-striped">
-			<thead>
-				<tr>
-					<th>Rank</th>
-					<th>User</th>
-					<th>Points</th>
-				</tr>
-			</thead>
-			<tbody id="leaderboardBody">
-				{{#if (length leaderboard)}}
-					{{#each leaderboard}}
-						<tr>
-							<td>{{rank}}</td>
-							<td>
-								<div class="d-flex align-items-center">
-									{{> user-avatar user=this}}
-									<span class="ms-2">{{display_name}}</span>
-								</div>
-							</td>
-							<td>
-								{{> points-badge points=total_points}}
-							</td>
-						</tr>
-					{{/each}}
-				{{else}}
-					<tr>
-						<td colspan="3" class="text-center text-muted">
-							No leaderboard data available yet
-						</td>
-					</tr>
-				{{/if}}
-			</tbody>
-		</table>
-	</div>
-</div>
-<script src="/js/leaderboard.js"></script>
+<div class="leaderboard-page">
+    <div class="container-fluid px-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
 
+                <div class="text-center mb-5">
+                    <h1 class="page-title">Leaderboard</h1>
+                    <p class="page-subtitle">Congrats to our weekly top 3!!</p>
+                </div>
+
+                {{
+#if
+ (length leaderboard)}}
+                <div class="top-three-section">
+                    <div class="row g-4">
+                        {{
+#each
+ leaderboard}}
+                        <div class="col-md-4">
+                            <div class="winner-card">
+                                <div class="winner-image">
+                                    {{> user-avatar user=this}}
+                                </div>
+                                <div class="winner-name">{{display_name}}</div>
+                                <div class="winner-note">
+                                    {{> points-badge points=total_points}}
+                                </div>
+                            </div>
+                        </div>
+                        {{
+/each
+}}
+                    </div>
+                </div>
+                {{
+/if
+}}
+
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h3>Full Leaderboard</h3>
+                    </div>
+                    <div id="membersList">
+                        {{
+#if
+ (length leaderboard)}}
+                            {{
+#each
+ leaderboard}}
+                            <div class="member-row">
+                                <div class="member-avatar">
+                                    {{> user-avatar user=this}}
+                                </div>
+                                <div class="member-info">
+                                    <div class="member-name">{{display_name}}</div>
+                                    <div class="member-description">
+                                        {{> points-badge points=total_points}}
+                                    </div>
+                                </div>
+                            </div>
+                            {{
+/each
+}}
+                        {{else}}
+                            <div class="empty-state text-center py-5">
+                                <p class="text-muted">No leaderboard data available yet</p>
+                            </div>
+                        {{
+/if
+}}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
