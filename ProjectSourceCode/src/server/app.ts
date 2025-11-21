@@ -53,7 +53,7 @@ app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
     ...helmetOptions,
-  })
+  }),
 );
 
 if (isProd) {
@@ -73,7 +73,7 @@ app.engine(
     layoutsDir: path.join(__dirname, "../views/layouts"),
     partialsDir: path.join(__dirname, "../views/partials"),
     helpers,
-  })
+  }),
 );
 
 app.set("view engine", "hbs");

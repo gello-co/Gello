@@ -25,7 +25,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.get("/tasks-team", requireAuth, async (req, res, next) => {
