@@ -8,14 +8,7 @@
     "defaultBranch": "dev"
   },
   "files": {
-    "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!!**/node_modules/",
-      "!!**/dist/",
-      "!!**/build/",
-      "!!**/.bun"
-    ]
+    "ignoreUnknown": true
   },
   "formatter": {
     "enabled": true,
@@ -28,6 +21,18 @@
       "recommended": true
     }
   },
+  "overrides": [
+    {
+      "includes": ["tests/**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "arrowParentheses": "always",
