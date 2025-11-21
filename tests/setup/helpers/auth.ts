@@ -273,6 +273,8 @@ export async function createTestUser(
 export async function loginAsAdmin(options?: { bypass?: boolean }): Promise<{
   cookies: string[];
   cookieHeader: string;
+  access_token?: string;
+  refresh_token?: string;
   bypassHeaders?: Record<string, string>;
 }> {
   await ensureAdminUser();
@@ -303,6 +305,8 @@ export async function loginAsUser(
 ): Promise<{
   cookies: string[];
   cookieHeader: string;
+  access_token?: string;
+  refresh_token?: string;
   bypassHeaders?: Record<string, string>;
 }> {
   // MVP: Test bypass option for rapid local development
@@ -365,6 +369,18 @@ export async function loginAsUser(
   // Join cookies with "; " (semicolon + space) as per HTTP Cookie header spec
   const cookieHeader = cookieStrings.join("; ");
 
+  // Extract access_token and refresh_token from cookies for E2E tests
+  // Parse cookie strings to extract token values
+  const parseCookieValue = (name: string): string | undefined => {
+    const cookie = cookieStrings.find((c) => c.startsWith(`${name}=`));
+    if (!cookie) return undefined;
+    const match = cookie.match(new RegExp(`${name}=([^;]+)`));
+    return match?.[1];
+  };
+
+  const access_token = parseCookieValue("sb-access-token");
+  const refresh_token = parseCookieValue("sb-refresh-token");
+
   // MVP: Fixed delay after login to allow Supabase Auth to sync session state
   // This is simpler and more reliable than complex polling for MVP
   // Configurable via TEST_AUTH_SYNC_DELAY env var (default: 500ms)
@@ -372,7 +388,13 @@ export async function loginAsUser(
   await new Promise((resolve) => setTimeout(resolve, syncDelay));
 
   // Return both array (for backward compatibility) and joined string (preferred)
-  return { cookies: cookieStrings, cookieHeader };
+  // Also include tokens for E2E tests that need them
+  return {
+    cookies: cookieStrings,
+    cookieHeader,
+    access_token,
+    refresh_token,
+  };
 }
 
 /**
