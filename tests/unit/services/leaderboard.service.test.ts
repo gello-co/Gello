@@ -1,0 +1,59 @@
+import { beforeEach, describe, expect, it, vi } from "bun:test";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { LeaderboardEntry } from "../../../ProjectSourceCode/src/lib/database/points.db.js";
+import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
+import { LeaderboardService } from "../../../ProjectSourceCode/src/lib/services/leaderboard.service.js";
+import { mockFn } from "../../setup/helpers/mock.js";
+
+vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js", () => ({
+  getLeaderboard: vi.fn(),
+}));
+
+type MockLeaderboardEntry = Pick<
+  LeaderboardEntry,
+  "user_id" | "total_points" | "display_name"
+>;
+
+describe("LeaderboardService (bun)", () => {
+  let service: LeaderboardService;
+  let mockClient: SupabaseClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockClient = {} as SupabaseClient;
+    service = new LeaderboardService(mockClient);
+  });
+
+  describe("getLeaderboard", () => {
+    it("should get leaderboard with default limit", async () => {
+      const mockLeaderboard = [
+        { user_id: "user-1", total_points: 100, display_name: "User 1" },
+        { user_id: "user-2", total_points: 50, display_name: "User 2" },
+      ] satisfies MockLeaderboardEntry[];
+
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(
+        mockLeaderboard as LeaderboardEntry[],
+      );
+
+      const result = await service.getLeaderboard();
+
+      expect(pointsDb.getLeaderboard).toHaveBeenCalledWith(mockClient, 10);
+      expect(result).toEqual(mockLeaderboard);
+    });
+
+    it("should get leaderboard with custom limit", async () => {
+      const mockLeaderboard = [
+        { user_id: "user-1", total_points: 100, display_name: "User 1" },
+      ] satisfies MockLeaderboardEntry[];
+
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(
+        mockLeaderboard as LeaderboardEntry[],
+      );
+
+      const result = await service.getLeaderboard(10);
+
+      expect(pointsDb.getLeaderboard).toHaveBeenCalledWith(mockClient, 10);
+      expect(result).toEqual(mockLeaderboard);
+    });
+  });
+});

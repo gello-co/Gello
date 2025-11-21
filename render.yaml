@@ -11,11 +11,14 @@ projects:
             plan: free
             region: ohio
             buildCommand: bun install && bun run build
-            startCommand: bun run start
+            startCommand: bun run start:prd
+            healthCheckPath: /api/health
+            # Environment variables are synced from Doppler automatically
+            envVars: []
             domains:
               - www.gello.co
               - gello.co
-            autoDeployTrigger: commit
+            autoDeployTrigger: off
             rootDir: .
             previews:
               generation: manual

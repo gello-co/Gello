@@ -4,6 +4,94 @@
 
 <!-- required -->
 
+## Week 5: 11/20/25
+
+<!-- required -->
+
+Attendees
+
+- TA: Mateo Cantagallo
+- Team Attendance:
+  - @duskoutlaw
+  - @jasmitha-22
+  - @PaytonJHsu
+  - @jnnkim1
+  - @wistb
+
+<!-- required -->
+
+Decisions made:
+
+- We presented our current application and current work with all of the individual work which has been approved.
+
+<!-- required -->
+
+Alternative actions/options discussed:
+
+- We were given the permission to continue the application as is.
+- The total presentation time is 15 minutes. The recommendation is to present the slides for 10 minutes and have a 5 minute live demo. Another recommendation is to start with a few values in the database already to show all features (spending points at point shop, an already set up leaderboard, etc.). The demo should be deployed.
+- It is not recommended to create new features at this time.
+
+<!-- required -->
+
+Follow-up items, including agreed-on roles and responsibilities:
+
+- This week, focus on finishing features we currently have.
+- Finish up authorization portion.
+- Finish the presentation and final report.
+- Prepare for the live demo a few times, testing every feature and making sure it passes all written tests.
+
+<!-- optional -->
+
+Notes
+
+---
+
+<!-- required -->
+
+## Week 4: 11/13/25
+
+<!-- required -->
+
+Attendees
+
+- TA: Mateo Cantagallo
+- Team Attendance:
+  - @duskoutlaw
+  - @jasmitha-22
+  - @PaytonJHsu
+  - @jnnkim1
+  - @wistb
+
+<!-- required -->
+
+Decisions made:
+
+- We presented our current application and current work with all of the individual work which has been approved.
+- Our unit testing has also been approved.
+
+<!-- required -->
+
+Alternative actions/options discussed:
+
+- We were given the permission to continue the application as is.
+- Some recommendations for the presentation was to include the stages of development and some of the testing we did.
+- For our application, the recommendation was to get all of the functionality of our application ready for the live demo, as well as polishing the application.
+
+<!-- required -->
+
+Follow-up items, including agreed-on roles and responsibilities:
+
+- For next week, we decided to narrow down on the final list of features for our application, using the unit testing to decide the rest of the interface and how to finalize and polish our application.
+
+<!-- optional -->
+
+Notes
+
+---
+
+<!-- required -->
+
 ## Week 3: 11/6/25
 
 <!-- required -->

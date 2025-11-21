@@ -1,17 +1,3 @@
-# Auto-format and lint staged files
-echo "🔧 Formatting code..."
-bun run format
+#!/usr/bin/env sh
 
-echo "🧹 Linting code..."
-bun run lint
-
-echo "✅ Checking code..."
-bun run check:dry || {
-  echo "❌ Code check failed. Run 'bun run check:dry' to see issues, or 'bun run check' to auto-fix."
-  exit 1
-}
-
-# Stage auto-fixed files
-git add -u
-
-echo "✨ Pre-commit checks passed."
+bunx git-format-staged --formatter 'biome check --files-ignore-unknown=true --no-errors-on-unmatched \"{}\"' .
