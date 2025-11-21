@@ -152,6 +152,9 @@ vite.config.ts.timestamp-*
 ProjectSourceCode/node_modules
 ProjectSourceCode/dist
 .vscode
+.cursor
+.claude
+.serena
 .venv
 .ops
 .devOps
