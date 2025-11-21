@@ -21,15 +21,6 @@
     "validate": "bun run format && bun run lint && bun run check:dry",
     "validate:all": "bun run validate && bun run test:ci",
     "e2e": "playwright test",
-    "workflow:validate": "yamllint --no-warnings .github/workflows/*.yml 2>&1 || echo 'yamllint not installed or found errors (install with: pip install yamllint)'",
-    "workflow:test:ci": "./bin/act pull_request -W .github/workflows/ci.yml --list",
-    "workflow:test:preview": "./bin/act pull_request -W .github/workflows/preview.yml --list",
-    "workflow:test:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot] --list",
-    "workflow:test:all": "bun run workflow:validate && ./bin/act --list",
-    "workflow:run:ci": "./bin/act pull_request -W .github/workflows/ci.yml",
-    "workflow:run:preview": "./bin/act pull_request -W .github/workflows/preview.yml",
-    "workflow:run:dependabot": "./bin/act pull_request_target -W .github/workflows/dependabot-automation.yml -a dependabot[bot]",
-    "workflow:run:lint": "./bin/act pull_request -W .github/workflows/ci.yml -j lint",
     "seed": "bun run scripts/seed-db.ts",
     "docs:validate": "bun run scripts/docs-validate.ts"
   },
@@ -42,11 +33,11 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "htmx.org": "^2.0.8",
-    "playwright": "^1.56.1",
     "tailwindcss": "^4.1.17",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "playwright": "^1.56.1",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@commitlint/prompt-cli": "^20.1.0",
