@@ -7,3 +7,4 @@ docs
 *.lock
 .devOps
 bin
+bun-cache
