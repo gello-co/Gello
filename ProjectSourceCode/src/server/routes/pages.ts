@@ -117,11 +117,13 @@ router.get("/boards", requireAuth, async (req, res, next) => {
     if (teamId) {
       boards = await boardService.getBoardsByTeam(teamId);
     } else {
-      boards = await boardService.getBoardsForUser(req.user?.id);
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      boards = await boardService.getBoardsForUser(req.user!.id);
     }
     res.render("pages/boards/index", {
       title: "Boards",
       layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       boards,
     });
@@ -204,12 +206,15 @@ router.get("/profile", requireAuth, async (req, res, next) => {
     const pointsService = getPointsService(req.user?.id);
     const taskService = getTaskService();
 
-    const pointsHistory = await pointsService.getPointsHistory(req.user?.id);
-    const assignedTasks = await taskService.getTasksByAssignee(req.user?.id);
+    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+    const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
+    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+    const assignedTasks = await taskService.getTasksByAssignee(req.user!.id);
 
     res.render("pages/profile/index", {
       title: "Profile",
       layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       pointsHistory,
       assignedTasks,

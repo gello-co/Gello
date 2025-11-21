@@ -25,8 +25,14 @@ describe("ListService (bun)", () => {
 
   describe("getList", () => {
     it("should get list by id", async () => {
-      const mockList = { id: "list-1", name: "Test List" };
-      mockFn(listsDb.getListById).mockResolvedValue(mockList as any);
+      const mockList = {
+        id: "list-1",
+        board_id: "board-1",
+        name: "Test List",
+        position: 0,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(listsDb.getListById).mockResolvedValue(mockList);
 
       const result = await service.getList("list-1");
 
@@ -38,10 +44,22 @@ describe("ListService (bun)", () => {
   describe("getListsByBoard", () => {
     it("should get lists by board", async () => {
       const mockLists = [
-        { id: "list-1", name: "List 1" },
-        { id: "list-2", name: "List 2" },
+        {
+          id: "list-1",
+          board_id: "board-1",
+          name: "List 1",
+          position: 0,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "list-2",
+          board_id: "board-1",
+          name: "List 2",
+          position: 1,
+          created_at: new Date().toISOString(),
+        },
       ];
-      mockFn(listsDb.getListsByBoard).mockResolvedValue(mockLists as any);
+      mockFn(listsDb.getListsByBoard).mockResolvedValue(mockLists);
 
       const result = await service.getListsByBoard("board-1");
 
@@ -56,8 +74,12 @@ describe("ListService (bun)", () => {
   describe("createList", () => {
     it("should create a list", async () => {
       const input = { name: "New List", board_id: "board-1", position: 0 };
-      const mockList = { id: "list-1", ...input };
-      mockFn(listsDb.createList).mockResolvedValue(mockList as any);
+      const mockList = {
+        id: "list-1",
+        ...input,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(listsDb.createList).mockResolvedValue(mockList);
 
       const result = await service.createList(input);
 
@@ -69,8 +91,14 @@ describe("ListService (bun)", () => {
   describe("updateList", () => {
     it("should update a list", async () => {
       const input = { id: "list-1", name: "Updated List" };
-      const mockList = { id: "list-1", name: "Updated List" };
-      mockFn(listsDb.updateList).mockResolvedValue(mockList as any);
+      const mockList = {
+        id: "list-1",
+        board_id: "board-1",
+        name: "Updated List",
+        position: 0,
+        created_at: new Date().toISOString(),
+      };
+      mockFn(listsDb.updateList).mockResolvedValue(mockList);
 
       const result = await service.updateList(input);
 
@@ -96,6 +124,7 @@ describe("ListService (bun)", () => {
         mockClient,
         input.board_id,
         input.list_positions,
+        undefined,
       );
     });
   });

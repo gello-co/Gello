@@ -31,7 +31,7 @@ export const createUserSchema = z
   })
   .transform((data) => {
     // Remove passwordConfirm before passing to service
-    const { passwordConfirm, ...rest } = data;
+    const { passwordConfirm: _passwordConfirm, ...rest } = data;
     return rest;
   });
 

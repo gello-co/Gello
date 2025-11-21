@@ -159,50 +159,43 @@ export async function ensureTemplateExists(): Promise<void> {
       // Note: seed-simple.ts uses Supabase client, not direct DB connection
       // The seed script will use the current Supabase environment variables
       // Template database is already set up with schema, seed will populate data
-      try {
-        // Run seed script via bun (uses Supabase env vars from bun-setup.ts)
-        await new Promise<void>((resolve, reject) => {
-          const seedProcess = spawn("bun", ["run", "scripts/seed-simple.ts"], {
-            env: process.env,
-          });
-
-          let stdout = "";
-          let stderr = "";
-
-          seedProcess.stdout?.on("data", (data) => {
-            stdout += data.toString();
-          });
-
-          seedProcess.stderr?.on("data", (data) => {
-            stderr += data.toString();
-          });
-
-          seedProcess.on("close", (code) => {
-            if (code === 0) {
-              resolve();
-            } else {
-              reject(
-                new Error(
-                  `Seed script failed with code ${code}\nstdout: ${stdout}\nstderr: ${stderr}`,
-                ),
-              );
-            }
-          });
-
-          seedProcess.on("error", (err) => {
-            reject(err);
-          });
+      // Run seed script via bun (uses Supabase env vars from bun-setup.ts)
+      await new Promise<void>((resolve, reject) => {
+        const seedProcess = spawn("bun", ["run", "scripts/seed-simple.ts"], {
+          env: process.env,
         });
-        logger.info(
-          { requestId },
-          "[template] Template database created and seeded successfully",
-        );
-      } finally {
-        // Restore original DB_URL
-        if (originalDbUrl) {
-          process.env.DB_URL = originalDbUrl;
-        }
-      }
+
+        let stdout = "";
+        let stderr = "";
+
+        seedProcess.stdout?.on("data", (data) => {
+          stdout += data.toString();
+        });
+
+        seedProcess.stderr?.on("data", (data) => {
+          stderr += data.toString();
+        });
+
+        seedProcess.on("close", (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(
+              new Error(
+                `Seed script failed with code ${code}\nstdout: ${stdout}\nstderr: ${stderr}`,
+              ),
+            );
+          }
+        });
+
+        seedProcess.on("error", (err) => {
+          reject(err);
+        });
+      });
+      logger.info(
+        { requestId },
+        "[template] Template database created and seeded successfully",
+      );
 
       templateCreated = true;
     } finally {
