@@ -10,18 +10,16 @@ let bypassLogged = false;
  */
 export const devBypassAuth = (
   req: Request,
-  _res: Response,
+  res: Response,
   next: NextFunction,
 ) => {
   if (env.DEV_BYPASS_AUTH === "true") {
     // Log on first request that bypass is active
     if (!bypassLogged) {
-      console.log(
-        "⚠️  DEV BYPASS ACTIVE: Authentication bypassed for all requests",
-      );
+      console.log("⚠️  DEV BYPASS ACTIVE: Authentication bypassed for all requests");
       bypassLogged = true;
     }
-
+    
     // Set a mock dev user on the request
     req.user = {
       id: "dev-user-id",
@@ -32,3 +30,4 @@ export const devBypassAuth = (
   }
   next();
 };
+

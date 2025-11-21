@@ -77,10 +77,14 @@ app.engine(
 );
 
 app.set("view engine", "hbs");
-app.set("views", path.join(__dirname, "../views"));
+app.set("views", [
+  path.join(__dirname, "../views"),
+  path.join(__dirname, "../express/express-views"),
+]);
 
 // Static files
 app.use("/public", express.static(path.join(__dirname, "../public")));
+app.use("/express/public", express.static(path.join(__dirname, "../express/express-public")));
 app.use("/css", express.static(path.join(__dirname, "../public/css")));
 app.use("/js", express.static(path.join(__dirname, "../public/js")));
 
@@ -110,12 +114,14 @@ import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
+import { expressApp } from "../express/express-app.js";
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);
 app.use("/api/lists", listsRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/", pageRoutes);
+app.use("/", expressApp);
 
 // Error handler must be last
 app.use(errorHandler);
