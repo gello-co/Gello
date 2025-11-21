@@ -53,7 +53,7 @@ app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
     ...helmetOptions,
-  })
+  }),
 );
 
 if (isProd) {
@@ -73,7 +73,7 @@ app.engine(
     layoutsDir: path.join(__dirname, "../views/layouts"),
     partialsDir: path.join(__dirname, "../views/partials"),
     helpers,
-  })
+  }),
 );
 
 app.set("view engine", "hbs");
@@ -118,7 +118,6 @@ import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksRouter from "./routes/tasks.js";
-import { expressApp } from "../express/express-app.js";
 
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsRouter);

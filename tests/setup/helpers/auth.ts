@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { User } from "../../../ProjectSourceCode/src/lib/database/users.db.js";
 import { DuplicateUserError } from "../../../ProjectSourceCode/src/lib/errors/app.errors.js";
 import { AuthService } from "../../../ProjectSourceCode/src/lib/services/auth.service.js";
+import { SEEDED_USER_PASSWORD } from "../../../scripts/seed-simple.js";
 import { setCsrfHeadersIfEnabled } from "./csrf.js";
 import {
   createTimeoutPromise,
@@ -11,8 +12,6 @@ import {
   RETRY_CONFIG,
   retryWithBackoff,
 } from "./db.js";
-
-import { SEEDED_USER_PASSWORD } from "../../../scripts/seed-simple.js";
 
 export { SEEDED_USER_PASSWORD };
 
@@ -38,7 +37,7 @@ const ADMIN_CREDENTIALS = {
 
 async function findExistingUser(
   client: ReturnType<typeof getTestSupabaseClient>,
-  email: string
+  email: string,
 ): Promise<User | null> {
   const { data: userData } = await client
     .from("users")
@@ -54,7 +53,7 @@ async function registerUserWithRetry(
   email: string,
   password: string,
   displayName: string,
-  role: User["role"]
+  role: User["role"],
 ): Promise<{ user: Omit<User, "password_hash"> } | null> {
   let retries = RETRY_CONFIG.maxRetries;
   let lastError: Error | null = null;
@@ -71,11 +70,11 @@ async function registerUserWithRetry(
               role,
             }),
           3,
-          300
+          300,
         ),
         createTimeoutPromise(
           RETRY_CONFIG.registerTimeout,
-          "Register timeout after 3 seconds"
+          "Register timeout after 3 seconds",
         ),
       ])) as { user: Omit<User, "password_hash"> } | null;
 
@@ -105,13 +104,13 @@ async function registerUserWithRetry(
   }
 
   throw new Error(
-    "Unexpected: registerUserWithRetry exited without result or error"
+    "Unexpected: registerUserWithRetry exited without result or error",
   );
 }
 
 async function retrieveUserWithRetry(
   client: ReturnType<typeof getTestSupabaseClient>,
-  email: string
+  email: string,
 ): Promise<User> {
   for (let i = 0; i < RETRY_CONFIG.userSyncRetries; i++) {
     try {
@@ -125,7 +124,7 @@ async function retrieveUserWithRetry(
           return queryResult;
         },
         2,
-        200
+        200,
       );
 
       if (result.data) {
@@ -133,19 +132,19 @@ async function retrieveUserWithRetry(
       }
 
       await new Promise((resolve) =>
-        setTimeout(resolve, RETRY_CONFIG.userSyncDelay)
+        setTimeout(resolve, RETRY_CONFIG.userSyncDelay),
       );
     } catch (error) {
       if (i === RETRY_CONFIG.userSyncRetries - 1) {
         throw new Error(
           `Failed to retrieve created user ${email} after retries: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
       }
 
       await new Promise((resolve) =>
-        setTimeout(resolve, RETRY_CONFIG.userSyncDelay)
+        setTimeout(resolve, RETRY_CONFIG.userSyncDelay),
       );
     }
   }
@@ -159,7 +158,7 @@ async function ensureAdminUser(): Promise<void> {
   const existingAdmin = await findExistingUser(client, ADMIN_CREDENTIALS.email);
   if (!existingAdmin) {
     throw new Error(
-      `Seeded admin account (${ADMIN_CREDENTIALS.email}) is missing. Re-run 'bun run seed' before running tests.`
+      `Seeded admin account (${ADMIN_CREDENTIALS.email}) is missing. Re-run 'bun run seed' before running tests.`,
     );
   }
 }
@@ -168,7 +167,7 @@ export async function createTestUser(
   email: string,
   password: string,
   role: User["role"] = "member",
-  displayName?: string
+  displayName?: string,
 ): Promise<TestUser> {
   const client = getTestSupabaseClient();
   const authClient = getAnonSupabaseClient();
@@ -202,7 +201,7 @@ export async function createTestUser(
     email,
     password,
     displayNameValue,
-    role
+    role,
   );
 
   if (registerResult?.user) {
@@ -244,13 +243,13 @@ export async function createTestUser(
         email,
         password,
         displayNameValue,
-        role
+        role,
       );
 
       if (retryResult?.user) {
         const syncDelay = parseInt(
           process.env.TEST_AUTH_SYNC_DELAY || "500",
-          10
+          10,
         );
         await new Promise((resolve) => setTimeout(resolve, syncDelay));
 
@@ -284,7 +283,7 @@ export async function loginAsAdmin(options?: { bypass?: boolean }): Promise<{
   return loginAsUser(
     ADMIN_CREDENTIALS.email,
     ADMIN_CREDENTIALS.password,
-    options
+    options,
   );
 }
 
@@ -304,7 +303,7 @@ export async function loginAsAdmin(options?: { bypass?: boolean }): Promise<{
 export async function loginAsUser(
   email: string,
   password: string,
-  options?: { bypass?: boolean }
+  options?: { bypass?: boolean },
 ): Promise<{
   cookies: string[];
   cookieHeader: string;
@@ -342,7 +341,7 @@ export async function loginAsUser(
     throw new Error(
       `Login failed: ${response.status} - ${
         response.text || response.body?.error || "Unknown error"
-      }`
+      }`,
     );
   }
 
@@ -362,14 +361,14 @@ export async function loginAsUser(
     })
     .filter(
       (c): c is string =>
-        typeof c === "string" && c.length > 0 && c.includes("=")
+        typeof c === "string" && c.length > 0 && c.includes("="),
     );
 
   if (cookieStrings.length === 0) {
     throw new Error(
       `No valid cookies extracted from login response. Set-Cookie headers: ${JSON.stringify(
-        setCookies
-      )}`
+        setCookies,
+      )}`,
     );
   }
 

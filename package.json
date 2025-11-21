@@ -6,8 +6,6 @@
   "scripts": {
     "start": "bash scripts/bootstrap.sh",
     "start:fresh": "RESET_DB=true bash scripts/bootstrap.sh",
-    "start:prd": "NODE_ENV=production bun ProjectSourceCode/src/index.ts",
-    "restart": "pkill -f 'bun --hot' && bun run dev",
     "dev": "bash scripts/bootstrap.sh",
     "build": "bun run build:css && bun run build:server",
     "build:css": "postcss ProjectSourceCode/src/public/css/input.css -o ProjectSourceCode/src/public/css/output.css",
