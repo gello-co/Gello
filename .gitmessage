@@ -1,0 +1,10 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+#
+# Types: feat, fix, docs, style, refactor, test, chore
+# Example: feat(auth): add login button
+# Optional: <scope> <body> <footer>
+

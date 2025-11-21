@@ -1,0 +1,21 @@
+{
+  "pull_request": {
+    "number": 1,
+    "head": {
+      "ref": "feat/test-event",
+      "sha": "abc123"
+    },
+    "base": {
+      "ref": "dev",
+      "sha": "def456"
+    },
+    "merged": false,
+    "state": "open"
+  },
+  "repository": {
+    "name": "Gello",
+    "owner": {
+      "login": "gello-co"
+    }
+  }
+}

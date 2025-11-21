@@ -70,20 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
-# act secrets file (for local workflow testing)
-.secrets
-
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
-
-# Bun cache
-.bun-cache/
-
-# Supabase local runtime artifacts
-supabase/.branches/
-supabase/.temp/
-supabase/certs/
 
 # Next.js build output
 .next
@@ -148,20 +137,3 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-
-ProjectSourceCode/node_modules
-ProjectSourceCode/dist
-.vscode
-.venv
-.ops
-.devOps
-.DevOps
-.tours
-
-# Local release preview outputs (ephemeral)
-.release-preview/
-RELEASE_NOTES*.md
-
-# act binary
-bin/
-.agents/
