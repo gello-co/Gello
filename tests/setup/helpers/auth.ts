@@ -13,6 +13,8 @@ import {
   retryWithBackoff,
 } from "./db.js";
 
+export { SEEDED_USER_PASSWORD };
+
 export type TestUser = {
   user: User;
   email: string;
@@ -337,7 +339,9 @@ export async function loginAsUser(
 
   if (!response.ok) {
     throw new Error(
-      `Login failed: ${response.status} - ${response.text || response.body?.error || "Unknown error"}`,
+      `Login failed: ${response.status} - ${
+        response.text || response.body?.error || "Unknown error"
+      }`,
     );
   }
 
@@ -362,7 +366,9 @@ export async function loginAsUser(
 
   if (cookieStrings.length === 0) {
     throw new Error(
-      `No valid cookies extracted from login response. Set-Cookie headers: ${JSON.stringify(setCookies)}`,
+      `No valid cookies extracted from login response. Set-Cookie headers: ${JSON.stringify(
+        setCookies,
+      )}`,
     );
   }
 

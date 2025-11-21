@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -50,7 +50,8 @@
       "!!**/*.lock",
       "!!**/*.tsbuildinfo",
       "!!**/bun.lockb",
-      "!!**/bun.lock"
+      "!!**/bun.lock",
+      "!!**/output.css"
     ]
   },
   "formatter": {

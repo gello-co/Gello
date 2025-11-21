@@ -1,7 +1,6 @@
 import express from "express";
 import "../types/express.d.js";
 import { BoardService } from "../../lib/services/board.service.js";
-import { LeaderboardService } from "../../lib/services/leaderboard.service.js";
 import { ListService } from "../../lib/services/list.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
 import { TaskService } from "../../lib/services/task.service.js";
@@ -25,10 +24,6 @@ function getTaskService() {
 
 function getTeamService() {
   return new TeamService(getSupabaseClient());
-}
-
-function getLeaderboardService() {
-  return new LeaderboardService(getSupabaseClient());
 }
 
 function getPointsService(userId?: string) {
@@ -179,21 +174,6 @@ router.get("/boards/:id", requireAuth, async (req, res, next) => {
       lists: listsWithTasks,
       users,
       scripts: ["/js/board.js", "/js/task-modal.js", "/js/task-card.js"],
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get("/leaderboard", requireAuth, async (req, res, next) => {
-  try {
-    const leaderboardService = getLeaderboardService();
-    const leaderboard = await leaderboardService.getLeaderboard(100);
-    res.render("pages/leaderboard/index", {
-      title: "Leaderboard",
-      layout: "dashboard",
-      user: req.user,
-      leaderboard,
     });
   } catch (error) {
     next(error);

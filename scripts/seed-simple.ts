@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { hashSync } from "bcryptjs";
 
 // Initialize Supabase client with service role key
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   console.error("❌ Missing required environment variables:");
@@ -46,6 +46,11 @@ interface UserRecord {
   name: string;
   role: string;
   team_id: string | null;
+}
+
+interface TeamRecord {
+  id: string;
+  name: string;
 }
 
 async function truncateAllTables(): Promise<void> {
@@ -109,7 +114,7 @@ async function createTestUsers(): Promise<UserRecord[]> {
         // If user already exists, try to get the existing user
         if (authError.message.includes("already been registered")) {
           console.log(
-            `ℹ️  User ${userData.email} already exists, skipping creation`,
+            `ℹ️  User ${userData.email} already exists, skipping creation`
           );
           continue;
         }
@@ -139,7 +144,7 @@ async function createTestUsers(): Promise<UserRecord[]> {
         // If user already exists in public.users, try to update instead
         if (userError.message.includes("duplicate key value")) {
           console.log(
-            `ℹ️  User ${userData.email} already exists in public.users, updating...`,
+            `ℹ️  User ${userData.email} already exists in public.users, updating...`
           );
           const { data: updatedUser, error: updateError } = await supabase
             .from("users")
@@ -177,7 +182,7 @@ async function createTestUsers(): Promise<UserRecord[]> {
 async function createTestData(
   teamId: string,
   adminUserId: string,
-  memberUserId: string,
+  memberUserId: string
 ) {
   console.log("📋 Creating test boards, lists, and tasks...");
 
@@ -281,7 +286,7 @@ async function main() {
 
     if (users.length === 0) {
       throw new Error(
-        "No users were created. Check if the script is running correctly.",
+        "No users were created. Check if the script is running correctly."
       );
     }
 
@@ -291,15 +296,11 @@ async function main() {
 
     if (!adminUser || !memberUser) {
       throw new Error(
-        "Required users (admin, member) were not created successfully.",
+        "Required users (admin, member) were not created successfully."
       );
     }
 
-    if (!adminUser.team_id) {
-      throw new Error("Admin user does not have a team_id");
-    }
-
-    await createTestData(adminUser.team_id, adminUser.id, memberUser.id);
+    await createTestData(adminUser.team_id!, adminUser.id, memberUser.id);
 
     console.log("");
     console.log("🎉 Seed completed successfully!");
