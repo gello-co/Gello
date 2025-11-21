@@ -13,19 +13,8 @@ projects:
             buildCommand: bun install && bun run build
             startCommand: bun run start:prd
             healthCheckPath: /api/health
-            envVars:
-              - key: NODE_ENV
-                value: production
-              - key: SUPABASE_URL
-                sync: false
-              - key: SUPABASE_ANON_KEY
-                sync: false
-              - key: SUPABASE_SERVICE_ROLE_KEY
-                sync: false
-              - key: SESSION_SECRET
-                generateValue: true
-              - key: PORT
-                value: "3000"
+            # Environment variables are synced from Doppler automatically
+            envVars: []
             domains:
               - www.gello.co
               - gello.co

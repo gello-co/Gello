@@ -34,7 +34,12 @@ export class ListService {
   }
 
   async reorderLists(input: ReorderListsInput, userId?: string): Promise<void> {
-    return reorderLists(this.client, input.board_id, input.list_positions, userId);
+    return reorderLists(
+      this.client,
+      input.board_id,
+      input.list_positions,
+      userId,
+    );
   }
 
   async deleteList(id: string): Promise<void> {

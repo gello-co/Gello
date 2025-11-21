@@ -35,7 +35,9 @@ export function getSupabaseClient() {
  * Accepts Express Request object or a minimal object with cookies/headers
  */
 export async function getSupabaseClientForRequest(
-  req: Request | { cookies?: Record<string, string>; headers?: Record<string, unknown> },
+  req:
+    | Request
+    | { cookies?: Record<string, string>; headers?: Record<string, unknown> },
 ): Promise<SupabaseClient> {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
     throw new Error(
@@ -58,9 +60,7 @@ export async function getSupabaseClientForRequest(
       cookieHeader = req.get("Cookie") || req.get("cookie");
     } else if ("headers" in req) {
       const headers = req.headers as Record<string, unknown>;
-      cookieHeader =
-        (headers.cookie as string) ||
-        (headers["cookie"] as string);
+      cookieHeader = (headers.cookie as string) || (headers.cookie as string);
     }
 
     if (cookieHeader) {
@@ -93,7 +93,9 @@ export async function getSupabaseClientForRequest(
   });
 
   // Helper to decode JWT without verification (just to inspect claims)
-  const decodeJWT = (token: string): { sub?: string; [key: string]: unknown } | null => {
+  const decodeJWT = (
+    token: string,
+  ): { sub?: string; [key: string]: unknown } | null => {
     try {
       const parts = token.split(".");
       if (parts.length !== 3) {
@@ -132,15 +134,15 @@ export async function getSupabaseClientForRequest(
       const headers = req.headers as Record<string, unknown>;
       cookieHeader =
         (headers.cookie as string) ||
-        (headers["cookie"] as string) ||
-        (headers["Cookie"] as string);
+        (headers.cookie as string) ||
+        (headers.Cookie as string);
     }
 
     if (cookieHeader) {
       const parseCookie = (name: string): string | undefined => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const regex = new RegExp(
-          `(?:^|;\\s*)${escapedName}\\s*=\\s*([^;]*)(?:;|$)`
+          `(?:^|;\\s*)${escapedName}\\s*=\\s*([^;]*)(?:;|$)`,
         );
         const match = cookieHeader?.match(regex);
         if (match?.[1]) {
@@ -209,13 +211,15 @@ export async function getSupabaseClientForRequest(
   if (accessToken && refreshToken) {
     try {
       // Attempt to set the session
-      const { data, error } = await client.auth.setSession({
+      const { error } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });
 
       // Verify session was actually established (ignore error if session exists)
-      const { data: { session: verifiedSession } } = await client.auth.getSession();
+      const {
+        data: { session: verifiedSession },
+      } = await client.auth.getSession();
 
       if (verifiedSession) {
         // Session is established - success!
@@ -249,9 +253,8 @@ export async function getSupabaseClientForRequest(
         }
 
         // Try getUser() to verify token is valid
-        const { data: userData, error: userError } = await client.auth.getUser(
-          accessToken,
-        );
+        const { data: userData, error: userError } =
+          await client.auth.getUser(accessToken);
 
         if (!userError && userData.user) {
           // Token is valid - the Authorization header should work for RPC calls

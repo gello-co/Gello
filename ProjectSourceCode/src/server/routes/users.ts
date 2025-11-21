@@ -1,11 +1,10 @@
-import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient.js";
 import bcrypt from "bcrypt";
 import express from "express";
 import { getSupabaseClient } from "../../lib/supabase.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", async (_req, res) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase.from("users").select("*");
   res.json(data);

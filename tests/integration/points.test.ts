@@ -3,7 +3,7 @@
  * Tests leaderboard, user points, and manual point awards
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import request from "supertest";
 import { app } from "../../ProjectSourceCode/src/server/app.js";
 import {
@@ -27,7 +27,7 @@ describe("Points API", () => {
     const adminEmail = generateTestEmail("points-admin");
     const memberEmail = generateTestEmail("points-member");
 
-    const admin = await createTestUser(
+    const _admin = await createTestUser(
       adminEmail,
       "password123",
       "admin",
@@ -53,7 +53,7 @@ describe("Points API", () => {
       "password123",
     );
     memberCookies = memberCookieHeader;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/points/leaderboard", () => {
     it("should return leaderboard for authenticated user", async () => {

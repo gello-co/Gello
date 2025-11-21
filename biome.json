@@ -1,32 +1,62 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
-  "root": true,
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "dev"
+  "$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    },
+    "enabled": true
+  },
+  "css": {
+    "formatter": {
+      "enabled": true,
+      "lineEnding": "auto"
+    },
+    "linter": {
+      "enabled": false
+    }
   },
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "**",
-      "!!**/node_modules/",
-      "!!**/dist/",
-      "!!**/build/",
-      "!!**/.bun"
+      "ProjectSourceCode/**/*.{js,ts,json,css}",
+      "tests/**/*.{js,ts}",
+      "supabase/migrations/**/*.sql",
+      "supabase/seed/**/*.{ts,js}",
+      "*.{json,js,ts}",
+      "!!**/node_modules",
+      "!!**/.bun",
+      "!!**/.bun-cache",
+      "!!**/dist",
+      "!!**/build",
+      "!!**/coverage",
+      "!!**/.next",
+      "!!**/.cache",
+      "!!**/.venv",
+      "!!**/.serena",
+      "!!**/.snaplet",
+      "!!**/playwright-report",
+      "!!**/test-results",
+      "!!**/.test-locks",
+      "!!**/supabase/.branches",
+      "!!**/supabase/.temp",
+      "!!**/supabase/certs",
+      "!!**/.agents",
+      "!!**/.ops",
+      "!!**/.devOps",
+      "!!**/.DevOps",
+      "!!**/.release-preview",
+      "!!**/*.lock",
+      "!!**/*.tsbuildinfo",
+      "!!**/bun.lockb",
+      "!!**/bun.lock"
     ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
   },
   "javascript": {
     "formatter": {
@@ -40,21 +70,29 @@
       "trailingCommas": "none"
     }
   },
-  "css": {
-    "formatter": {
-      "enabled": true,
-      "lineEnding": "auto"
-    },
-    "linter": {
-      "enabled": false
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
     }
   },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
+  "overrides": [
+    {
+      "includes": ["tests/**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
       }
     }
+  ],
+  "root": true,
+  "vcs": {
+    "clientKind": "git",
+    "defaultBranch": "dev",
+    "enabled": true,
+    "useIgnoreFile": true
   }
 }

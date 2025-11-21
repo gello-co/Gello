@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+bunx git-format-staged --formatter 'biome check --files-ignore-unknown=true --no-errors-on-unmatched \"{}\"' .

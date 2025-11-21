@@ -3,7 +3,7 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
 
-const LOCK_DIR = join(process.cwd(), ".test-locks");
+const LOCK_DIR = join(process.cwd(), "ProjectSourceCode/.test-locks");
 const LOCK_FILE = join(LOCK_DIR, "db-reset.lock");
 
 interface LockInfo {

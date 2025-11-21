@@ -1,4 +1,3 @@
-import type { Request } from "express";
 import type { BoardService } from "../../lib/services/board.service.js";
 
 declare global {

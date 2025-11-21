@@ -9,7 +9,7 @@ import {
 
 export const errorHandler: ErrorRequestHandler = (
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
   _next,
 ) => {

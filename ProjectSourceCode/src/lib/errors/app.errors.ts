@@ -14,8 +14,6 @@ const RETRYABLE_ERROR = Symbol("RetryableError");
 const NON_RETRYABLE_ERROR = Symbol("NonRetryableError");
 
 export class DuplicateUserError extends Error {
-  private readonly [DUPLICATE_USER_ERROR] = true;
-
   constructor(message: string = "User with this email already exists") {
     super(message);
     this.name = "DuplicateUserError";
@@ -33,8 +31,6 @@ export class DuplicateUserError extends Error {
 }
 
 export class InvalidCredentialsError extends Error {
-  private readonly [INVALID_CREDENTIALS_ERROR] = true;
-
   constructor(message: string = "Invalid email or password") {
     super(message);
     this.name = "InvalidCredentialsError";
@@ -54,8 +50,6 @@ export class InvalidCredentialsError extends Error {
 }
 
 export class UserNotFoundError extends Error {
-  private readonly [USER_NOT_FOUND_ERROR] = true;
-
   constructor(message: string = "User not found") {
     super(message);
     this.name = "UserNotFoundError";
@@ -73,8 +67,6 @@ export class UserNotFoundError extends Error {
 }
 
 export class ValidationError extends Error {
-  private readonly [VALIDATION_ERROR] = true;
-
   constructor(message: string = "Validation failed") {
     super(message);
     this.name = "ValidationError";
@@ -90,8 +82,6 @@ export class ValidationError extends Error {
 }
 
 export class ResourceNotFoundError extends Error {
-  private readonly [RESOURCE_NOT_FOUND_ERROR] = true;
-
   constructor(message: string = "Resource not found") {
     super(message);
     this.name = "ResourceNotFoundError";
@@ -111,8 +101,6 @@ export class ResourceNotFoundError extends Error {
 }
 
 export class RetryableError extends Error {
-  private readonly [RETRYABLE_ERROR] = true;
-
   constructor(message: string = "Retryable error occurred") {
     super(message);
     this.name = "RetryableError";
@@ -128,8 +116,6 @@ export class RetryableError extends Error {
 }
 
 export class NonRetryableError extends Error {
-  private readonly [NON_RETRYABLE_ERROR] = true;
-
   constructor(message: string = "Non-retryable error occurred") {
     super(message);
     this.name = "NonRetryableError";

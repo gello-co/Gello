@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@supabase/supabase-js";
 import * as usersDb from "../../../ProjectSourceCode/src/lib/database/users.db.js";
 import { AuthService } from "../../../ProjectSourceCode/src/lib/services/auth.service.js";
 import { mockFn } from "../../setup/helpers/mock.js";
@@ -57,8 +56,8 @@ describe("AuthService (bun)", () => {
       from: vi.fn((table: string) => {
         if (table === "users") {
           return {
-            select: vi.fn((columns: string) => ({
-              eq: vi.fn((column: string, value: string) => ({
+            select: vi.fn((_columns: string) => ({
+              eq: vi.fn((_column: string, _value: string) => ({
                 maybeSingle: vi.fn().mockResolvedValue({
                   data: null,
                   error: null,
@@ -69,8 +68,8 @@ describe("AuthService (bun)", () => {
                 }),
               })),
             })),
-            insert: vi.fn((data: any) => ({
-              select: vi.fn((columns: string) => ({
+            insert: vi.fn((_data: any) => ({
+              select: vi.fn((_columns: string) => ({
                 single: vi.fn().mockResolvedValue({
                   data: null,
                   error: null,
@@ -119,16 +118,16 @@ describe("AuthService (bun)", () => {
 
       // Configure service role client mock for this test
       mockFn(mockServiceRoleClient.from).mockReturnValue({
-        select: vi.fn((columns: string) => ({
-          eq: vi.fn((column: string, value: string) => ({
+        select: vi.fn((_columns: string) => ({
+          eq: vi.fn((_column: string, _value: string) => ({
             maybeSingle: vi.fn().mockResolvedValue({
               data: null, // User doesn't exist yet
               error: null,
             }),
           })),
         })),
-        insert: vi.fn((data: any) => ({
-          select: vi.fn((columns: string) => ({
+        insert: vi.fn((_data: any) => ({
+          select: vi.fn((_columns: string) => ({
             single: vi.fn().mockResolvedValue({
               data: mockUser,
               error: null,
@@ -176,8 +175,8 @@ describe("AuthService (bun)", () => {
 
       // Configure service role client to return existing user
       mockFn(mockServiceRoleClient.from).mockReturnValue({
-        select: vi.fn((columns: string) => ({
-          eq: vi.fn((column: string, value: string) => ({
+        select: vi.fn((_columns: string) => ({
+          eq: vi.fn((_column: string, _value: string) => ({
             maybeSingle: vi.fn().mockResolvedValue({
               data: { id: "existing-id", email: uniqueEmail },
               error: null,
@@ -198,8 +197,8 @@ describe("AuthService (bun)", () => {
     it("should throw error if auth signup fails", async () => {
       // Configure service role client to return no existing user
       mockFn(mockServiceRoleClient.from).mockReturnValue({
-        select: vi.fn((columns: string) => ({
-          eq: vi.fn((column: string, value: string) => ({
+        select: vi.fn((_columns: string) => ({
+          eq: vi.fn((_column: string, _value: string) => ({
             maybeSingle: vi.fn().mockResolvedValue({
               data: null,
               error: null,
@@ -296,8 +295,8 @@ describe("AuthService (bun)", () => {
 
       // Configure service role client to fail user creation
       mockFn(mockServiceRoleClient.from).mockReturnValue({
-        insert: vi.fn((data: any) => ({
-          select: vi.fn((columns: string) => ({
+        insert: vi.fn((_data: any) => ({
+          select: vi.fn((_columns: string) => ({
             single: vi.fn().mockResolvedValue({
               data: null,
               error: { message: "Failed to create profile" },

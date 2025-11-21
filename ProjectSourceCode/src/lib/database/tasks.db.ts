@@ -175,7 +175,7 @@ export async function completeTask(
     if (
       error.code === "P0001" ||
       error.details?.includes("task_not_found") ||
-      (error.details && error.details.includes("Task not found"))
+      error.details?.includes("Task not found")
     ) {
       throw new ResourceNotFoundError(`Task not found: ${taskId}`);
     }

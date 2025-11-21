@@ -26,7 +26,7 @@ export async function getCsrfToken(
       req = req.set("Cookie", cookies.join("; "));
     }
   }
-  
+
   const inputCookies = Array.isArray(cookies)
     ? cookies
     : cookies

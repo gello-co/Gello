@@ -62,7 +62,7 @@ export function broadcastLeaderboardUpdate() {
   clients.forEach((client) => {
     try {
       client.write(`data: ${message}\n\n`);
-    } catch (error) {
+    } catch (_error) {
       clients.delete(client);
     }
   });

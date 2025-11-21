@@ -1,0 +1,90 @@
+<div class="profile">
+    <div class="container-fluid px-4">
+        <h2>Admin Permissions</h2>
+        <div class="row g-4">
+            <!-- Left Card: Join requests -->
+            <div class="col-md-6">
+                <div class="profile-card">
+                    <div class="login-card-body">
+                        <h3>Join requests</h3>
+                        {{#if joinRequests}}
+                        {{#each joinRequests}}
+                        <div class="request-item">
+                            <span class="user-avatar">A</span>
+                            <span class="username">Username: {{name}}</span>
+                            <div class="actions">
+                                <button class="action-btn accept-btn">
+                                    <span class="checkmark">&#x2713;</span>
+                                </button>
+                                <button class="action-btn reject-btn">
+                                    <span class="xmark">&#x2715;</span>
+                                </button>
+                            </div>
+                        </div>
+                        {{/each}}
+                        {{else}}
+                        <!-- Placeholder requests if none are available -->
+                        <div class="request-item">
+                            <span class="user-avatar">A</span>
+                            <span class="username">Username: First name, Last name</span>
+                            <div class="actions">
+                                <button class="action-btn accept-btn">
+                                    <span class="checkmark">&#x2713;</span>
+                                </button>
+                                <button class="action-btn reject-btn">
+                                    <span class="xmark">&#x2715;</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="request-item">
+                            <span class="user-avatar">A</span>
+                            <span class="username">Username: First name, Last name</span>
+                            <div class="actions">
+                                <button class="action-btn accept-btn">
+                                    <span class="checkmark">&#x2713;</span>
+                                </button>
+                                <button class="action-btn reject-btn">
+                                    <span class="xmark">&#x2715;</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="request-item">
+                            <span class="user-avatar">A</span>
+                            <span class="username">Username: First name, Last name</span>
+                            <div class="actions">
+                                <button class="action-btn accept-btn">
+                                    <span class="checkmark">&#x2713;</span>
+                                </button>
+                                <button class="action-btn reject-btn">
+                                    <span class="xmark">&#x2715;</span>
+                                </button>
+                            </div>
+                        </div>
+                        {{/if}}
+                        <a class="prof-link" href="#">See all requests</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Card: Points settings -->
+            <div class="col-md-6">
+                <div class="profile-card">
+                    <div class="login-card-body">
+                        <h3>Points settings</h3>
+
+                        <!-- 2X Points Toggle Button: green = active red = deactive -->
+                        <button
+                            class="settings-btn points2x-btn points2x {{#if is2xPointsActive}}active-green{{else}}inactive-red{{/if}}">
+                            Set 2X points
+                        </button>
+
+                        <!-- Assign and manage tasks button -->
+                        <a href="/tasks-admin">
+                            <button class="settings-btn">Assign and manage tasks</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
