@@ -8,15 +8,21 @@ const router = express.Router();
 router.get("/leaderboard", requireAuth, async (req, res, next) => {
   try {
     if (!req.user) throw new Error("User not authenticated");
-    
+
     const leaderboardService = new LeaderboardService(getSupabaseClient());
     const leaderboard = await leaderboardService.getLeaderboard(100);
+
+    const topThree = leaderboard.slice(0, 3);
+    const others = leaderboard.slice(3);
+    const isManager = req.user.role === "manager" || req.user.role === "admin";
 
     res.render("pages/leaderboard/index", {
       title: "Leaderboard",
       layout: "dashboard",
       user: req.user,
-      leaderboard,
+      topThree,
+      others,
+      isManager,
     });
   } catch (error) {
     next(error);
