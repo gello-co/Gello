@@ -59,12 +59,8 @@ schema_paths = ["./migrations/*.sql"]
 
 [db.seed]
 # If enabled, seeds the database after migrations during a db reset.
-# For tests: disabled (use programmatic seeding via resetTestDb() for faster feedback)
-# For development: enable manually or use `bun run seed` after reset
-enabled = false
-# Seed data is generated from Snaplet Seed via `bun run seed:sql`
-# Run `bun run seed:sql` to regenerate seed.sql after schema changes
-# sql_paths = ["./seed.sql"]
+enabled = true
+sql_paths = ["./seed.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.

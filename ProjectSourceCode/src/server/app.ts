@@ -53,7 +53,7 @@ app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
     ...helmetOptions,
-  }),
+  })
 );
 
 if (isProd) {
@@ -73,7 +73,7 @@ app.engine(
     layoutsDir: path.join(__dirname, "../views/layouts"),
     partialsDir: path.join(__dirname, "../views/partials"),
     helpers,
-  }),
+  })
 );
 
 app.set("view engine", "hbs");
@@ -84,7 +84,10 @@ app.set("views", [
 
 // Static files
 app.use("/public", express.static(path.join(__dirname, "../public")));
-app.use("/express/public", express.static(path.join(__dirname, "../express/express-public")));
+app.use(
+  "/express/public",
+  express.static(path.join(__dirname, "../express/express-public"))
+);
 app.use("/css", express.static(path.join(__dirname, "../public/css")));
 app.use("/js", express.static(path.join(__dirname, "../public/js")));
 
@@ -94,12 +97,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Request logging middleware (structured logging)
-import { devAutoAuth } from "./middleware/dev-auto-auth.js";
+import { devAuth } from "../express/express-middleware/dev-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestLogger } from "./middleware/request-logger.js";
 
 app.use(requestLogger);
-app.use(devAutoAuth);
+app.use(devAuth);
 
 // CSRF protection deferred to v0.2.0
 // import { csrfProtection, csrfTokenToLocals } from "./middleware/csrf.js";
