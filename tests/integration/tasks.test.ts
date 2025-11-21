@@ -30,7 +30,7 @@ describe("Tasks API", () => {
     const managerEmail = generateTestEmail("tasks-manager");
     const memberEmail = generateTestEmail("tasks-member");
 
-    const manager = await createTestUser(
+    const _manager = await createTestUser(
       managerEmail,
       "password123",
       "manager",
@@ -87,7 +87,7 @@ describe("Tasks API", () => {
       });
 
     listId = listResponse.body.id;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/tasks/lists/:listId/tasks", () => {
     it("should return tasks for a list", async () => {

@@ -227,6 +227,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       if $BUNX_CMD supabase status -o env > /tmp/supabase-env.log 2>&1; then
         # Source the env vars
         set -a
+        # shellcheck disable=SC1091
         source /tmp/supabase-env.log 2>/dev/null || true
         set +a
 
@@ -278,7 +279,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       fi
     else
       echo "⚠️  Database seeding had issues (this is OK if data already exists)"
-      cat /tmp/seed-output.log | tail -10
+      tail -10 /tmp/seed-output.log
     fi
 
     # Run tests
@@ -303,7 +304,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       fi
     else
       echo "❌ Unit tests failed - see /tmp/test-output.log for details"
-      cat /tmp/test-output.log | tail -20
+      tail -20 /tmp/test-output.log
       echo ""
       echo "   To skip test verification on container creation, set FULL_SETUP_ON_CREATE=false"
       exit 1
@@ -329,7 +330,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       else
         echo "❌ Integration tests failed"
       fi
-      cat /tmp/integration-test-output.log | tail -30
+      tail -30 /tmp/integration-test-output.log
       echo ""
       echo "   Setup cannot complete - integration tests must pass"
       echo "   Check Supabase: bun run supabase:status"

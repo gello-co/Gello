@@ -1,14 +1,12 @@
 import express from "express";
 import "../types/express.d.js";
 import { BoardService } from "../../lib/services/board.service.js";
-import { LeaderboardService } from "../../lib/services/leaderboard.service.js";
 import { ListService } from "../../lib/services/list.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
 import { TaskService } from "../../lib/services/task.service.js";
 import { TeamService } from "../../lib/services/team.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
 import { requireAuth } from "../middleware/requireAuth.js";
-import { ResourceNotFoundError } from "@/lib/errors/app.errors.js";
 
 const router = express.Router();
 
@@ -28,10 +26,6 @@ function getTeamService() {
   return new TeamService(getSupabaseClient());
 }
 
-function getLeaderboardService() {
-  return new LeaderboardService(getSupabaseClient());
-}
-
 function getPointsService(userId?: string) {
   return new PointsService(getSupabaseClient(), userId);
 }
@@ -43,50 +37,21 @@ router.get("/", (req, res) => {
   }
   res.render("pages/home", {
     title: "Gello",
+    layout: "main",
   });
-});
-
-router.get("/register", (req, res) => {
-  res.render("pages/auth/register");
 });
 
 router.get("/login", (_req, res) => {
-  res.redirect("/login/admin");
-});
-
-router.get("/login/admin", (_req, res) => {
-  res.render("pages/login-admin", {
-    title: "(TODO) Admin Login",
+  res.render("pages/auth/login", {
+    title: "Login",
+    layout: "auth",
   });
 });
 
-router.get("/login/team", (_req, res) => {
-  res.render("pages/login-team", {
-    title: "(TODO) Team Member Login",
-  });
-});
-
-router.post("/login/admin", (req, res) => {
-  // dev bypass auth middleware sets user
-  if (req.user) {
-    return res.redirect("/profile/admin");
-  }
-  // TODO: Implement actual authentication
-  res.status(401).render("pages/login-admin", {
-    title: "(TODO) Admin Login",
-    error: "Invalid credentials",
-  });
-});
-
-router.post("/login/team", (req, res) => {
-  // dev bypass auth middleware sets user
-  if (req.user) {
-    return res.redirect("/profile/team");
-  }
-  // TODO: Implement actual authentication
-  res.status(401).render("pages/login-team", {
-    title: "(TODO) Team Member Login",
-    error: "Invalid credentials",
+router.get("/register", (_req, res) => {
+  res.render("pages/auth/register", {
+    title: "Register",
+    layout: "auth",
   });
 });
 
@@ -147,21 +112,19 @@ router.get("/boards", requireAuth, async (req, res, next) => {
     if (teamId) {
       boards = await boardService.getBoardsByTeam(teamId);
     } else {
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       boards = await boardService.getBoardsForUser(req.user!.id);
     }
     res.render("pages/boards/index", {
       title: "Boards",
       layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       boards,
     });
   } catch (error) {
     next(error);
   }
-});
-
-router.get("/boards-test", async (req, res, next) => {
-    res.render("pages/boards/index");
 });
 
 router.get("/boards/:id", requireAuth, async (req, res, next) => {
@@ -217,38 +180,21 @@ router.get("/boards/:id", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/leaderboard", requireAuth, async (req, res, next) => {
-  try {
-    const leaderboardService = getLeaderboardService();
-    const leaderboard = await leaderboardService.getLeaderboard(100);
-    res.render("pages/leaderboard/index", {
-      title: "Leaderboard",
-      layout: "dashboard",
-      user: req.user,
-      leaderboard,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get("/leaderboard-test", async (req, res) => {
-  //TODO: delete this
-  res.render("pages/leaderboard/index");
-});
-
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
-    const pointsService = getPointsService(req.user!.id);
+    const pointsService = getPointsService(req.user?.id);
     const taskService = getTaskService();
 
+    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
     const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
+    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
     const assignedTasks = await taskService.getTasksByAssignee(req.user!.id);
 
     res.render("pages/profile/index", {
       title: "Profile",
       layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       pointsHistory,
       assignedTasks,
@@ -258,24 +204,4 @@ router.get("/profile", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/profile-test", async (req, res) => {
-  res.render("pages/profile/index");
-  //TODO: Delete route after logins are fixed
-});
-
-router.get("/tasks-admin-test",async (req, res) => {
-  res.render("pages/tasks-admin");
-  //TODO: Delete router after logins are fixed
-});
-
-
-router.get("/tasks-admin-test",async (req, res) => {
-  res.render("pages/tasks-team");
-  //TODO: Delete router after logins are fixed
-});
-
-router.get("/points-shop",async (req, res) => {
-  res.render("pages/points-shop/index");
-  //TODO: Delete router after logins are fixed
-})
 export default router;

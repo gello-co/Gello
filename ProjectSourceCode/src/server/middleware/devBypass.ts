@@ -10,13 +10,15 @@ let bypassLogged = false;
  */
 export const devBypassAuth = (
   req: Request,
-  res: Response,
-  next: NextFunction,
+  _res: Response,
+  next: NextFunction
 ) => {
   if (env.DEV_BYPASS_AUTH === "true") {
     // Log on first request that bypass is active
     if (!bypassLogged) {
-      console.log("⚠️  DEV BYPASS ACTIVE: Authentication bypassed for all requests");
+      console.log(
+        "⚠️  DEV BYPASS ACTIVE: Authentication bypassed for all requests"
+      );
       bypassLogged = true;
     }
     

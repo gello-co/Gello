@@ -88,7 +88,7 @@ test.describe("Board Workflow", () => {
     const boardUrl = page.url();
     const boardIdMatch = boardUrl.match(/\/boards\/([^/]+)/);
     expect(boardIdMatch).toBeTruthy();
-    const boardId = boardIdMatch![1];
+    const boardId = boardIdMatch?.[1];
 
     // Step 3: Add a list to the board
     await expect(page.locator("text=Test Board")).toBeVisible();

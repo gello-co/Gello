@@ -117,7 +117,7 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
       return headerToken;
     }
     // Check _csrf body field (for form submissions)
-    if (req.body && req.body._csrf) {
+    if (req.body?._csrf) {
       if (!isProduction) {
         console.debug(
           `[CSRF] Token found in body: ${req.body._csrf.substring(0, 20)}...`,

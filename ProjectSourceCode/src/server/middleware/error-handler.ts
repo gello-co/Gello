@@ -8,6 +8,7 @@ import {
 import { logger } from "../lib/logger.js";
 
 export const errorHandler: ErrorRequestHandler = (
+  // biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type from Express
   err: Error | any,
   req: Request,
   res: Response,

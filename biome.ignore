@@ -1,9 +1,0 @@
-node_modules
-dist
-.cache
-docs
-.vscode
-.venv
-*.lock
-.devOps
-bin

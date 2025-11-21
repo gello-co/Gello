@@ -33,7 +33,7 @@ router.get("/", requireAuth, attachBoardService, async (req, res, next) => {
   try {
     const teamId = req.query.team_id as string;
     if (teamId) {
-      const boards = await req.boardService!.getBoardsByTeam(teamId);
+      const boards = await req.boardService?.getBoardsByTeam(teamId);
       return res.json(boards);
     }
     res.status(400).json({ error: "team_id query parameter is required" });
@@ -48,7 +48,7 @@ router.get("/:id", requireAuth, attachBoardService, async (req, res, next) => {
     if (!id) {
       return res.status(400).json({ error: "id parameter is required" });
     }
-    const board = await req.boardService!.getBoard(id);
+    const board = await req.boardService?.getBoard(id);
     if (!board) {
       return res.status(404).json({ error: "Board not found" });
     }
@@ -65,7 +65,7 @@ router.post(
   validate(createBoardSchema),
   async (req, res, next) => {
     try {
-      const board = await req.boardService!.createBoard({
+      const board = await req.boardService?.createBoard({
         ...req.body,
         created_by: req.user?.id ?? null,
       });
@@ -87,7 +87,7 @@ router.put(
       if (!id) {
         return res.status(400).json({ error: "id parameter is required" });
       }
-      const board = await req.boardService!.updateBoard({
+      const board = await req.boardService?.updateBoard({
         ...req.body,
         id,
       });
@@ -108,7 +108,7 @@ router.delete(
       if (!id) {
         return res.status(400).json({ error: "id parameter is required" });
       }
-      await req.boardService!.deleteBoard(id);
+      await req.boardService?.deleteBoard(id);
       res.status(204).send();
     } catch (error) {
       next(error);

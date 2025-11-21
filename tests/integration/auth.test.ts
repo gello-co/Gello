@@ -27,7 +27,7 @@ async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
 describe("Auth API (bun)", () => {
   beforeAll(async () => {
     await prepareTestDb();
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("POST /api/auth/register", () => {
     it("should register a new user", async () => {

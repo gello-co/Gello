@@ -1,2 +1,57 @@
 /*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */
-.collapse{visibility:collapse}.visible{visibility:visible}.fixed{position:fixed}.relative{position:relative}.static{position:static}.col-12{grid-column:12}.container{width:100%}.mx-auto{margin-inline:auto}.block{display:block}.contents{display:contents}.hidden{display:none}.inline{display:inline}.table{display:table}.truncate{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.text-center{text-align:center}.capitalize{text-transform:capitalize}.lowercase{text-transform:lowercase}.uppercase{text-transform:uppercase}
+.collapse {
+  visibility: collapse;
+}
+.visible {
+  visibility: visible;
+}
+.fixed {
+  position: fixed;
+}
+.relative {
+  position: relative;
+}
+.static {
+  position: static;
+}
+.col-12 {
+  grid-column: 12;
+}
+.container {
+  width: 100%;
+}
+.mx-auto {
+  margin-inline: auto;
+}
+.block {
+  display: block;
+}
+.contents {
+  display: contents;
+}
+.hidden {
+  display: none;
+}
+.inline {
+  display: inline;
+}
+.table {
+  display: table;
+}
+.truncate {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.text-center {
+  text-align: center;
+}
+.capitalize {
+  text-transform: capitalize;
+}
+.lowercase {
+  text-transform: lowercase;
+}
+.uppercase {
+  text-transform: uppercase;
+}
