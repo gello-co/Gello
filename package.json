@@ -1,7 +1,7 @@
 {
   "name": "team-1-gello",
   "private": true,
-  "version": "0.1.0abu",
+  "version": "0.2.0-dev",
   "type": "module",
   "scripts": {
     "start": "bash scripts/bootstrap.sh",
