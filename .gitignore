@@ -77,6 +77,14 @@ web_modules/
 .cache
 .parcel-cache
 
+# Bun cache
+.bun-cache/
+
+# Supabase local runtime artifacts
+supabase/.branches/
+supabase/.temp/
+supabase/certs/
+
 # Next.js build output
 .next
 out

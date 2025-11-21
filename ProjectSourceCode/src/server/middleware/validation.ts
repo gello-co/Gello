@@ -21,4 +21,3 @@ export const validate =
       next(error);
     }
   };
-  
