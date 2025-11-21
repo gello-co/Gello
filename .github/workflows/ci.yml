@@ -37,7 +37,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.1
+          bun-version: 1.3.2
 
       - name: Restore Bun cache
         id: bun-cache
@@ -177,7 +177,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.1
+          bun-version: 1.3.2
 
       - name: Restore Bun cache
         id: bun-cache
@@ -211,7 +211,7 @@ jobs:
         run: bunx supabase start
 
       - name: Run tests with Bun
-        run: bun test --bail
+        run: bun test --bail tests/unit tests/integration tests/health.test.ts
 
       - name: Stop Supabase
         if: always()
