@@ -47,12 +47,11 @@ setup_environment() {
 }
 
 # Function: Reset and seed database
+# Function: Reset and seed database
 reset_and_seed() {
   echo -e "${YELLOW}🗄️  Resetting database...${NC}"
-  bunx supabase db reset --no-seed
-  echo -e "${YELLOW}🌱 Seeding test data...${NC}"
-  cd ProjectSourceCode && bun ../scripts/seed-simple.ts
-  cd ..  # Return to root directory for subsequent functions
+  # This will automatically run supabase/seed.sql because we enabled it in config.toml
+  bunx supabase db reset
   echo -e "${GREEN}✓${NC} Database ready"
 }
 
@@ -61,9 +60,8 @@ start_dev_server() {
   echo -e "${YELLOW}🔥 Starting development server...${NC}"
   echo -e "${GREEN}✓${NC} Server running at http://localhost:3000"
   echo ""
-  echo "Test accounts:"
-  echo "  • admin@test.com / password123 (Admin)"
-  echo "  • member@test.com / password123 (Member)"
+  echo "Auto-login is enabled for development"
+  echo "You are automatically logged in as the admin user"
   echo ""
 
   # Change to ProjectSourceCode directory so Bun can find .env.local
