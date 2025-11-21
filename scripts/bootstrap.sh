@@ -71,7 +71,13 @@ start_dev_server() {
   cd ProjectSourceCode
 
   # Start server with hot reload
-  exec bun --hot src/index.ts
+  # INTEGRATION: Use Doppler if available to inject shared dev secrets
+  if command -v doppler >/dev/null 2>&1 && [ -f "../doppler.yaml" ]; then
+    echo -e "${YELLOW}🔐 Doppler detected. Starting with secrets injection...${NC}"
+    exec doppler run -- bun --hot src/index.ts
+  else
+    exec bun --hot src/index.ts
+  fi
 }
 
 # Main execution
