@@ -1,0 +1,58 @@
+<div class="container my-5">
+	<div class="row">
+		<div class="col-md-8 mx-auto">
+			<div class="card">
+				<div class="card-body">
+					<div class="text-center mb-4">
+						{{> user-avatar user=user}}
+						<h2>{{user.display_name}}</h2>
+						<p class="text-muted">{{user.email}}</p>
+						{{> points-badge points=user.total_points}}
+					</div>
+					<div class="mb-4">
+						<h3>Points History</h3>
+						<ul class="list-group">
+							{{#if (length pointsHistory)}}
+								{{#each pointsHistory}}
+									<li class="list-group-item d-flex justify-content-between align-items-center">
+										<div>
+											<strong>+{{points_earned}} points</strong>
+											<br />
+											<small class="text-muted">{{reason}} - {{formatDate created_at}}</small>
+										</div>
+										{{#if notes}}
+											<span class="badge bg-secondary">{{notes}}</span>
+										{{/if}}
+									</li>
+								{{/each}}
+							{{else}}
+								<li class="list-group-item text-center text-muted">
+									<small>No points history yet</small>
+								</li>
+							{{/if}}
+						</ul>
+					</div>
+					<div>
+						<h3>Assigned Tasks</h3>
+						<ul class="list-group">
+							{{#if (length assignedTasks)}}
+								{{#each assignedTasks}}
+									<li class="list-group-item">
+										<h5>{{title}}</h5>
+										<p class="mb-0">{{description}}</p>
+										<small class="text-muted">{{story_points}} story points</small>
+									</li>
+								{{/each}}
+							{{else}}
+								<li class="list-group-item text-center text-muted">
+									<small>No assigned tasks</small>
+								</li>
+							{{/if}}
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
