@@ -14,7 +14,7 @@ import { env } from "../../config/env.js";
 export const devAuth = async (
   req: Request,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   // Only run in development and if not already authenticated
   if (env.NODE_ENV === "development" && !req.user) {
@@ -22,7 +22,7 @@ export const devAuth = async (
       // Use Service Role Key to bypass RLS and fetch the admin user
       if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
         console.warn(
-          "[DevAuth] Missing SUPABASE_SERVICE_ROLE_KEY, skipping auto-login"
+          "[DevAuth] Missing SUPABASE_SERVICE_ROLE_KEY, skipping auto-login",
         );
         return next();
       }
@@ -35,7 +35,7 @@ export const devAuth = async (
             persistSession: false,
             autoRefreshToken: false,
           },
-        }
+        },
       );
 
       // Use hardcoded Admin UUID for reliable auto-login
