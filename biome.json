@@ -50,7 +50,8 @@
       "!!**/*.lock",
       "!!**/*.tsbuildinfo",
       "!!**/bun.lockb",
-      "!!**/bun.lock"
+      "!!**/bun.lock",
+      "!!**/output.css"
     ]
   },
   "formatter": {
