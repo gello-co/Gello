@@ -86,7 +86,7 @@ app.set("views", [
 app.use("/public", express.static(path.join(__dirname, "../public")));
 app.use(
   "/express/public",
-  express.static(path.join(__dirname, "../express/express-public"))
+  express.static(path.join(__dirname, "../express/express-public")),
 );
 app.use("/css", express.static(path.join(__dirname, "../public/css")));
 app.use("/js", express.static(path.join(__dirname, "../public/js")));
@@ -112,6 +112,7 @@ app.use(devAuth);
 // Make CSRF token available to all views
 // app.use(csrfTokenToLocals);
 
+import { expressApp } from "../express/express-app.js";
 import apiRoutes from "./routes/api.js";
 import boardsRouter from "./routes/boards.js";
 import listsRouter from "./routes/lists.js";

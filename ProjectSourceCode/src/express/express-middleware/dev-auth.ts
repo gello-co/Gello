@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { env } from "../../config/env.js";
 
 /**
@@ -13,7 +13,7 @@ import { env } from "../../config/env.js";
  */
 export const devAuth = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   // Only run in development and if not already authenticated
@@ -21,16 +21,22 @@ export const devAuth = async (
     try {
       // Use Service Role Key to bypass RLS and fetch the admin user
       if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.warn("[DevAuth] Missing SUPABASE_SERVICE_ROLE_KEY, skipping auto-login");
+        console.warn(
+          "[DevAuth] Missing SUPABASE_SERVICE_ROLE_KEY, skipping auto-login"
+        );
         return next();
       }
 
-      const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      });
+      const supabase = createClient(
+        env.SUPABASE_URL,
+        env.SUPABASE_SERVICE_ROLE_KEY,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+          },
+        }
+      );
 
       // Use hardcoded Admin UUID for reliable auto-login
       const { data: user, error } = await supabase

@@ -1,8 +1,8 @@
 import express from "express";
 import { TaskService } from "../../lib/services/task.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
-import { requireAuth } from "../../server/middleware/requireAuth.js";
 import { requireAdmin } from "../../server/middleware/requireAdmin.js";
+import { requireAuth } from "../../server/middleware/requireAuth.js";
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.get(
     try {
       if (!req.user) throw new Error("User not authenticated");
 
-      const taskService = new TaskService(getSupabaseClient());
+      const _taskService = new TaskService(getSupabaseClient());
       // TODO: Add method to get all tasks for admin or filter by team
 
       res.render("pages/tasks-admin", {

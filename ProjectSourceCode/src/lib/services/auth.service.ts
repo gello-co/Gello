@@ -34,11 +34,11 @@ export class AuthService {
   private readonly serviceRoleClient: SupabaseClient | null;
 
   // Cached service-role client (singleton pattern) for production use
-  private static serviceRoleClientCache: SupabaseClient | null = null;
+  // private static serviceRoleClientCache: SupabaseClient | null = null;
 
   constructor(
     private client: SupabaseClient,
-    serviceRoleClient?: SupabaseClient,
+    serviceRoleClient?: SupabaseClient
   ) {
     // Allow injecting service role client for testing
     // If not provided, will be created lazily via getServiceRoleClient()
@@ -63,7 +63,7 @@ export class AuthService {
     // Validate environment variables
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error(
-        "Service role key required for user management operations",
+        "Service role key required for user management operations"
       );
     }
 
@@ -76,7 +76,7 @@ export class AuthService {
           autoRefreshToken: false,
           persistSession: false,
         },
-      },
+      }
     );
 
     return AuthService.serviceRoleClientCache;
@@ -99,7 +99,7 @@ export class AuthService {
     // Handle errors other than "not found"
     if (existingUserError && existingUserError.code !== "PGRST116") {
       throw new Error(
-        `Failed to check for existing user: ${existingUserError.message}`,
+        `Failed to check for existing user: ${existingUserError.message}`
       );
     }
 
@@ -221,7 +221,7 @@ export class AuthService {
 
       if (userError || !newUser) {
         throw new Error(
-          `User profile not found and failed to create: ${userError?.message}`,
+          `User profile not found and failed to create: ${userError?.message}`
         );
       }
       user = newUser as User;

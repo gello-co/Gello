@@ -7,9 +7,10 @@ const router = express.Router();
 
 router.get("/points-shop", requireAuth, async (req, res, next) => {
   try {
-    const pointsService = new PointsService(getSupabaseClient(), req.user!.id);
-    const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
-    const totalPoints = await pointsService.getBalance(req.user!.id);
+    if (!req.user) throw new Error("User not authenticated");
+    const pointsService = new PointsService(getSupabaseClient(), req.user.id);
+    const pointsHistory = await pointsService.getPointsHistory(req.user.id);
+    const totalPoints = await pointsService.getUserPoints(req.user.id);
 
     res.render("pages/points-shop/index", {
       title: "Points Shop",
