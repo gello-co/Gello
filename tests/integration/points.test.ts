@@ -53,7 +53,7 @@ describe("Points API", () => {
       "password123",
     );
     memberCookies = memberCookieHeader;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/points/leaderboard", () => {
     it("should return leaderboard for authenticated user", async () => {

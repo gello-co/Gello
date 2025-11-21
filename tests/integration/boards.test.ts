@@ -54,7 +54,7 @@ describe("Boards API", () => {
     const teamResponse = await req.send({ name: "Test Team" });
 
     teamId = teamResponse.body.id;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/boards", () => {
     it("should return boards for a team", async () => {

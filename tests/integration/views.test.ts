@@ -18,7 +18,7 @@ import {
 describe("View Rendering", () => {
   beforeAll(async () => {
     await prepareTestDb();
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /", () => {
     it("should render home page", async () => {

@@ -67,7 +67,7 @@ describe("Teams API", () => {
       "password123",
     );
     memberCookies = memberCookieHeader;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/teams", () => {
     it("should return all teams for authenticated user", async () => {

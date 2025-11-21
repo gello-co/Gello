@@ -68,7 +68,7 @@ describe("Lists API", () => {
     });
 
     boardId = boardResponse.body.id;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/lists/boards/:boardId/lists", () => {
     it("should return lists for a board", async () => {
