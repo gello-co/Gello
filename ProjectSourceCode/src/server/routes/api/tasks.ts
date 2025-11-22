@@ -31,8 +31,10 @@ async function getPointsService(req: Request, userId?: string) {
 router.get("/lists/:listId/tasks", requireAuth, async (req, res, next) => {
   try {
     const listId = req.params.listId;
-    // biome-ignore lint/style/noNonNullAssertion: Express route params are guaranteed to exist
-    const tasks = await (await getTaskService(req)).getTasksByList(listId!);
+    if (!listId) {
+      return res.status(400).json({ error: "Missing listId" });
+    }
+    const tasks = await (await getTaskService(req)).getTasksByList(listId);
     res.json(tasks);
   } catch (error) {
     next(error);
@@ -60,8 +62,10 @@ router.post(
 router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;
-    // biome-ignore lint/style/noNonNullAssertion: Express route params are guaranteed to exist
-    const task = await (await getTaskService(req)).getTask(id!);
+    if (!id) {
+      return res.status(400).json({ error: "Missing id" });
+    }
+    const task = await (await getTaskService(req)).getTask(id);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
@@ -205,8 +209,10 @@ router.patch("/:id/complete", requireAuth, async (req, res, next) => {
 router.delete("/:id", requireManager, async (req, res, next) => {
   try {
     const id = req.params.id;
-    // biome-ignore lint/style/noNonNullAssertion: Express route params are guaranteed to exist
-    await (await getTaskService(req)).deleteTask(id!);
+    if (!id) {
+      return res.status(400).json({ error: "Missing id" });
+    }
+    await (await getTaskService(req)).deleteTask(id);
     res.status(204).send();
   } catch (error) {
     next(error);

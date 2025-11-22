@@ -1,6 +1,6 @@
 import express from "express";
-import { requireAdmin } from "../../server/middleware/requireAdmin.js";
-import { requireAuth } from "../../server/middleware/requireAuth.js";
+import { requireAdmin } from "../../middleware/requireAdmin.js";
+import { requireAuth } from "../../middleware/requireAuth.js";
 
 const router = express.Router();
 

@@ -14,9 +14,6 @@ function getBoardService() {
   return new BoardService(getSupabaseClient());
 }
 
-function getListService() {
-  return new ListService(getSupabaseClient());
-}
 
 function getTaskService() {
   return new TaskService(getSupabaseClient());

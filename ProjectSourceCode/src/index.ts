@@ -1,4 +1,4 @@
-import { app } from "./server/app.js";
+import { app } from "./express/app.js";
 import { logger } from "./server/lib/logger.js";
 
 const PORT = Number(process.env.PORT ?? 3000);

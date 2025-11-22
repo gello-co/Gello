@@ -1,7 +1,7 @@
 import express from "express";
 import { PointsService } from "../../lib/services/points.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
-import { requireAuth } from "../../server/middleware/requireAuth.js";
+import { requireAuth } from "../../middleware/requireAuth.js";
 
 const router = express.Router();
 

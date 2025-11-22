@@ -87,6 +87,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["ProjectSourceCode/src/express/routes/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off"
+          }
+        }
+      }
     }
   ],
   "root": true,
