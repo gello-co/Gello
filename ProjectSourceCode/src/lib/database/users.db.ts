@@ -91,9 +91,7 @@ export async function getUsersByTeam(
   return (data ?? []) as User[];
 }
 
-export async function getAllUsers(
-  client: SupabaseClient,
-): Promise<User[]> {
+export async function getAllUsers(client: SupabaseClient): Promise<User[]> {
   const { data, error } = await client
     .from("users")
     .select("*")

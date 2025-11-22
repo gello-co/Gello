@@ -5,9 +5,9 @@ import { manualAwardSchema } from "../../../lib/schemas/points.js";
 import { LeaderboardService } from "../../../lib/services/leaderboard.service.js";
 import { PointsService } from "../../../lib/services/points.service.js";
 import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
-import { requireAdmin } from "../../middleware/requireAdmin.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
-import { validate } from "../../middleware/validation.js";
+import { requireAdmin } from "../../../middleware/requireAdmin.js";
+import { requireAuth } from "../../../middleware/requireAuth.js";
+import { validate } from "../../../middleware/validation.js";
 
 const router = express.Router();
 

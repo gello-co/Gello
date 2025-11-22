@@ -1,5 +1,5 @@
 import express from "express";
-import "../types/express.d.js";
+import "../../types/express.d.js";
 import { BoardService } from "../../lib/services/board.service.js";
 import { ListService } from "../../lib/services/list.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
@@ -13,7 +13,6 @@ const router = express.Router();
 function getBoardService() {
   return new BoardService(getSupabaseClient());
 }
-
 
 function getTaskService() {
   return new TaskService(getSupabaseClient());
@@ -99,7 +98,6 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
     next(error);
   }
 });
-
 
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {

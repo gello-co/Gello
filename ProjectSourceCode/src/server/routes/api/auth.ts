@@ -7,8 +7,8 @@ import express from "express";
 import { createUserSchema, loginSchema } from "../../../lib/schemas/user.js";
 import { AuthService } from "../../../lib/services/auth.service.js";
 import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
-import { validate } from "../../middleware/validation.js";
+import { requireAuth } from "../../../middleware/requireAuth.js";
+import { validate } from "../../../middleware/validation.js";
 
 const router = express.Router();
 

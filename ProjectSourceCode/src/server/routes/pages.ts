@@ -6,7 +6,7 @@ import { PointsService } from "../../lib/services/points.service.js";
 import { TaskService } from "../../lib/services/task.service.js";
 import { TeamService } from "../../lib/services/team.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
+import { requireAuth } from "../../../middleware/requireAuth.js";
 
 const router = express.Router();
 
@@ -14,9 +14,6 @@ function getBoardService() {
   return new BoardService(getSupabaseClient());
 }
 
-function getListService() {
-  return new ListService(getSupabaseClient());
-}
 
 function getTaskService() {
   return new TaskService(getSupabaseClient());
@@ -102,7 +99,6 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
     next(error);
   }
 });
-
 
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {

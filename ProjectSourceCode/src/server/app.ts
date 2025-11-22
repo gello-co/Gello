@@ -98,8 +98,8 @@ app.use(cookieParser());
 
 // Request logging middleware (structured logging)
 import { devAuth } from "../express/express-middleware/dev-auth.js";
-import { errorHandler } from "./middleware/error-handler.js";
-import { requestLogger } from "./middleware/request-logger.js";
+import { errorHandler } from "../middleware/error-handler.js";
+import { requestLogger } from "../middleware/request-logger.js";
 
 app.use(requestLogger);
 app.use(devAuth);

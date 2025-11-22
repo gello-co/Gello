@@ -6,10 +6,10 @@ import {
 } from "../../../lib/schemas/team.js";
 import { TeamService } from "../../../lib/services/team.service.js";
 import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
-import { requireAdmin } from "../../middleware/requireAdmin.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
-import { requireManager } from "../../middleware/requireManager.js";
-import { validate } from "../../middleware/validation.js";
+import { requireAdmin } from "../../../middleware/requireAdmin.js";
+import { requireAuth } from "../../../middleware/requireAuth.js";
+import { requireManager } from "../../../middleware/requireManager.js";
+import { validate } from "../../../middleware/validation.js";
 
 const router = express.Router();
 

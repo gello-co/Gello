@@ -8,7 +8,8 @@ import {
 } from "../lib/errors/app.errors.js";
 
 export const errorHandler: ErrorRequestHandler = (
-  err: Error,
+  // biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type
+  err: Error | any,
   _req: Request,
   res: Response,
   _next,

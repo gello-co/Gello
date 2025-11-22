@@ -25,9 +25,12 @@ export const devBypassAuth = (
     // Set a mock dev user on the request
     req.user = {
       id: "dev-user-id",
-      username: "dev-user",
+      display_name: "dev-user",
       email: "dev@example.com",
-      role: "admin", // Admin role to access all pages
+      role: "admin" as const, // Admin role to access all pages
+      team_id: null,
+      total_points: 0,
+      avatar_url: null,
     };
   }
   next();

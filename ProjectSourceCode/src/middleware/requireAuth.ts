@@ -36,8 +36,12 @@ export async function requireAuth(
         req.user = {
           id: (testUserId as string) || "test-user-id",
           email: "test@test.local",
-          role: "member",
-        } as typeof req.user;
+          display_name: "Test User",
+          role: "member" as const,
+          team_id: null,
+          total_points: 0,
+          avatar_url: null,
+        };
         logger.info(
           {
             path: req.path,
@@ -193,7 +197,7 @@ export async function requireAuth(
       },
     );
 
-    const { getUserById } = await import("../../lib/database/users.db.js");
+    const { getUserById } = await import("../lib/database/users.db.js");
     const user = await getUserById(clientWithToken, userId);
 
     if (!user) {

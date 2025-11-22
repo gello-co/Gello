@@ -6,9 +6,9 @@ import {
 } from "../../../lib/schemas/board.js";
 import { BoardService } from "../../../lib/services/board.service.js";
 import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
-import { requireManager } from "../../middleware/requireManager.js";
-import { validate } from "../../middleware/validation.js";
+import { requireAuth } from "../../../middleware/requireAuth.js";
+import { requireManager } from "../../../middleware/requireManager.js";
+import { validate } from "../../../middleware/validation.js";
 
 const router = express.Router();
 
