@@ -7,6 +7,7 @@
 import crypto from "node:crypto";
 import { doubleCsrf } from "csrf-csrf";
 import type { NextFunction, Request, Response } from "express";
+import { logger } from "../lib/logger.js";
 
 // Initialize CSRF protection with Double Submit Cookie Pattern
 const isProduction = process.env.NODE_ENV === "production";
@@ -51,15 +52,14 @@ function initializeCsrfSecret(): string {
   }
 
   const generated = crypto.randomBytes(32).toString("hex");
-  console.warn(
-    "⚠️  WARNING: CSRF_SECRET not set. Using generated temporary secret.",
-    "This secret will change on each restart. Set CSRF_SECRET in your environment for persistent sessions.",
+  logger.warn(
+    "WARNING: CSRF_SECRET not set. Using generated temporary secret. This secret will change on each restart. Set CSRF_SECRET in your environment for persistent sessions.",
   );
-  console.warn(
-    "   To fix: Ensure CSRF_SECRET is set in Doppler or containerEnv before server starts.",
+  logger.warn(
+    "To fix: Ensure CSRF_SECRET is set in Doppler or containerEnv before server starts.",
   );
-  console.warn(
-    "   Note: If using doppler run, ensure CSRF_SECRET is set in Doppler secrets.",
+  logger.warn(
+    "Note: If using doppler run, ensure CSRF_SECRET is set in Doppler secrets.",
   );
   return generated;
 }

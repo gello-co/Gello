@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
 
 let bypassLogged = false;
 
@@ -16,8 +17,8 @@ export const devBypassAuth = (
   if (env.DEV_BYPASS_AUTH === "true") {
     // Log on first request that bypass is active
     if (!bypassLogged) {
-      console.log(
-        "⚠️  DEV BYPASS ACTIVE: Authentication bypassed for all requests",
+      logger.warn(
+        "DEV BYPASS ACTIVE: Authentication bypassed for all requests",
       );
       bypassLogged = true;
     }

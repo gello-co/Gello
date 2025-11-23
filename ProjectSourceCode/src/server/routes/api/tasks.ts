@@ -11,10 +11,10 @@ import { TaskService } from "../../../lib/services/task.service.js";
 import { getSupabaseClientForRequest } from "../../../lib/supabase.js";
 import { canManageTask } from "../../../lib/utils/permissions.js";
 import { retryWithBackoff } from "../../../lib/utils/retry.js";
-import { logger } from "../../lib/logger.js";
 import { requireAuth } from "../../../middleware/requireAuth.js";
 import { requireManager } from "../../../middleware/requireManager.js";
 import { validate } from "../../../middleware/validation.js";
+import { logger } from "../../lib/logger.js";
 
 const router = express.Router();
 

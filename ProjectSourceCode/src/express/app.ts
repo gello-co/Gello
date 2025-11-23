@@ -5,16 +5,16 @@ import express from "express";
 import { engine } from "express-handlebars";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { helpers } from "./helpers/handlebars.js";
-import { devAuth } from "./express-middleware/dev-auth.js";
+import { devAuth } from "../middleware/dev-auth.js";
 import { errorHandler } from "../middleware/error-handler.js";
 import { requestLogger } from "../middleware/request-logger.js";
 import { expressApp } from "./express-app.js";
+import { helpers } from "./helpers/handlebars.js";
 import apiRoutes from "./routes/api.js";
 import boardsApiRouter from "./routes/boards/api.js";
 import boardsPagesRouter from "./routes/boards/pages.js";
-import listsRouter from "./routes/lists.js";
 import leaderboardPagesRouter from "./routes/leaderboard/pages.js";
+import listsRouter from "./routes/lists.js";
 import pageRoutes from "./routes/pages.js";
 import tasksApiRouter from "./routes/tasks/api.js";
 
@@ -88,17 +88,10 @@ app.engine(
 );
 
 app.set("view engine", "hbs");
-app.set("views", [
-  path.join(__dirname, "./views"),
-  path.join(__dirname, "./express-views"),
-]);
+app.set("views", path.join(__dirname, "./views"));
 
 // Static files
 app.use("/public", express.static(path.join(__dirname, "../public")));
-app.use(
-  "/express/public",
-  express.static(path.join(__dirname, "./express-public")),
-);
 app.use("/css", express.static(path.join(__dirname, "../public/css")));
 app.use("/js", express.static(path.join(__dirname, "../public/js")));
 

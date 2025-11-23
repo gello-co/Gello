@@ -5,6 +5,7 @@ import express from "express";
 //   generateCsrfToken,
 //   getCsrfToken,
 // } from "../middleware/csrf.js";
+import { logger } from "../../lib/logger.js";
 import authRoutes from "../../server/routes/api/auth.js";
 import boardsRoutes from "../../server/routes/api/boards.js";
 import listsRoutes from "../../server/routes/api/lists.js";
@@ -43,7 +44,7 @@ router.post("/register", (req, res) => {
   try {
     res.status(200).send("Success");
   } catch (err) {
-    console.log(err);
+    logger.error({ err }, "Registration failed");
   }
 });
 

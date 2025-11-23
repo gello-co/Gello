@@ -1,19 +1,18 @@
 import express from "express";
 import "../types/express.d.js";
+import { requireAuth } from "../../../middleware/requireAuth.js";
 import { BoardService } from "../../lib/services/board.service.js";
 import { ListService } from "../../lib/services/list.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
 import { TaskService } from "../../lib/services/task.service.js";
 import { TeamService } from "../../lib/services/team.service.js";
 import { getSupabaseClient } from "../../lib/supabase.js";
-import { requireAuth } from "../../../middleware/requireAuth.js";
 
 const router = express.Router();
 
 function getBoardService() {
   return new BoardService(getSupabaseClient());
 }
-
 
 function getTaskService() {
   return new TaskService(getSupabaseClient());

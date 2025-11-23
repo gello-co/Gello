@@ -10,6 +10,7 @@ import {
   DuplicateUserError,
   InvalidCredentialsError,
 } from "../errors/app.errors.js";
+import { logger } from "../logger.js";
 import type { CreateUserInput, LoginInput } from "../schemas/user.js";
 
 export type AuthResult = {
@@ -162,7 +163,7 @@ export class AuthService {
         await adminClient.auth.admin.deleteUser(authData.user.id);
       } catch (cleanupError) {
         // Log but don't throw - original error is more important
-        console.error("Failed to cleanup auth user:", cleanupError);
+        logger.error({ cleanupError }, "Failed to cleanup auth user");
       }
       throw new Error(`Failed to create user profile: ${userError?.message}`);
     }

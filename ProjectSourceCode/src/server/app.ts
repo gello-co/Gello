@@ -5,6 +5,9 @@ import express from "express";
 import { engine } from "express-handlebars";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { devAuth } from "../middleware/dev-auth.js";
+import { errorHandler } from "../middleware/error-handler.js";
+import { requestLogger } from "../middleware/request-logger.js";
 import { helpers } from "./helpers/handlebars.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -70,24 +73,17 @@ app.engine(
   engine({
     extname: ".hbs",
     defaultLayout: "main",
-    layoutsDir: path.join(__dirname, "../views/layouts"),
-    partialsDir: path.join(__dirname, "../views/partials"),
+    layoutsDir: path.join(__dirname, "../express/views/layouts"),
+    partialsDir: path.join(__dirname, "../express/views/partials"),
     helpers,
   }),
 );
 
 app.set("view engine", "hbs");
-app.set("views", [
-  path.join(__dirname, "../views"),
-  path.join(__dirname, "../express/express-views"),
-]);
+app.set("views", path.join(__dirname, "../express/views"));
 
 // Static files
 app.use("/public", express.static(path.join(__dirname, "../public")));
-app.use(
-  "/express/public",
-  express.static(path.join(__dirname, "../express/express-public")),
-);
 app.use("/css", express.static(path.join(__dirname, "../public/css")));
 app.use("/js", express.static(path.join(__dirname, "../public/js")));
 
@@ -97,10 +93,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Request logging middleware (structured logging)
-import { devAuth } from "../express/express-middleware/dev-auth.js";
-import { errorHandler } from "../middleware/error-handler.js";
-import { requestLogger } from "../middleware/request-logger.js";
-
 app.use(requestLogger);
 app.use(devAuth);
 

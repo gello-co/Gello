@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { NextFunction, Request, Response } from "express";
-import { env } from "../../config/env.js";
+import { env } from "../config/env.js";
+import { logger } from "../lib/logger.js";
 
 /**
  * Development Authentication Middleware
@@ -21,7 +22,7 @@ export const devAuth = async (
     try {
       // Use Service Role Key to bypass RLS and fetch the admin user
       if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.warn(
+        logger.warn(
           "[DevAuth] Missing SUPABASE_SERVICE_ROLE_KEY, skipping auto-login",
         );
         return next();
@@ -59,7 +60,7 @@ export const devAuth = async (
         req.headers["x-dev-auth"] = "true";
       }
     } catch (err) {
-      console.warn("[DevAuth] Failed to auto-login:", err);
+      logger.warn({ err }, "[DevAuth] Failed to auto-login");
       // Continue without auth if it fails
     }
   }

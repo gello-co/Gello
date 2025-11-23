@@ -6,6 +6,7 @@ import {
   UserNotFoundError,
   ValidationError,
 } from "../lib/errors/app.errors.js";
+import { logger } from "../lib/logger.js";
 
 export const errorHandler: ErrorRequestHandler = (
   // biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type
@@ -14,7 +15,7 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next,
 ) => {
-  console.error("Error:", err);
+  logger.error({ err }, "Error handler");
 
   // Custom application errors (using symbolic methods)
   if (DuplicateUserError.isDuplicateUserError(err)) {

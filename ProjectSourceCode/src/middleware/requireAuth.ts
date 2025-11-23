@@ -4,8 +4,8 @@
  */
 
 import type { NextFunction, Request, Response } from "express";
-import { getSupabaseClientForRequest } from "../lib/supabase.js";
 import { logger } from "../lib/logger.js";
+import { getSupabaseClientForRequest } from "../lib/supabase.js";
 
 const isBypassEnabled =
   process.env.NODE_ENV !== "production" &&
@@ -230,7 +230,7 @@ export async function requireAuth(
             : undefined,
       },
     };
-    console.error("[AUTH ERROR]", JSON.stringify(errorLog, null, 2));
+    logger.error({ errorLog }, "[AUTH ERROR]");
 
     return res.status(401).json({ error: "Authentication failed" });
   }
