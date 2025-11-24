@@ -44,7 +44,7 @@
     "helmet": "^8.1.0",
     "htmx.org": "^2.0.8",
     "pino": "^10.1.0",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
