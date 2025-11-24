@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Multi-stage Bun build for Gello (workspace at repo root)
 
-FROM oven/bun:1.3.2 AS deps
+FROM oven/bun:1.3.3 AS deps
 WORKDIR /app
 
 # Copy root workspace manifests and app manifest for dependency resolution
@@ -17,7 +17,7 @@ COPY . .
 RUN bun run build
 
 # --- Production runtime ---
-FROM oven/bun:1.3.2 AS runner
+FROM oven/bun:1.3.3 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
