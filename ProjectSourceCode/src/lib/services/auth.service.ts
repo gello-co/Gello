@@ -34,9 +34,6 @@ export type SessionUser = {
 export class AuthService {
   private readonly serviceRoleClient: SupabaseClient | null;
 
-  // Cached service-role client (singleton pattern) for production use
-  private static serviceRoleClientCache: SupabaseClient | null = null;
-
   constructor(
     private client: SupabaseClient,
     serviceRoleClient?: SupabaseClient,
@@ -57,9 +54,8 @@ export class AuthService {
     }
 
     // Return cached client if it exists
-    if (AuthService.serviceRoleClientCache) {
-      return AuthService.serviceRoleClientCache;
-    }
+    const cache = getCachedServiceRoleClient();
+    if (cache) return cache;
 
     // Validate environment variables
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -69,7 +65,7 @@ export class AuthService {
     }
 
     // Create and cache the service-role client
-    AuthService.serviceRoleClientCache = createClient(
+    const client = createClient(
       env.SUPABASE_URL,
       env.SUPABASE_SERVICE_ROLE_KEY,
       {
@@ -80,7 +76,8 @@ export class AuthService {
       },
     );
 
-    return AuthService.serviceRoleClientCache;
+    setCachedServiceRoleClient(client);
+    return client;
   }
 
   /**
@@ -279,3 +276,13 @@ export class AuthService {
     }
   }
 }
+
+let cachedServiceRoleClient: SupabaseClient | null = null;
+const getCachedServiceRoleClient = (): SupabaseClient | null =>
+  cachedServiceRoleClient;
+const setCachedServiceRoleClient = (client: SupabaseClient): void => {
+  cachedServiceRoleClient = client;
+};
+export const resetServiceRoleClientCache = (): void => {
+  cachedServiceRoleClient = null;
+};

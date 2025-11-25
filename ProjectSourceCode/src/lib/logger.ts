@@ -12,7 +12,11 @@ import pino from "pino";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 const isProduction = process.env.NODE_ENV === "production";
-const logLevel = process.env.LOG_LEVEL || (isDevelopment ? "debug" : "info");
+const isTest = process.env.NODE_ENV === "test";
+// Silent by default in test mode to reduce noise; override with LOG_LEVEL=debug for verbose test output
+const logLevel =
+  process.env.LOG_LEVEL ||
+  (isTest ? "silent" : isDevelopment ? "debug" : "info");
 const logFile = process.env.LOG_FILE;
 
 /**

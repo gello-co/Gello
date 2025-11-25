@@ -148,7 +148,11 @@ export function isRetryableError(error: unknown): boolean {
   }
 
   // Priority 4: Fall back to existing lower-cased message checks
-  const message = error.message.toLowerCase();
+  const rawMessage = (error as { message?: unknown }).message;
+  if (typeof rawMessage !== "string") {
+    return false;
+  }
+  const message = rawMessage.toLowerCase();
 
   // Don't retry on business logic errors
   if (
