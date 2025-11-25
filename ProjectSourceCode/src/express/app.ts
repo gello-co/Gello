@@ -27,6 +27,11 @@ const app = express();
 const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProd = nodeEnv === "production";
 
+// Trust Render proxy for proper IP detection in rate limiting
+if (isProd) {
+  app.set("trust proxy", true);
+}
+
 const helmetOptions: Parameters<typeof helmet>[0] = isProd
   ? {
       contentSecurityPolicy: {
