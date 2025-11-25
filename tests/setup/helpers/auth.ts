@@ -35,6 +35,17 @@ const ADMIN_CREDENTIALS = {
 // Note: SEEDED_USER_FIXTURES removed - tests now use fresh users via generateTestEmail()
 // Seeded users (admin@test.com, manager@test.com, member@test.com) are only for manual testing
 
+import { resetAnonSupabaseClient } from "./db.js";
+
+let sharedAuthService: AuthService | null = null;
+
+function getSharedAuthService(): AuthService {
+  if (!sharedAuthService) {
+    sharedAuthService = new AuthService(getAnonSupabaseClient());
+  }
+  return sharedAuthService;
+}
+
 async function findExistingUser(
   client: ReturnType<typeof getTestSupabaseClient>,
   email: string,
@@ -170,8 +181,7 @@ export async function createTestUser(
   displayName?: string,
 ): Promise<TestUser> {
   const client = getTestSupabaseClient();
-  const authClient = getAnonSupabaseClient();
-  const authService = new AuthService(authClient);
+  const authService = getSharedAuthService();
 
   // Always create fresh users for tests - no reuse of existing users
   // This ensures full test isolation and eliminates auth state conflicts
@@ -325,7 +335,7 @@ export async function loginAsUser(
   }
 
   // Import app and request dynamically to avoid circular dependencies
-  const { app } = await import("../../../ProjectSourceCode/src/server/app.js");
+  const { app } = await import("../../../ProjectSourceCode/src/express/app.js");
   const request = (await import("supertest")).default;
 
   // Get CSRF token if needed
@@ -403,11 +413,24 @@ export async function loginAsUser(
   };
 }
 
+export async function resetAuthTestState(): Promise<void> {
+  if (sharedAuthService) {
+    try {
+      await sharedAuthService.logout();
+    } catch {
+      // ignore logout errors during test cleanup
+    }
+  }
+
+  await resetAnonSupabaseClient();
+  sharedAuthService = null;
+}
+
 /**
  * Helper to get CSRF token safely (handles case where CSRF is disabled).
  */
 async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
-  const { app } = await import("../../../ProjectSourceCode/src/server/app.js");
+  const { app } = await import("../../../ProjectSourceCode/src/express/app.js");
   const request = (await import("supertest")).default;
 
   const csrfResponse = await request(app).get("/api/csrf-token");

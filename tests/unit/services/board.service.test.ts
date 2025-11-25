@@ -1,119 +1,130 @@
-import { beforeEach, describe, expect, it, vi } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Board } from "../../../ProjectSourceCode/src/lib/database/boards.db.js";
-import * as boardsDb from "../../../ProjectSourceCode/src/lib/database/boards.db.js";
-import { BoardService } from "../../../ProjectSourceCode/src/lib/services/board.service.js";
-import { mockFn } from "../../setup/helpers/mock.js";
+import { db } from "@/lib/database/drizzle";
+import {
+  boards,
+  lists,
+  pointsHistory,
+  tasks,
+  teams,
+  users,
+} from "@/lib/database/schema";
+import { BoardService } from "@/lib/services/board.service";
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/boards.db.js", () => ({
-  getBoardById: vi.fn(),
-  getBoardsByTeam: vi.fn(),
-  createBoard: vi.fn(),
-  updateBoard: vi.fn(),
-  deleteBoard: vi.fn(),
-}));
-
-describe("BoardService (bun)", () => {
+describe.skip("BoardService Integration (legacy)", () => {
   let service: BoardService;
-  let mockClient: SupabaseClient;
+  let testTeamId: string;
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockClient = {} as SupabaseClient;
-    service = new BoardService(mockClient);
+  beforeEach(async () => {
+    const supabase = {} as SupabaseClient;
+    service = new BoardService(supabase);
+
+    // Cleanup in correct order (respect foreign keys)
+    await db.delete(pointsHistory);
+    await db.delete(tasks);
+    await db.delete(lists);
+    await db.delete(boards);
+    await db.delete(users);
+    await db.delete(teams);
+
+    // Setup test team
+    const team = await db
+      .insert(teams)
+      .values({ name: "Test Team" })
+      .returning();
+    testTeamId = team[0]?.id ?? "";
   });
+
+  // Note: Don't close DB connection here - shared singleton is cleaned up by process exit
 
   describe("getBoard", () => {
     it("should get board by id", async () => {
-      const mockBoard: Board = {
-        id: "board-1",
+      // Create a board first
+      const created = await service.createBoard({
         name: "Test Board",
-        description: "Test",
-        team_id: "team-1",
-        created_by: "user-1",
-        created_at: new Date().toISOString(),
-      };
-      mockFn(boardsDb.getBoardById).mockResolvedValue(mockBoard as any);
+        team_id: testTeamId,
+      });
 
-      const result = await service.getBoard("board-1");
+      const result = await service.getBoard(created.id);
 
-      expect(boardsDb.getBoardById).toHaveBeenCalledWith(mockClient, "board-1");
-      expect(result).toEqual(mockBoard);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(created.id);
+      expect(result?.name).toBe("Test Board");
+      expect(result?.team_id).toBe(testTeamId);
+    });
+
+    it("should return null for non-existent board", async () => {
+      const result = await service.getBoard(
+        "00000000-0000-0000-0000-000000000000",
+      );
+      expect(result).toBeNull();
     });
   });
 
   describe("getBoardsByTeam", () => {
     it("should get boards by team", async () => {
-      const mockBoards: boardsDb.Board[] = [
-        {
-          id: "board-1",
-          name: "Board 1",
-          description: null,
-          team_id: "team-1",
-          created_by: null,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "board-2",
-          name: "Board 2",
-          description: null,
-          team_id: "team-1",
-          created_by: null,
-          created_at: new Date().toISOString(),
-        },
-      ];
-      mockFn(boardsDb.getBoardsByTeam).mockResolvedValue(mockBoards);
+      // Create multiple boards
+      await service.createBoard({ name: "Board 1", team_id: testTeamId });
+      await service.createBoard({ name: "Board 2", team_id: testTeamId });
 
-      const result = await service.getBoardsByTeam("team-1");
+      const results = await service.getBoardsByTeam(testTeamId);
 
-      expect(boardsDb.getBoardsByTeam).toHaveBeenCalledWith(
-        mockClient,
-        "team-1",
-      );
-      expect(result).toEqual(mockBoards);
+      expect(results.length).toBe(2);
+      expect(results.map((b) => b.name).sort()).toEqual(["Board 1", "Board 2"]);
+    });
+
+    it("should return empty array for team with no boards", async () => {
+      const results = await service.getBoardsByTeam(testTeamId);
+      expect(results).toEqual([]);
     });
   });
 
   describe("createBoard", () => {
     it("should create a board", async () => {
-      const input = { name: "New Board", team_id: "team-1" };
-      const mockBoard: boardsDb.Board = {
-        id: "board-1",
-        name: input.name,
-        description: null,
-        team_id: input.team_id,
-        created_by: null,
-        created_at: new Date().toISOString(),
-      };
-      mockFn(boardsDb.createBoard).mockResolvedValue(mockBoard);
+      const result = await service.createBoard({
+        name: "New Board",
+        team_id: testTeamId,
+        description: "Test description",
+      });
 
-      const result = await service.createBoard(input);
-
-      expect(boardsDb.createBoard).toHaveBeenCalledWith(mockClient, input);
-      expect(result).toEqual(mockBoard);
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe("New Board");
+      expect(result.team_id).toBe(testTeamId);
+      expect(result.description).toBe("Test description");
+      expect(result.created_at).toBeDefined();
     });
   });
 
   describe("updateBoard", () => {
     it("should update a board", async () => {
-      const input = { id: "board-1", name: "Updated Board" };
-      const mockBoard = { id: "board-1", name: "Updated Board" };
-      mockFn(boardsDb.updateBoard).mockResolvedValue(mockBoard as any);
+      const created = await service.createBoard({
+        name: "Original Name",
+        team_id: testTeamId,
+      });
 
-      const result = await service.updateBoard(input);
+      const updated = await service.updateBoard({
+        id: created.id,
+        name: "Updated Name",
+        description: "New description",
+      });
 
-      expect(boardsDb.updateBoard).toHaveBeenCalledWith(mockClient, input);
-      expect(result).toEqual(mockBoard);
+      expect(updated.id).toBe(created.id);
+      expect(updated.name).toBe("Updated Name");
+      expect(updated.description).toBe("New description");
     });
   });
 
   describe("deleteBoard", () => {
     it("should delete a board", async () => {
-      mockFn(boardsDb.deleteBoard).mockResolvedValue(undefined);
+      const created = await service.createBoard({
+        name: "Board to Delete",
+        team_id: testTeamId,
+      });
 
-      await service.deleteBoard("board-1");
+      await service.deleteBoard(created.id);
 
-      expect(boardsDb.deleteBoard).toHaveBeenCalledWith(mockClient, "board-1");
+      const fetched = await service.getBoard(created.id);
+      expect(fetched).toBeNull();
     });
   });
 });

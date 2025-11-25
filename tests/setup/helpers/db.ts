@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import crypto from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
+import { logger } from "../../../ProjectSourceCode/src/lib/logger.js";
 import { cleanupTestData } from "./db-cleanup.js";
 import { acquireDbLock } from "./db-lock.js";
 
@@ -520,6 +520,25 @@ export function resetSharedClient(): void {
   sharedClient = null;
 }
 
+let sharedAnonClient: SupabaseClient | null = null;
+
+export async function resetAnonSupabaseClient(): Promise<void> {
+  if (!sharedAnonClient) {
+    return;
+  }
+
+  try {
+    await sharedAnonClient.auth.signOut();
+  } catch (error) {
+    logger.warn(
+      { error: error instanceof Error ? error.message : String(error) },
+      "[db] Failed to sign out shared anon client during reset",
+    );
+  } finally {
+    sharedAnonClient = null;
+  }
+}
+
 function createFetchWithTLS(
   _isLocalhost: boolean,
 ): (url: RequestInfo | URL, options?: RequestInit) => Promise<Response> {
@@ -599,15 +618,25 @@ export function getTestSupabaseClient(): SupabaseClient {
 }
 
 export function getAnonSupabaseClient(): SupabaseClient {
+  if (sharedAnonClient) {
+    return sharedAnonClient;
+  }
+
   const url = getSupabaseUrl();
   const isLocalhost = url.includes("127.0.0.1") || url.includes("localhost");
 
-  return createClient(url, getSupabaseAnonKey(), {
-    auth: { persistSession: false },
+  sharedAnonClient = createClient(url, getSupabaseAnonKey(), {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
     global: {
       fetch: createFetchWithTLS(isLocalhost) as typeof fetch,
     },
   });
+
+  return sharedAnonClient;
 }
 
 type RetryableError = Error & {

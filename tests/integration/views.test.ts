@@ -5,7 +5,7 @@
 
 import { beforeAll, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { app } from "../../ProjectSourceCode/src/server/app.js";
+import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
   generateTestEmail,
@@ -51,10 +51,12 @@ describe("View Rendering", () => {
   });
 
   describe("GET /teams", () => {
-    it("should require authentication", async () => {
+    it("should redirect to login when not authenticated", async () => {
       const response = await request(app).get("/teams");
 
-      expect(response.status).toBe(401);
+      // Page routes redirect to login (302) instead of returning 401
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe("/login");
     });
 
     it("should render teams list for authenticated user", async () => {
@@ -73,10 +75,12 @@ describe("View Rendering", () => {
   });
 
   describe("GET /teams/:id", () => {
-    it("should require authentication", async () => {
+    it("should redirect to login when not authenticated", async () => {
       const response = await request(app).get("/teams/123");
 
-      expect(response.status).toBe(401);
+      // Page routes redirect to login (302) instead of returning 401
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe("/login");
     });
 
     it("should render team detail page for authenticated user", async () => {
@@ -116,10 +120,12 @@ describe("View Rendering", () => {
   });
 
   describe("GET /boards", () => {
-    it("should require authentication", async () => {
+    it("should redirect to login when not authenticated", async () => {
       const response = await request(app).get("/boards");
 
-      expect(response.status).toBe(401);
+      // Page routes redirect to login (302) instead of returning 401
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe("/login");
     });
 
     it("should render boards list for authenticated user", async () => {
@@ -138,10 +144,12 @@ describe("View Rendering", () => {
   });
 
   describe("GET /boards/:id", () => {
-    it("should require authentication", async () => {
+    it("should redirect to login when not authenticated", async () => {
       const response = await request(app).get("/boards/123");
 
-      expect(response.status).toBe(401);
+      // Page routes redirect to login (302) instead of returning 401
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe("/login");
     });
 
     it("should render board detail page for authenticated user", async () => {
@@ -194,10 +202,12 @@ describe("View Rendering", () => {
   });
 
   describe("GET /leaderboard", () => {
-    it("should require authentication", async () => {
+    it("should redirect to login when not authenticated", async () => {
       const response = await request(app).get("/leaderboard");
 
-      expect(response.status).toBe(401);
+      // Page routes redirect to login (302) instead of returning 401
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe("/login");
     });
 
     it("should render leaderboard for authenticated user", async () => {
@@ -216,10 +226,12 @@ describe("View Rendering", () => {
   });
 
   describe("GET /profile", () => {
-    it("should require authentication", async () => {
+    it("should redirect to login when not authenticated", async () => {
       const response = await request(app).get("/profile");
 
-      expect(response.status).toBe(401);
+      // Page routes redirect to login (302) instead of returning 401
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe("/login");
     });
 
     it("should render profile page for authenticated user", async () => {

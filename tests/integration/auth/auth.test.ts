@@ -4,14 +4,14 @@
 
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { app } from "../../ProjectSourceCode/src/server/app.js";
+import { app } from "../../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
   generateTestEmail,
   getCsrfToken,
   prepareTestDb,
   setCsrfHeadersIfEnabled,
-} from "../setup/helpers/index.js";
+} from "../../setup/helpers/index.js";
 
 async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
   const csrfResponse = await request(app).get("/api/csrf-token");

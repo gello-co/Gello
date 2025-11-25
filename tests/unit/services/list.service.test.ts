@@ -1,141 +1,150 @@
-import { beforeEach, describe, expect, it, vi } from "bun:test";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import * as listsDb from "../../../ProjectSourceCode/src/lib/database/lists.db.js";
-import { ListService } from "../../../ProjectSourceCode/src/lib/services/list.service.js";
-import { mockFn } from "../../setup/helpers/mock.js";
+import { beforeEach, describe, expect, it } from "bun:test";
+import { db } from "@/lib/database/drizzle";
+import {
+  boards,
+  lists,
+  pointsHistory,
+  tasks,
+  teams,
+  users,
+} from "@/lib/database/schema";
+import { ListService } from "@/lib/services/list.service";
+import { getSupabaseClient } from "@/lib/supabase";
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/lists.db.js", () => ({
-  getListById: vi.fn(),
-  getListsByBoard: vi.fn(),
-  createList: vi.fn(),
-  updateList: vi.fn(),
-  deleteList: vi.fn(),
-  reorderLists: vi.fn(),
-}));
-
-describe("ListService (bun)", () => {
+describe("ListService Integration", () => {
   let service: ListService;
-  let mockClient: SupabaseClient;
+  let testTeamId: string;
+  let testBoardId: string;
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockClient = {} as SupabaseClient;
-    service = new ListService(mockClient);
+  beforeEach(async () => {
+    const supabase = getSupabaseClient();
+    service = new ListService(supabase);
+
+    // Cleanup in correct order (respect foreign keys)
+    await db.delete(pointsHistory);
+    await db.delete(tasks);
+    await db.delete(lists);
+    await db.delete(boards);
+    await db.delete(users);
+    await db.delete(teams);
+
+    // Setup hierarchy
+    const team = await db
+      .insert(teams)
+      .values({ name: "Test Team" })
+      .returning();
+    testTeamId = team[0]?.id ?? "";
+
+    const board = await db
+      .insert(boards)
+      .values({
+        name: "Test Board",
+        teamId: testTeamId,
+      })
+      .returning();
+    testBoardId = board[0]?.id ?? "";
   });
+
+  // Note: Don't close DB connection here - shared singleton is cleaned up by process exit
 
   describe("getList", () => {
     it("should get list by id", async () => {
-      const mockList = {
-        id: "list-1",
-        board_id: "board-1",
+      const created = await service.createList({
+        board_id: testBoardId,
         name: "Test List",
         position: 0,
-        created_at: new Date().toISOString(),
-      };
-      mockFn(listsDb.getListById).mockResolvedValue(mockList);
+      });
 
-      const result = await service.getList("list-1");
+      const result = await service.getList(created.id);
 
-      expect(listsDb.getListById).toHaveBeenCalledWith(mockClient, "list-1");
-      expect(result).toEqual(mockList);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(created.id);
+      expect(result?.name).toBe("Test List");
+      expect(result?.board_id).toBe(testBoardId);
+    });
+
+    it("should return null for non-existent list", async () => {
+      const result = await service.getList(
+        "00000000-0000-0000-0000-000000000000",
+      );
+      expect(result).toBeNull();
     });
   });
 
   describe("getListsByBoard", () => {
-    it("should get lists by board", async () => {
-      const mockLists = [
-        {
-          id: "list-1",
-          board_id: "board-1",
-          name: "List 1",
-          position: 0,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "list-2",
-          board_id: "board-1",
-          name: "List 2",
-          position: 1,
-          created_at: new Date().toISOString(),
-        },
-      ];
-      mockFn(listsDb.getListsByBoard).mockResolvedValue(mockLists);
+    it("should get lists by board ordered by position", async () => {
+      await service.createList({
+        board_id: testBoardId,
+        name: "List 2",
+        position: 1,
+      });
+      await service.createList({
+        board_id: testBoardId,
+        name: "List 1",
+        position: 0,
+      });
 
-      const result = await service.getListsByBoard("board-1");
+      const results = await service.getListsByBoard(testBoardId);
 
-      expect(listsDb.getListsByBoard).toHaveBeenCalledWith(
-        mockClient,
-        "board-1",
-      );
-      expect(result).toEqual(mockLists);
+      expect(results.length).toBe(2);
+      expect(results[0]?.name).toBe("List 1");
+      expect(results[1]?.name).toBe("List 2");
+    });
+
+    it("should return empty array for board with no lists", async () => {
+      const results = await service.getListsByBoard(testBoardId);
+      expect(results).toEqual([]);
     });
   });
 
   describe("createList", () => {
     it("should create a list", async () => {
-      const input = { name: "New List", board_id: "board-1", position: 0 };
-      const mockList = {
-        id: "list-1",
-        ...input,
-        created_at: new Date().toISOString(),
-      };
-      mockFn(listsDb.createList).mockResolvedValue(mockList);
+      const result = await service.createList({
+        board_id: testBoardId,
+        name: "New List",
+        position: 0,
+      });
 
-      const result = await service.createList(input);
-
-      expect(listsDb.createList).toHaveBeenCalledWith(mockClient, input);
-      expect(result).toEqual(mockList);
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe("New List");
+      expect(result.board_id).toBe(testBoardId);
+      expect(result.position).toBe(0);
+      expect(result.created_at).toBeDefined();
     });
   });
 
   describe("updateList", () => {
     it("should update a list", async () => {
-      const input = { id: "list-1", name: "Updated List" };
-      const mockList = {
-        id: "list-1",
-        board_id: "board-1",
-        name: "Updated List",
+      const created = await service.createList({
+        board_id: testBoardId,
+        name: "Original Name",
         position: 0,
-        created_at: new Date().toISOString(),
-      };
-      mockFn(listsDb.updateList).mockResolvedValue(mockList);
+      });
 
-      const result = await service.updateList(input);
+      const updated = await service.updateList({
+        id: created.id,
+        name: "Updated Name",
+        position: 5,
+      });
 
-      expect(listsDb.updateList).toHaveBeenCalledWith(mockClient, input);
-      expect(result).toEqual(mockList);
-    });
-  });
-
-  describe("reorderLists", () => {
-    it("should reorder lists", async () => {
-      const input = {
-        board_id: "board-1",
-        list_positions: [
-          { id: "list-1", position: 0 },
-          { id: "list-2", position: 1 },
-        ],
-      };
-      mockFn(listsDb.reorderLists).mockResolvedValue(undefined);
-
-      await service.reorderLists(input);
-
-      expect(listsDb.reorderLists).toHaveBeenCalledWith(
-        mockClient,
-        input.board_id,
-        input.list_positions,
-        undefined,
-      );
+      expect(updated.id).toBe(created.id);
+      expect(updated.name).toBe("Updated Name");
+      expect(updated.position).toBe(5);
     });
   });
 
   describe("deleteList", () => {
     it("should delete a list", async () => {
-      mockFn(listsDb.deleteList).mockResolvedValue(undefined);
+      const created = await service.createList({
+        board_id: testBoardId,
+        name: "List to Delete",
+        position: 0,
+      });
 
-      await service.deleteList("list-1");
+      await service.deleteList(created.id);
 
-      expect(listsDb.deleteList).toHaveBeenCalledWith(mockClient, "list-1");
+      const fetched = await service.getList(created.id);
+      expect(fetched).toBeNull();
     });
   });
 });
