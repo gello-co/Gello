@@ -1,5 +1,10 @@
+import {
+  createServerClient,
+  parseCookieHeader,
+  serializeCookieHeader,
+} from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import { env } from "../config/env";
 
 let client: SupabaseClient | null = null;
@@ -308,4 +313,49 @@ export function getServiceRoleClient(): SupabaseClient {
   );
 
   return serviceRoleClient;
+}
+
+/**
+ * Create SSR-compatible Supabase client for OAuth flows.
+ * Uses @supabase/ssr for proper PKCE code verifier handling via cookies.
+ *
+ * This is required for OAuth because:
+ * 1. OAuth uses PKCE flow which stores a code verifier in cookies during initiation
+ * 2. The callback needs to read that verifier to exchange the code for a session
+ * 3. Standard clients with persistSession:false lose this context
+ *
+ * @param req Express request object
+ * @param res Express response object
+ * @returns Supabase client configured for SSR cookie handling
+ */
+export function createSupabaseSSRClient(req: Request, res: Response) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error(
+      "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
+    );
+  }
+
+  return createServerClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
+    cookies: {
+      getAll() {
+        // Parse cookies from request header and filter out undefined values
+        const parsed = parseCookieHeader(req.headers.cookie ?? "");
+        return parsed
+          .filter(
+            (cookie): cookie is { name: string; value: string } =>
+              cookie.value !== undefined,
+          )
+          .map(({ name, value }) => ({ name, value }));
+      },
+      setAll(cookiesToSet) {
+        // Set cookies on the response
+        cookiesToSet.forEach(({ name, value, options }) => {
+          res.appendHeader(
+            "Set-Cookie",
+            serializeCookieHeader(name, value, options),
+          );
+        });
+      },
+    },
+  });
 }

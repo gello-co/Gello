@@ -12,7 +12,11 @@ import { Router } from "express";
 import { env } from "@/config/env.js";
 import { logger } from "@/lib/logger.js";
 import { AuthService } from "@/lib/services/auth.service.js";
-import { getServiceRoleClient, getSupabaseClient } from "@/lib/supabase.js";
+import {
+  createSupabaseSSRClient,
+  getServiceRoleClient,
+  getSupabaseClient,
+} from "@/lib/supabase.js";
 import { clearAuthCookies, setAuthCookies } from "@/lib/utils/auth-cookies.js";
 
 const router = Router();
@@ -140,7 +144,7 @@ router.post("/register", async (req, res) => {
 // Logout
 // ============================================================================
 
-router.post("/logout", async (req, res) => {
+router.post("/logout", async (_req, res) => {
   try {
     const supabase = getSupabaseClient();
     const authService = new AuthService(supabase);
@@ -163,13 +167,15 @@ router.get("/logout", (_req, res) => {
 // OAuth - Discord
 // ============================================================================
 
-router.get("/auth/discord", async (_req, res) => {
+router.get("/auth/discord", async (req, res) => {
   try {
     if (!env.AUTH_SITE_URL) {
       logger.error("AUTH_SITE_URL not configured");
       return res.redirect("/login?error=OAuth not configured");
     }
-    const supabase = getSupabaseClient();
+
+    // Use SSR client to properly store PKCE code verifier in cookies
+    const supabase = createSupabaseSSRClient(req, res);
     const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -193,13 +199,15 @@ router.get("/auth/discord", async (_req, res) => {
 // OAuth - GitHub
 // ============================================================================
 
-router.get("/auth/github", async (_req, res) => {
+router.get("/auth/github", async (req, res) => {
   try {
     if (!env.AUTH_SITE_URL) {
       logger.error("AUTH_SITE_URL not configured");
       return res.redirect("/login?error=OAuth not configured");
     }
-    const supabase = getSupabaseClient();
+
+    // Use SSR client to properly store PKCE code verifier in cookies
+    const supabase = createSupabaseSSRClient(req, res);
     const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -227,24 +235,32 @@ router.get("/auth/callback", async (req, res) => {
   const { code } = req.query;
 
   if (!code || typeof code !== "string" || code.trim() === "") {
+    logger.warn({ query: req.query }, "OAuth callback missing code parameter");
     return res.redirect("/login?error=Invalid OAuth response");
   }
 
   try {
-    const supabase = getSupabaseClient();
+    // Use SSR client to access the PKCE code verifier stored in cookies during initiation
+    const supabase = createSupabaseSSRClient(req, res);
     const { data, error } = await supabase.auth.exchangeCodeForSession(
       code.trim(),
     );
 
     if (error || !data.session || !data.user) {
-      logger.error({ error }, "OAuth callback error");
+      logger.error(
+        { error, hasSession: !!data?.session },
+        "OAuth callback error",
+      );
       return res.redirect("/login?error=Authentication failed");
     }
 
     // Sync user profile to public.users table
     await syncOAuthUserProfile(data.user);
 
+    // Set our app's auth cookies (the SSR client also sets Supabase's internal cookies)
     setAuthCookies(res, data.session.access_token, data.session.refresh_token);
+
+    logger.info({ userId: data.user.id }, "OAuth login successful");
     res.redirect("/boards");
   } catch (error) {
     logger.error({ error }, "OAuth callback error");
