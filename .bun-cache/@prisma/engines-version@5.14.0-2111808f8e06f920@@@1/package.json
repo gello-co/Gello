@@ -1,0 +1,27 @@
+{
+  "name": "@prisma/engines-version",
+  "version": "5.14.0-6.264f24ce0b2f544ff968ff76bfaa999de1161361",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "Apache-2.0",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "prisma": {
+    "enginesVersion": "264f24ce0b2f544ff968ff76bfaa999de1161361"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prisma/engines-wrapper.git",
+    "directory": "packages/engines-version"
+  },
+  "devDependencies": {
+    "@types/node": "18.19.29",
+    "typescript": "4.9.5"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "build": "tsc -d"
+  }
+}
