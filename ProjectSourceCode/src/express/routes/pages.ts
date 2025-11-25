@@ -94,15 +94,16 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
-    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
     const supabase = getSupabase(req);
-    const pointsService = new PointsService(supabase, req.user!.id);
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.redirect("/login");
+    }
+    const pointsService = new PointsService(supabase, userId);
     const taskService = new TaskService(supabase);
 
-    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-    const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
-    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-    const assignedTasks = await taskService.getTasksByAssignee(req.user!.id);
+    const pointsHistory = await pointsService.getPointsHistory(userId);
+    const assignedTasks = await taskService.getTasksByAssignee(userId);
 
     res.render("pages/profile/index", {
       title: "Profile",

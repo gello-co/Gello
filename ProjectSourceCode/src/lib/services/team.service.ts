@@ -141,7 +141,7 @@ export class TeamService {
     try {
       const { id, ...updates } = input;
 
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | number | boolean | null> = {
         updated_at: new Date().toISOString(),
       };
       if (updates.name !== undefined) updateData.name = updates.name;

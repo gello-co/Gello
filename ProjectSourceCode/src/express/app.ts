@@ -28,8 +28,10 @@ const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProd = nodeEnv === "production";
 
 // Trust Render proxy for proper IP detection in rate limiting
+// Use number of hops (1) instead of true to satisfy express-rate-limit v8+ validation
+// Render uses a single proxy hop before reaching the app
 if (isProd) {
-  app.set("trust proxy", true);
+  app.set("trust proxy", 1);
 }
 
 const helmetOptions: Parameters<typeof helmet>[0] = isProd

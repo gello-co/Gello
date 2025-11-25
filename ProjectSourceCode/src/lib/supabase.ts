@@ -335,27 +335,63 @@ export function createSupabaseSSRClient(req: Request, res: Response) {
     );
   }
 
+  // Determine if we're in a secure context (HTTPS)
+  const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https";
+
   return createServerClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll() {
         // Parse cookies from request header and filter out undefined values
         const parsed = parseCookieHeader(req.headers.cookie ?? "");
-        return parsed
+        const cookies = parsed
           .filter(
             (cookie): cookie is { name: string; value: string } =>
               cookie.value !== undefined,
           )
           .map(({ name, value }) => ({ name, value }));
+
+        // Debug logging for OAuth troubleshooting (names only, no values)
+        if (process.env.DEBUG_SUPABASE) {
+          console.log(
+            "[SSR] getAll cookies:",
+            cookies.map((c) => c.name).join(", ") || "(none)",
+          );
+        }
+
+        return cookies;
       },
       setAll(cookiesToSet) {
-        // Set cookies on the response
+        // Debug logging for OAuth troubleshooting (names only, no values)
+        if (process.env.DEBUG_SUPABASE) {
+          console.log(
+            "[SSR] setAll cookies:",
+            cookiesToSet.map((c) => c.name).join(", ") || "(none)",
+          );
+        }
+
+        // Set cookies on the response with proper options for OAuth flow
         cookiesToSet.forEach(({ name, value, options }) => {
+          // Merge default options with provided options
+          // SameSite=Lax is required for OAuth redirects to work
+          const mergedOptions = {
+            path: "/",
+            sameSite: "lax" as const,
+            secure: isSecure,
+            httpOnly: true,
+            ...options,
+          };
+
           res.appendHeader(
             "Set-Cookie",
-            serializeCookieHeader(name, value, options),
+            serializeCookieHeader(name, value, mergedOptions),
           );
         });
       },
+    },
+    auth: {
+      // Use PKCE flow for server-side OAuth - returns code in query string
+      // instead of tokens in URL fragment (implicit flow)
+      flowType: "pkce",
     },
   });
 }

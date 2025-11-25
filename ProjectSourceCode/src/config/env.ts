@@ -96,7 +96,9 @@ export const env: AppEnv = {
   // Falls back to localhost with configured PORT for local development only
   AUTH_SITE_URL: pick(
     process.env.AUTH_SITE_URL,
-    isDevelopment ? `http://127.0.0.1:${process.env.PORT || "3000"}` : undefined,
+    isDevelopment
+      ? `http://127.0.0.1:${process.env.PORT || "3000"}`
+      : undefined,
   ),
   // DATABASE_URL: PostgreSQL connection string (legacy, kept for compatibility)
   // DB_URL is output by `bunx supabase status -o env`

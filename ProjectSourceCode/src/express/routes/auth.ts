@@ -210,6 +210,11 @@ router.get("/auth/github", async (req, res) => {
     const supabase = createSupabaseSSRClient(req, res);
     const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
+    logger.info(
+      { redirectTo, authSiteUrl: env.AUTH_SITE_URL },
+      "GitHub OAuth initiation",
+    );
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: { redirectTo },
@@ -218,6 +223,22 @@ router.get("/auth/github", async (req, res) => {
     if (error || !data.url) {
       logger.error({ error }, "GitHub OAuth initiation failed");
       return res.redirect("/login?error=OAuth initialization failed");
+    }
+
+    // Debug: Log OAuth redirect (no sensitive data)
+    if (process.env.DEBUG_SUPABASE) {
+      const setCookieHeaders = res.getHeaders()["set-cookie"];
+      logger.info(
+        {
+          oauthUrlPrefix: data.url.substring(0, 50),
+          cookiesSet: Array.isArray(setCookieHeaders)
+            ? setCookieHeaders.length
+            : setCookieHeaders
+              ? 1
+              : 0,
+        },
+        "GitHub OAuth redirect",
+      );
     }
 
     res.redirect(data.url);
@@ -234,6 +255,19 @@ router.get("/auth/github", async (req, res) => {
 router.get("/auth/callback", async (req, res) => {
   const { code } = req.query;
 
+  // Debug: Log incoming request details (no sensitive data)
+  if (process.env.DEBUG_SUPABASE) {
+    logger.info(
+      {
+        hasCode: !!code,
+        codeLength: typeof code === "string" ? code.length : 0,
+        hasCookies: Boolean(req.headers.cookie),
+        queryParams: Object.keys(req.query),
+      },
+      "OAuth callback received",
+    );
+  }
+
   if (!code || typeof code !== "string" || code.trim() === "") {
     logger.warn({ query: req.query }, "OAuth callback missing code parameter");
     return res.redirect("/login?error=Invalid OAuth response");
@@ -242,9 +276,27 @@ router.get("/auth/callback", async (req, res) => {
   try {
     // Use SSR client to access the PKCE code verifier stored in cookies during initiation
     const supabase = createSupabaseSSRClient(req, res);
+
+    if (process.env.DEBUG_SUPABASE) {
+      logger.info("Exchanging authorization code for session");
+    }
+
     const { data, error } = await supabase.auth.exchangeCodeForSession(
       code.trim(),
     );
+
+    // Debug: Log the full error details
+    if (error) {
+      logger.error(
+        {
+          errorName: error.name,
+          errorMessage: error.message,
+          errorStatus: (error as { status?: number }).status,
+          errorCode: (error as { code?: string }).code,
+        },
+        "exchangeCodeForSession failed",
+      );
+    }
 
     if (error || !data.session || !data.user) {
       logger.error(
