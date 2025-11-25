@@ -22,6 +22,7 @@
     "test:integration": "bun test tests/integration",
     "test:watch": "bun test --watch",
     "test:ci": "bun test --bail",
+    "test:server": "doppler run --config dev -- env NODE_ENV=test ALLOW_TEST_BYPASS=true bun ProjectSourceCode/src/index.ts",
     "build": "bun run build:css && bun run build:server",
     "build:css": "postcss ProjectSourceCode/src/public/css/input.css -o ProjectSourceCode/src/public/css/output.css",
     "build:server": "bun build ProjectSourceCode/src/index.ts --outdir=dist --target=node --sourcemap",
@@ -52,6 +53,7 @@
     "pino": "^10.1.0",
     "pino-http": "^10.5.0",
     "postgres": "^3.4.7",
+    "supabase": "^2.62.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {

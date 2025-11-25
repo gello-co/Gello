@@ -8,6 +8,44 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Store the project root for later reference
+PROJECT_ROOT="$(pwd)"
+
+# ============================================================================
+# CLEAN ARCHITECTURE: Doppler + Local Supabase
+# ============================================================================
+# Sources of truth:
+#   - Doppler (dev config): SESSION_SECRET, CSRF_SECRET, OAuth client IDs
+#   - Local Supabase: DATABASE_URL, SUPABASE_URL, SUPABASE_*_KEY
+#
+# No .env files needed - everything is injected at runtime.
+# ============================================================================
+
+# Function: Check if Doppler is available (from project root)
+check_doppler() {
+  if command -v doppler >/dev/null 2>&1 && [ -f "${PROJECT_ROOT}/doppler.yaml" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Function: Export OAuth secrets for Supabase CLI
+# Doppler uses SB_* prefix, Supabase CLI expects SUPABASE_AUTH_EXTERNAL_*
+export_oauth_for_supabase() {
+  if check_doppler; then
+    echo -e "${YELLOW}🔑 Loading OAuth secrets from Doppler for Supabase...${NC}"
+
+    # Export with SUPABASE_* prefix for Supabase CLI
+    export SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_CLIENT_ID --plain 2>/dev/null || echo "")
+    export SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_SECRET --plain 2>/dev/null || echo "")
+    export SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_CLIENT_ID --plain 2>/dev/null || echo "")
+    export SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_SECRET --plain 2>/dev/null || echo "")
+
+    echo -e "${GREEN}✓${NC} OAuth secrets loaded"
+  fi
+}
+
 # Function: Check if Supabase is running
 check_supabase() {
   if bunx supabase status > /dev/null 2>&1; then
@@ -25,32 +63,43 @@ start_supabase() {
   echo -e "${GREEN}✓${NC} Supabase started"
 }
 
-# Function: Setup environment variables
-setup_environment() {
-  echo -e "${YELLOW}📝 Writing environment variables to ProjectSourceCode/.env.local...${NC}"
+# Function: Get local Supabase env vars and export them
+export_supabase_env() {
+  echo -e "${YELLOW}📝 Loading local Supabase environment...${NC}"
 
-  # Get Supabase env vars and transform variable names to match app expectations
-  # Supabase outputs: API_URL, ANON_KEY, PUBLISHABLE_KEY, SERVICE_ROLE_KEY
-  # App expects: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SERVICE_ROLE_KEY
-  bunx supabase status -o env | sed \
-    -e 's/^API_URL=/SUPABASE_URL=/' \
-    -e 's/^ANON_KEY=/SUPABASE_ANON_KEY=/' \
-    -e 's/^PUBLISHABLE_KEY=/SUPABASE_PUBLISHABLE_KEY=/' \
-    -e 's/^SERVICE_ROLE_KEY=/SUPABASE_SERVICE_ROLE_KEY=/' \
-    > ProjectSourceCode/.env.local
+  # Parse supabase status output line by line
+  while IFS='=' read -r key value; do
+    # Remove surrounding quotes from value
+    value="${value%\"}"
+    value="${value#\"}"
 
-  # Add fallback environment variables
-  echo "SESSION_SECRET=${SESSION_SECRET:-local-dev-secret-min-32-chars}" >> ProjectSourceCode/.env.local
-  echo "NODE_ENV=${NODE_ENV:-development}" >> ProjectSourceCode/.env.local
+    case "$key" in
+      API_URL)
+        export SUPABASE_URL="$value"
+        ;;
+      DB_URL)
+        export DATABASE_URL="$value"
+        ;;
+      ANON_KEY)
+        export SUPABASE_ANON_KEY="$value"
+        ;;
+      PUBLISHABLE_KEY)
+        export SUPABASE_PUBLISHABLE_KEY="$value"
+        ;;
+      SERVICE_ROLE_KEY|SECRET_KEY)
+        export SUPABASE_SERVICE_ROLE_KEY="$value"
+        ;;
+    esac
+  done < <(bunx supabase status -o env 2>/dev/null)
 
-  echo -e "${GREEN}✓${NC} Environment variables ready"
+  echo -e "${GREEN}✓${NC} Supabase environment loaded"
+  echo -e "    Database: ${DATABASE_URL:-not set}"
+  echo -e "    API URL:  ${SUPABASE_URL:-not set}"
 }
 
 # Function: Reset and seed database
-# Function: Reset and seed database
 reset_and_seed() {
   echo -e "${YELLOW}🗄️  Resetting database...${NC}"
-  # This will automatically run supabase/seed.sql because we enabled it in config.toml
   bunx supabase db reset
   echo -e "${GREEN}✓${NC} Database ready"
 }
@@ -58,36 +107,45 @@ reset_and_seed() {
 # Function: Start dev server
 start_dev_server() {
   echo -e "${YELLOW}🔥 Starting development server...${NC}"
+  echo ""
   echo -e "${GREEN}✓${NC} Server running at http://localhost:3000"
   echo ""
-  echo "Auto-login is enabled for development"
-  echo "You are automatically logged in as the admin user"
+  echo "DEV_BYPASS_AUTH is enabled - auto-login as admin"
   echo ""
 
-  # Change to ProjectSourceCode directory so Bun can find .env.local
-  # Bun looks for .env files in the directory containing package.json
-  cd ProjectSourceCode
+  # Change to ProjectSourceCode directory
+  cd "${PROJECT_ROOT}/ProjectSourceCode"
 
   # Start server with hot reload
-  # INTEGRATION: Use Doppler if available to inject shared dev secrets
-  if command -v doppler >/dev/null 2>&1 && [ -f "../doppler.yaml" ]; then
-    echo -e "${YELLOW}🔐 Doppler detected. Starting with secrets injection...${NC}"
-    exec doppler run -- bun --hot src/index.ts
+  if check_doppler; then
+    echo -e "${YELLOW}🔐 Starting with Doppler secrets injection...${NC}"
+    # Doppler injects SB_* secrets, local Supabase vars already exported
+    exec doppler run --project gello --config dev -- bun --hot src/index.ts
   else
+    echo -e "${YELLOW}⚠️  Doppler not available, using environment only${NC}"
     exec bun --hot src/index.ts
   fi
 }
 
+# ============================================================================
 # Main execution
+# ============================================================================
+
+# Step 1: Export OAuth secrets before starting Supabase (needed for auth config)
+export_oauth_for_supabase
+
+# Step 2: Start Supabase if not running
 if ! check_supabase; then
   start_supabase
 fi
 
-# Setup environment variables before seeding (seed script needs them)
-setup_environment
+# Step 3: Load local Supabase env vars into current shell
+export_supabase_env
 
+# Step 4: Reset database if requested
 if [ "${RESET_DB:-false}" = "true" ]; then
   reset_and_seed
 fi
 
+# Step 5: Start the dev server
 start_dev_server
