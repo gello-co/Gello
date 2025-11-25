@@ -1,7 +1,10 @@
 -- Insert seed users into auth.users (for Supabase Auth)
+-- Password is 'password' (bcrypt hash from Laravel)
+-- Note: All varchar/text columns must be empty strings (not NULL) for GoTrue compatibility
 INSERT INTO auth.users (
     id,
     instance_id,
+    aud,
     email,
     encrypted_password,
     email_confirmed_at,
@@ -10,12 +13,22 @@ INSERT INTO auth.users (
     raw_app_meta_data,
     raw_user_meta_data,
     is_super_admin,
-    role
+    role,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change_token_current,
+    reauthentication_token,
+    phone_change_token,
+    email_change,
+    phone,
+    phone_change
 ) VALUES
 -- Admin user
 (
     '22222222-2222-2222-2222-222222222222',
     '00000000-0000-0000-0000-000000000000',
+    'authenticated',
     'admin@gello.dev',
     '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     NOW(),
@@ -24,12 +37,22 @@ INSERT INTO auth.users (
     '{"provider": "email", "providers": ["email"]}',
     '{"role": "admin"}',
     false,
-    'authenticated'
+    'authenticated',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ''
 ),
 -- Test member user
 (
     '11111111-1111-1111-1111-111111111111',
     '00000000-0000-0000-0000-000000000000',
+    'authenticated',
     'test@gello.dev',
     '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     NOW(),
@@ -38,7 +61,51 @@ INSERT INTO auth.users (
     '{"provider": "email", "providers": ["email"]}',
     '{"role": "member"}',
     false,
-    'authenticated'
+    'authenticated',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ''
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert auth.identities for email provider (required for email/password login)
+INSERT INTO auth.identities (
+    id,
+    user_id,
+    provider_id,
+    provider,
+    identity_data,
+    last_sign_in_at,
+    created_at,
+    updated_at
+) VALUES
+-- Admin user identity
+(
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab',
+    '22222222-2222-2222-2222-222222222222',
+    '22222222-2222-2222-2222-222222222222',
+    'email',
+    '{"sub": "22222222-2222-2222-2222-222222222222", "email": "admin@gello.dev", "email_verified": true, "phone_verified": false}',
+    NULL,
+    NOW(),
+    NOW()
+),
+-- Test member identity
+(
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    '11111111-1111-1111-1111-111111111111',
+    '11111111-1111-1111-1111-111111111111',
+    'email',
+    '{"sub": "11111111-1111-1111-1111-111111111111", "email": "test@gello.dev", "email_verified": true, "phone_verified": false}',
+    NULL,
+    NOW(),
+    NOW()
 )
 ON CONFLICT (id) DO NOTHING;
 
