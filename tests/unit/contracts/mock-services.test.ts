@@ -4,20 +4,20 @@
  * These tests validate the contracts/mock system works correctly.
  * UI/UX developers can run these to verify mock data behavior.
  */
-import { describe, expect, it, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import {
   createTestContainer,
-  resetMockServices,
   isMockMode,
+  resetMockServices,
 } from "@/contracts/container.js";
 import {
-  MOCK_USERS,
-  MOCK_TEAMS,
-  MOCK_BOARDS,
-  MOCK_TASKS,
   DEFAULT_MOCK_USER,
   getMockUserByEmail,
   getMockUserById,
+  MOCK_BOARDS,
+  MOCK_TASKS,
+  MOCK_TEAMS,
+  MOCK_USERS,
 } from "@/contracts/fixtures/index.js";
 
 describe("Contracts System", () => {

@@ -2,13 +2,11 @@ import express from "express";
 import "../../../types/express.d.js";
 import { isMockMode } from "../../../contracts/container.js";
 import {
-  MOCK_BOARDS,
-  MOCK_LISTS,
-  MOCK_TASKS,
   getMockBoardsByTeam,
   getMockListsByBoard,
   getMockTasksByList,
   getMockUsersByTeam,
+  MOCK_BOARDS,
 } from "../../../contracts/fixtures/index.js";
 import { BoardService } from "../../../lib/services/board.service.js";
 import { ListService } from "../../../lib/services/list.service.js";
