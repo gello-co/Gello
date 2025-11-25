@@ -1,5 +1,14 @@
 import express from "express";
 import "../../types/express.d.js";
+import { isMockMode } from "../../contracts/container.js";
+import {
+  MOCK_BOARDS,
+  MOCK_POINTS_HISTORY,
+  MOCK_TASKS,
+  MOCK_TEAMS,
+  getMockBoardsByTeam,
+  getMockUsersByTeam,
+} from "../../contracts/fixtures/index.js";
 import { BoardService } from "../../lib/services/board.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
 import { TaskService } from "../../lib/services/task.service.js";
@@ -7,6 +16,13 @@ import { TeamService } from "../../lib/services/team.service.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 
 const router = express.Router();
+
+/**
+ * Helper to add mock mode flag to view context
+ */
+function withMockFlag<T extends object>(data: T): T & { mockMode: boolean } {
+  return { ...data, mockMode: isMockMode() };
+}
 
 function getSupabase(req: express.Request) {
   if (!req.supabase) {
@@ -17,13 +33,14 @@ function getSupabase(req: express.Request) {
 }
 
 router.get("/", (req, res) => {
-  // Redirect authenticated users to boards page
+  // Redirect authenticated users to dashboard in mock mode, boards otherwise
   if (req.user) {
-    return res.redirect("/boards");
+    return res.redirect(isMockMode() ? "/dashboard" : "/boards");
   }
   res.render("pages/home", {
     title: "Gello",
     layout: "main",
+    mockMode: isMockMode(),
   });
 });
 
@@ -43,15 +60,25 @@ router.get("/register", (_req, res) => {
 
 router.get("/teams", requireAuth, async (req, res, next) => {
   try {
-    const supabase = getSupabase(req);
-    const teamService = new TeamService(supabase);
-    const teams = await teamService.getAllTeams();
-    res.render("pages/teams/index", {
-      title: "Teams",
-      layout: "dashboard",
-      user: req.user,
-      teams,
-    });
+    let teams: typeof MOCK_TEAMS = [];
+
+    if (isMockMode()) {
+      teams = MOCK_TEAMS;
+    } else {
+      const supabase = getSupabase(req);
+      const teamService = new TeamService(supabase);
+      teams = await teamService.getAllTeams();
+    }
+
+    res.render(
+      "pages/teams/index",
+      withMockFlag({
+        title: "Teams",
+        layout: "dashboard",
+        user: req.user,
+        teams,
+      }),
+    );
   } catch (error) {
     next(error);
   }
@@ -66,26 +93,66 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
         layout: "main",
       });
     }
-    const supabase = getSupabase(req);
-    const teamService = new TeamService(supabase);
-    const boardService = new BoardService(supabase);
-    const team = await teamService.getTeam(id);
+
+    let team: (typeof MOCK_TEAMS)[0] | null | undefined;
+    let members: Array<{
+      id: string;
+      display_name: string;
+      email: string;
+      role: string;
+      team_id: string | null;
+    }> = [];
+    let boards: Array<{
+      id: string;
+      name: string;
+      description: string | null;
+      team_id: string | null;
+      created_by: string | null;
+      created_at: string;
+    }> = [];
+
+    if (isMockMode()) {
+      team = MOCK_TEAMS.find((t) => t.id === id);
+      if (team) {
+        members = getMockUsersByTeam(id);
+        boards = getMockBoardsByTeam(id);
+      }
+    } else {
+      const supabase = getSupabase(req);
+      const teamService = new TeamService(supabase);
+      const boardService = new BoardService(supabase);
+      team = await teamService.getTeam(id);
+      if (team) {
+        const rawMembers = await teamService.getTeamMembers(id);
+        members = rawMembers.map((m) => ({
+          id: m.id,
+          display_name: m.display_name,
+          email: m.email,
+          role: m.role,
+          team_id: m.team_id,
+        }));
+        boards = await boardService.getBoardsByTeam(id);
+      }
+    }
+
     if (!team) {
       return res.status(404).render("pages/404", {
         title: "Team Not Found",
         layout: "main",
       });
     }
-    const members = await teamService.getTeamMembers(id);
-    const boards = await boardService.getBoardsByTeam(id);
-    res.render("pages/teams/detail", {
-      title: team.name,
-      layout: "dashboard",
-      user: req.user,
-      team,
-      members,
-      boards,
-    });
+
+    res.render(
+      "pages/teams/detail",
+      withMockFlag({
+        title: team.name,
+        layout: "dashboard",
+        user: req.user,
+        team,
+        members,
+        boards,
+      }),
+    );
   } catch (error) {
     next(error);
   }
@@ -93,26 +160,36 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
 
 router.get("/profile", requireAuth, async (req, res, next) => {
   try {
-    // requireAuth guarantees req.user is set when next() is called
-    const supabase = getSupabase(req);
     const userId = req.user?.id;
     if (!userId) {
       return res.redirect("/login");
     }
-    const pointsService = new PointsService(supabase, userId);
-    const taskService = new TaskService(supabase);
 
-    const pointsHistory = await pointsService.getPointsHistory(userId);
-    const assignedTasks = await taskService.getTasksByAssignee(userId);
+    let pointsHistory: typeof MOCK_POINTS_HISTORY = [];
+    let assignedTasks: typeof MOCK_TASKS = [];
 
-    res.render("pages/profile/index", {
-      title: "Profile",
-      layout: "dashboard",
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      user: req.user!,
-      pointsHistory,
-      assignedTasks,
-    });
+    if (isMockMode()) {
+      pointsHistory = MOCK_POINTS_HISTORY.filter((p) => p.user_id === userId);
+      assignedTasks = MOCK_TASKS.filter((t) => t.assigned_to === userId);
+    } else {
+      const supabase = getSupabase(req);
+      const pointsService = new PointsService(supabase, userId);
+      const taskService = new TaskService(supabase);
+      pointsHistory = await pointsService.getPointsHistory(userId);
+      assignedTasks = await taskService.getTasksByAssignee(userId);
+    }
+
+    res.render(
+      "pages/profile/index",
+      withMockFlag({
+        title: "Profile",
+        layout: "dashboard",
+        // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+        user: req.user!,
+        pointsHistory,
+        assignedTasks,
+      }),
+    );
   } catch (error) {
     next(error);
   }

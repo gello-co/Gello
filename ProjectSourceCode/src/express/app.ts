@@ -16,6 +16,7 @@ import boardsApiRouter from "./routes/boards/api.js";
 import boardsPagesRouter from "./routes/boards/pages.js";
 import leaderboardPagesRouter from "./routes/leaderboard/pages.js";
 import listsRouter from "./routes/lists.js";
+import mockPagesRouter from "./routes/mock-pages.js";
 import pageRoutes from "./routes/pages.js";
 import tasksApiRouter from "./routes/tasks/api.js";
 
@@ -128,6 +129,8 @@ app.use("/api/tasks", tasksApiRouter);
 app.use("/api/lists", listsRouter);
 app.use("/boards", boardsPagesRouter);
 app.use("/leaderboard", leaderboardPagesRouter);
+// Mock-aware routes (contracts system) - registered before pageRoutes for priority
+app.use("/", mockPagesRouter);
 app.use("/", pageRoutes);
 app.use("/", expressApp);
 

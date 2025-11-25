@@ -1,24 +1,54 @@
 import { createClient } from "@supabase/supabase-js";
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
+import { isMockMode } from "../contracts/container.js";
+import { DEFAULT_MOCK_USER } from "../contracts/fixtures/index.js";
 import { logger } from "../lib/logger.js";
 
 /**
  * Development Authentication Middleware
  *
- * Automatically logs in as the seed admin user when in development mode.
- * This allows "live preview" of features without needing to go through
- * the full auth flow every time the server restarts.
+ * Automatically logs in as a user when in development mode.
  *
- * It fetches the REAL user from the database so that services work correctly.
+ * In Mock Mode (MOCK_MODE=true + MOCK_AUTO_LOGIN=true):
+ * - Uses mock fixture data, no database required
+ * - Auto-logs in as DEFAULT_MOCK_USER (admin)
+ *
+ * In Real Mode (development):
+ * - Fetches the REAL admin user from the database
+ * - Requires SUPABASE_SERVICE_ROLE_KEY
  */
 export const devAuth = async (
   req: Request,
   _res: Response,
   next: NextFunction,
 ) => {
-  // Only run in development and if not already authenticated
-  if (env.NODE_ENV === "development" && !req.user) {
+  // Skip if already authenticated
+  if (req.user) {
+    return next();
+  }
+
+  // Mock Mode: Use fixture user
+  if (isMockMode() && process.env.MOCK_AUTO_LOGIN === "true") {
+    req.user = {
+      id: DEFAULT_MOCK_USER.id,
+      email: DEFAULT_MOCK_USER.email,
+      display_name: DEFAULT_MOCK_USER.display_name,
+      role: DEFAULT_MOCK_USER.role,
+      team_id: DEFAULT_MOCK_USER.team_id,
+      total_points: DEFAULT_MOCK_USER.total_points,
+      avatar_url: DEFAULT_MOCK_USER.avatar_url,
+    };
+    req.headers["x-dev-auth"] = "mock";
+    logger.debug(
+      { userId: DEFAULT_MOCK_USER.id },
+      "[DevAuth] Mock auto-login enabled",
+    );
+    return next();
+  }
+
+  // Real Mode: Auto-login in development
+  if (env.NODE_ENV === "development") {
     try {
       // Use Service Role Key to bypass RLS and fetch the admin user
       if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {

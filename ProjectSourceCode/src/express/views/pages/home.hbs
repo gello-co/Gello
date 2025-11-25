@@ -1,14 +1,78 @@
+<!-- Landing Page - Gello: Gamified Project Management -->
 <div class="container my-5">
-  <div class="row">
+  <!-- Hero Section -->
+  <div class="row mb-5">
     <div class="col-lg-8 mx-auto text-center">
-      <h1 class="display-4 mb-4">Welcome to Gello</h1>
-      <p class="lead mb-4">
-        TODO (placeholder)
+      <h1 class="display-3 fw-bold mb-4">
+        <i class="fas fa-gamepad text-primary me-2"></i>
+        Gello
+      </h1>
+      <p class="lead mb-4 text-muted">
+        Gamified project management for teams. Earn points, climb leaderboards, and make work feel like play.
       </p>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-        <a href="/login" class="btn btn-primary btn-lg">Get Started</a>
-        <a href="/register" class="btn btn-outline-primary btn-lg">Sign Up</a>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-4">
+        <a href="/login" class="btn btn-primary btn-lg px-4">
+          <i class="fas fa-sign-in-alt me-2"></i>Get Started
+        </a>
+        <a href="/register" class="btn btn-outline-primary btn-lg px-4">
+          <i class="fas fa-user-plus me-2"></i>Sign Up
+        </a>
+      </div>
+      <p class="text-muted small">
+        <a href="/about" class="text-decoration-none">Learn more about Gello →</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="fas fa-columns fa-3x text-primary"></i>
+          </div>
+          <h5 class="card-title">Kanban Boards</h5>
+          <p class="card-text text-muted">
+            Organize tasks with drag-and-drop boards. Track progress from To Do to Done.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="fas fa-trophy fa-3x text-warning"></i>
+          </div>
+          <h5 class="card-title">Points & Rewards</h5>
+          <p class="card-text text-muted">
+            Earn points for completing tasks. Compete on leaderboards and unlock achievements.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="mb-3">
+            <i class="fas fa-users fa-3x text-success"></i>
+          </div>
+          <h5 class="card-title">Team Collaboration</h5>
+          <p class="card-text text-muted">
+            Work together with your team. Assign tasks, share boards, and celebrate wins.
+          </p>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Mock Mode Banner (only shown in dev) -->
+  {{#if mockMode}}
+  <div class="alert alert-info text-center" role="alert">
+    <i class="fas fa-flask me-2"></i>
+    <strong>Mock Mode Active</strong> -
+    <a href="/dashboard" class="alert-link">Go to Dashboard</a> (auto-logged in as admin)
+  </div>
+  {{/if}}
 </div>

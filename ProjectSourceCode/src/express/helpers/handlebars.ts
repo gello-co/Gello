@@ -36,4 +36,12 @@ export const helpers = {
     if (!path) return "/";
     return path.startsWith("/") ? path : `/${path}`;
   },
+  // Debug helpers
+  json: (obj: unknown) => {
+    try {
+      return JSON.stringify(obj, null, 2);
+    } catch {
+      return "[Unable to stringify]";
+    }
+  },
 };
