@@ -38,7 +38,7 @@ export const createTaskSchema = z.object({
     .max(1000, "Description too long")
     .nullable()
     .optional(),
-  list_id: z.string().uuid("Invalid list ID"),
+  list_id: z.uuid("Invalid list ID"),
   story_points: z.number().int().min(1).max(100).optional().default(1),
   assigned_to: z.uuid().nullable().optional(),
   position: z.number().int().min(0).optional().default(0),
@@ -74,7 +74,7 @@ export const assignTaskSchema = z.object({
 });
 
 export const taskIdSchema = z.object({
-  id: z.string().uuid("Invalid task ID"),
+  id: z.uuid("Invalid task ID"),
 });
 
 export type Task = z.infer<typeof taskSchema>;

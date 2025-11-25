@@ -9,6 +9,7 @@
  * Uses PRG (Post-Redirect-Get) pattern for form submissions.
  */
 import { Router } from "express";
+import { env } from "@/config/env.js";
 import { logger } from "@/lib/logger.js";
 import { AuthService } from "@/lib/services/auth.service.js";
 import { getServiceRoleClient, getSupabaseClient } from "@/lib/supabase.js";
@@ -164,8 +165,12 @@ router.get("/logout", (_req, res) => {
 
 router.get("/auth/discord", async (_req, res) => {
   try {
+    if (!env.AUTH_SITE_URL) {
+      logger.error("AUTH_SITE_URL not configured");
+      return res.redirect("/login?error=OAuth not configured");
+    }
     const supabase = getSupabaseClient();
-    const redirectTo = `${process.env.AUTH_SITE_URL || "http://127.0.0.1:3000"}/auth/callback`;
+    const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
@@ -190,8 +195,12 @@ router.get("/auth/discord", async (_req, res) => {
 
 router.get("/auth/github", async (_req, res) => {
   try {
+    if (!env.AUTH_SITE_URL) {
+      logger.error("AUTH_SITE_URL not configured");
+      return res.redirect("/login?error=OAuth not configured");
+    }
     const supabase = getSupabaseClient();
-    const redirectTo = `${process.env.AUTH_SITE_URL || "http://127.0.0.1:3000"}/auth/callback`;
+    const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "github",

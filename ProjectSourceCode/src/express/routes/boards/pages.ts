@@ -45,8 +45,8 @@ router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;
     if (!id) {
-      return res.status(400).render("pages/404", {
-        title: "Invalid Request",
+      return res.status(404).render("pages/404", {
+        title: "Board Not Found",
         layout: "main",
       });
     }

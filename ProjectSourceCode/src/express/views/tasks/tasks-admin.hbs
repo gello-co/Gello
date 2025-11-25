@@ -75,6 +75,9 @@
                             <label for="assignedUser" class="form-label">Assign To</label>
                             <select class="form-select" id="assignedUser" required>
                                 <option value="">Select user...</option>
+                                {{#each users}}
+                                <option value="{{id}}">{{display_name}}</option>
+                                {{/each}}
                             </select>
                         </div>
                     </div>

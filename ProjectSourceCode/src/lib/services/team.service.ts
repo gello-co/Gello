@@ -107,7 +107,18 @@ export class TeamService {
 
       if (userError || !user) {
         // If user update fails, rollback by deleting the team
-        await this.supabase.from("teams").delete().eq("id", team.id);
+        const { error: rollbackError } = await this.supabase
+          .from("teams")
+          .delete()
+          .eq("id", team.id);
+
+        if (rollbackError) {
+          logger.error(
+            { rollbackError, teamId: team.id, userError },
+            "Failed to rollback team creation after user update failure",
+          );
+        }
+
         throw (
           userError || new ResourceNotFoundError(`User not found: ${managerId}`)
         );

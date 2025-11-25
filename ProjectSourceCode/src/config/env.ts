@@ -25,6 +25,7 @@ export type AppEnv = {
   NODE_ENV: string | undefined;
   PORT: string | undefined;
   DEV_BYPASS_AUTH?: string;
+  AUTH_SITE_URL?: string;
   DATABASE_URL?: string;
   DB_POOL_MAX?: number;
   DB_IDLE_TIMEOUT?: number;
@@ -89,9 +90,13 @@ const isDevelopment = (nodeEnv ?? "development") === "development";
 export const env: AppEnv = {
   NODE_ENV: nodeEnv,
   PORT: process.env.PORT,
-  DEV_BYPASS_AUTH: pick(
-    process.env.DEV_BYPASS_AUTH,
-    isDevelopment ? "true" : undefined,
+  // DEV_BYPASS_AUTH must be explicitly set - no default for security
+  DEV_BYPASS_AUTH: process.env.DEV_BYPASS_AUTH,
+  // AUTH_SITE_URL: OAuth redirect base URL (required for OAuth flows)
+  // Falls back to localhost with configured PORT for local development only
+  AUTH_SITE_URL: pick(
+    process.env.AUTH_SITE_URL,
+    isDevelopment ? `http://127.0.0.1:${process.env.PORT || "3000"}` : undefined,
   ),
   // DATABASE_URL: PostgreSQL connection string (legacy, kept for compatibility)
   // DB_URL is output by `bunx supabase status -o env`

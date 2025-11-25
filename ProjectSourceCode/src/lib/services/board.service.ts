@@ -10,6 +10,7 @@ export type Board = {
   team_id: string;
   created_by: string | null;
   created_at: string;
+  updated_at: string | null;
 };
 
 export class BoardService {
