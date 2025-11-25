@@ -37,10 +37,16 @@ export_oauth_for_supabase() {
     echo -e "${YELLOW}🔑 Loading OAuth secrets from Doppler for Supabase...${NC}"
 
     # Export with SUPABASE_* prefix for Supabase CLI
-    export SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_CLIENT_ID --plain 2>/dev/null || echo "")
-    export SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_SECRET --plain 2>/dev/null || echo "")
-    export SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_CLIENT_ID --plain 2>/dev/null || echo "")
-    export SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_SECRET --plain 2>/dev/null || echo "")
+    # Declare and assign separately to avoid masking return values (SC2155)
+    local discord_client_id discord_secret github_client_id github_secret
+    discord_client_id=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_CLIENT_ID --plain 2>/dev/null || echo "")
+    discord_secret=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_SECRET --plain 2>/dev/null || echo "")
+    github_client_id=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_CLIENT_ID --plain 2>/dev/null || echo "")
+    github_secret=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_SECRET --plain 2>/dev/null || echo "")
+    export SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID="$discord_client_id"
+    export SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET="$discord_secret"
+    export SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID="$github_client_id"
+    export SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET="$github_secret"
 
     echo -e "${GREEN}✓${NC} OAuth secrets loaded"
   fi
