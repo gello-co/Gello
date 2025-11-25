@@ -17,6 +17,11 @@ export async function requireAuth(
   res: Response,
   next: NextFunction,
 ) {
+  // If user is already authenticated (e.g. by dev-auth middleware), proceed
+  if (req.user) {
+    return next();
+  }
+
   try {
     // MVP: Test bypass for reliable local development
     // Only enabled in test environment, never in production

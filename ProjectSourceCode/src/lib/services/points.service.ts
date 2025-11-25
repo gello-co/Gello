@@ -10,16 +10,13 @@ import {
 import { getTaskById } from "../database/tasks.db.js";
 import { getUserById } from "../database/users.db.js";
 import { ResourceNotFoundError } from "../errors/app.errors.js";
-import type {
-  CreatePointsHistoryInput,
-  ManualAwardInput,
-} from "../schemas/points.js";
+import type { ManualAwardInput } from "../schemas/points.js";
 import { calculateTaskPoints, validateManualAward } from "../utils/points.js";
 
 export class PointsService {
   constructor(
     private client: SupabaseClient,
-    private currentUserId?: string,
+    _currentUserId?: string,
   ) {}
 
   async awardPointsForTaskCompletion(

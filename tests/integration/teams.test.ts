@@ -10,7 +10,6 @@ import {
   createTestUser,
   generateTestEmail,
   getCsrfToken,
-  loginAsAdmin,
   loginAsUser,
   prepareTestDb,
   setCsrfHeadersIfEnabled,
@@ -31,19 +30,19 @@ describe("Teams API", () => {
     const managerEmail = generateTestEmail("teams-manager");
     const memberEmail = generateTestEmail("teams-member");
 
-    const adminUser = await createTestUser(
+    const _adminUser = await createTestUser(
       adminEmail,
       "password123",
       "admin",
       "Admin User",
     );
-    const managerUser = await createTestUser(
+    const _managerUser = await createTestUser(
       managerEmail,
       "password123",
       "manager",
       "Manager User",
     );
-    const memberUser = await createTestUser(
+    const _memberUser = await createTestUser(
       memberEmail,
       "password123",
       "member",
@@ -68,7 +67,7 @@ describe("Teams API", () => {
       "password123",
     );
     memberCookies = memberCookieHeader;
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /api/teams", () => {
     it("should return all teams for authenticated user", async () => {

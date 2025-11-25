@@ -100,7 +100,7 @@ router.patch(
           board_id: req.body.board_id,
           list_positions: req.body.list_positions,
         },
-        req.user?.id,  // Pass user_id explicitly for RPC function
+        req.user?.id, // Pass user_id explicitly for RPC function
       );
       res.status(204).send();
     } catch (error) {

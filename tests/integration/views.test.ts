@@ -18,7 +18,7 @@ import {
 describe("View Rendering", () => {
   beforeAll(async () => {
     await prepareTestDb();
-  }, 15000); // 15 seconds should be plenty for local Supabase
+  });
 
   describe("GET /", () => {
     it("should render home page", async () => {
@@ -62,7 +62,9 @@ describe("View Rendering", () => {
       await createTestUser(userEmail, "password123", "member", "Test User");
       const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
-      const response = await request(app).get("/teams").set("Cookie", cookieHeader);
+      const response = await request(app)
+        .get("/teams")
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -84,10 +86,20 @@ describe("View Rendering", () => {
 
       // Create a team first (use manager instead of admin)
       const managerEmail = generateTestEmail("team-detail-manager");
-      await createTestUser(managerEmail, "password123", "manager", "Manager User");
-      const { cookieHeader: managerCookieHeader } = await loginAsUser(managerEmail, "password123");
+      await createTestUser(
+        managerEmail,
+        "password123",
+        "manager",
+        "Manager User",
+      );
+      const { cookieHeader: managerCookieHeader } = await loginAsUser(
+        managerEmail,
+        "password123",
+      );
       const { token: csrfToken } = await getCsrfToken(managerCookieHeader);
-      let req = request(app).post("/api/teams").set("Cookie", managerCookieHeader);
+      let req = request(app)
+        .post("/api/teams")
+        .set("Cookie", managerCookieHeader);
       req = setCsrfHeadersIfEnabled(req, csrfToken);
       const teamResponse = await req.send({ name: "Test Team" });
 
@@ -115,7 +127,9 @@ describe("View Rendering", () => {
       await createTestUser(userEmail, "password123", "member", "Test User");
       const { cookieHeader } = await loginAsUser(userEmail, "password123");
 
-      const response = await request(app).get("/boards").set("Cookie", cookieHeader);
+      const response = await request(app)
+        .get("/boards")
+        .set("Cookie", cookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -137,10 +151,20 @@ describe("View Rendering", () => {
 
       // Create a team and board first (use manager instead of admin)
       const managerEmail = generateTestEmail("board-detail-manager");
-      await createTestUser(managerEmail, "password123", "manager", "Manager User");
-      const { cookieHeader: managerCookieHeader } = await loginAsUser(managerEmail, "password123");
+      await createTestUser(
+        managerEmail,
+        "password123",
+        "manager",
+        "Manager User",
+      );
+      const { cookieHeader: managerCookieHeader } = await loginAsUser(
+        managerEmail,
+        "password123",
+      );
       const { token: csrfToken } = await getCsrfToken(managerCookieHeader);
-      let req = request(app).post("/api/teams").set("Cookie", managerCookieHeader);
+      let req = request(app)
+        .post("/api/teams")
+        .set("Cookie", managerCookieHeader);
       req = setCsrfHeadersIfEnabled(req, csrfToken);
       const teamResponse = await req.send({ name: "Test Team" });
 

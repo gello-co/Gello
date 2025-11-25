@@ -34,7 +34,7 @@ export class AuthService {
   private readonly serviceRoleClient: SupabaseClient | null;
 
   // Cached service-role client (singleton pattern) for production use
-  private static serviceRoleClientCache: SupabaseClient | null = null;
+  // private static serviceRoleClientCache: SupabaseClient | null = null;
 
   constructor(
     private client: SupabaseClient,

@@ -38,13 +38,23 @@ router.use("/sse", sseRoutes);
 
 //"Create" user
 router.post("/register", (req, res) => {
-  const username = req.body.username;
-  const email = req.body.email;
+  const _username = req.body.username;
+  const _email = req.body.email;
   try {
     res.status(200).send("Success");
   } catch (err) {
     console.log(err);
   }
 });
+
+//CRUD board routes
+
+router.get("/viewBoards", async (_req, _res) => {});
+
+router.post("/createBoard", async (_req, _res) => {});
+
+router.put("/updateBoard", async (_req, _res) => {});
+
+router.delete("/deleteBoard", async (_req, _res) => {});
 
 export default router;
