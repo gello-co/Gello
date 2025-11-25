@@ -1,5 +1,4 @@
 import { app } from "./express/app.js";
-import { closeDatabaseConnection } from "./lib/database/drizzle.js";
 import { logger } from "./lib/logger.js";
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -43,15 +42,8 @@ const shutdown = async (signal: string) => {
     logger.error({ error, signal }, "Error closing HTTP server");
   }
 
-  try {
-    await closeDatabaseConnection();
-  } catch (error) {
-    exitCode = 1;
-    logger.error({ error, signal }, "Error closing database connection");
-  } finally {
-    clearTimeout(forceExit);
-    process.exit(exitCode);
-  }
+  clearTimeout(forceExit);
+  process.exit(exitCode);
 };
 
 process.on("SIGINT", () => {

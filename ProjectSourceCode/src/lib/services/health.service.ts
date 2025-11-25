@@ -1,4 +1,4 @@
-import { checkDatabaseConnection } from "@/lib/database/drizzle.js";
+import { getSupabaseClient } from "@/lib/supabase.js";
 
 export type HealthStatus = {
   ok: boolean;
@@ -10,7 +10,9 @@ export type HealthStatus = {
 export async function checkHealth(): Promise<HealthStatus> {
   let db = false;
   try {
-    db = await checkDatabaseConnection();
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.from("users").select("id").limit(1);
+    db = !error;
   } catch (error) {
     console.error("Health check: Database connection failed", error);
     db = false;

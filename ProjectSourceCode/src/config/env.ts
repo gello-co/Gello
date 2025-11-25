@@ -1,14 +1,11 @@
 /**
  * Environment configuration
  *
- * Bun automatically loads .env files from the project root, so dotenv is not needed
- * for the main application. However, drizzle-kit CLI (run via bunx) may need explicit
- * dotenv loading, which is handled in drizzle.config.ts.
+ * Bun automatically loads .env files from the project root.
  *
  * Required environment variables:
  * - NODE_ENV: Environment (development, test, production)
  * - PORT: Server port (defaults to 3000)
- * - DATABASE_URL: PostgreSQL connection string for Drizzle ORM
  * - SUPABASE_URL: Supabase project URL
  * - SUPABASE_PUBLISHABLE_KEY: Supabase publishable/anonymous key
  * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (JWT format, for admin operations)
@@ -96,8 +93,7 @@ export const env: AppEnv = {
     process.env.DEV_BYPASS_AUTH,
     isDevelopment ? "true" : undefined,
   ),
-  // DATABASE_URL: Primary connection string for Drizzle ORM
-  // Fallback to local Supabase DB URL for development
+  // DATABASE_URL: PostgreSQL connection string (legacy, kept for compatibility)
   // DB_URL is output by `bunx supabase status -o env`
   DATABASE_URL: pick(
     process.env.DATABASE_URL,

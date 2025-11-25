@@ -1,43 +1,12 @@
-import {
-  createInsertSchema,
-  createSelectSchema,
-  createUpdateSchema,
-} from "drizzle-zod";
 import { z } from "zod";
-import { users } from "../database/schema/users.js";
 
 /**
- * Base schemas generated from Drizzle ORM schema using drizzle-zod
- * These ensure type safety and alignment with the database schema
- * Reference: https://orm.drizzle.team/docs/zod
- *
- * These use camelCase field names matching the Drizzle schema.
- * API schemas below use snake_case for API contract compatibility.
+ * User schemas using pure Zod
+ * API uses snake_case field names
  */
-export const userInsertSchemaBase = createInsertSchema(users, {
-  email: (_schema) => z.email(),
-  displayName: (schema) => schema.min(1),
-  totalPoints: (schema) => schema.min(0),
-});
 
-export const userUpdateSchemaBase = createUpdateSchema(users, {
-  email: () => z.email(),
-  displayName: (schema) => schema.min(1),
-  totalPoints: (schema) => schema.min(0),
-});
-
-export const userSelectSchemaBase = createSelectSchema(users);
-
-// Generate enum schema from Drizzle enum
 export const userRoleSchema = z.enum(["admin", "manager", "member"]);
 
-/**
- * API schemas using snake_case for API contract compatibility
- * These maintain the existing API format while leveraging Drizzle-generated schemas
- * for type safety and validation alignment.
- */
-
-// Select schema - for API responses (snake_case format)
 export const userSchema = z.object({
   id: z.uuid(),
   email: z.email(),
@@ -66,7 +35,6 @@ export const createUserSchema = z
     path: ["passwordConfirm"],
   })
   .transform((data) => {
-    // Remove passwordConfirm before passing to service
     const { passwordConfirm: _passwordConfirm, ...rest } = data;
     return rest;
   });
