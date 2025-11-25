@@ -1,6 +1,11 @@
 /**
  * Authentication middleware using Supabase Auth
- * Sessions stored in secure, httpOnly cookies
+ *
+ * Uses @supabase/ssr for cookie-based session management.
+ * The SSR client automatically:
+ * - Reads session from cookies
+ * - Refreshes expired tokens
+ * - Sets updated tokens on response
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -8,12 +13,25 @@ import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
 import { getUserById } from "../lib/database/users.db.js";
 import { logger } from "../lib/logger.js";
+import { createAuthenticatedClient } from "../lib/supabase.js";
 
 const isBypassEnabled =
   process.env.NODE_ENV !== "production" &&
   (process.env.ALLOW_TEST_BYPASS === undefined ||
     process.env.ALLOW_TEST_BYPASS === "true");
 
+/**
+ * Middleware that requires authentication.
+ *
+ * On success, attaches to request:
+ * - req.supabase: Authenticated Supabase client
+ * - req.user: User profile from database
+ *
+ * On failure:
+ * - API routes: 401 JSON response
+ * - Page routes: Redirect to /login
+ * - HTMX requests: HX-Redirect header
+ */
 export async function requireAuth(
   req: Request,
   res: Response,
@@ -48,49 +66,36 @@ export async function requireAuth(
     return next();
   }
 
-  const accessToken = req.cookies?.["sb-access-token"];
-  if (!accessToken) {
-    return handleUnauthorized(req, res);
-  }
+  // 2. Create SSR client - handles cookie parsing automatically
+  const supabase = createAuthenticatedClient(req, res);
 
   try {
-    if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
-      logger.error("[requireAuth] Missing Supabase configuration");
-      return handleUnauthorized(req, res);
-    }
-
-    // Create scoped client with user's access token
-    const scopedClient = createClient(
-      env.SUPABASE_URL,
-      env.SUPABASE_PUBLISHABLE_KEY,
-      {
-        auth: { persistSession: false, autoRefreshToken: false },
-        global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      },
-    );
-
-    // Use Supabase's getUser() which verifies JWT signature
+    // 3. Verify user session
+    // getUser() validates JWT signature server-side (more secure than getSession())
     const {
       data: { user },
       error: authError,
-    } = await scopedClient.auth.getUser(accessToken);
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      logger.debug(
-        { authError: authError?.message },
-        "[requireAuth] JWT verification failed",
-      );
+      if (authError) {
+        logger.warn(
+          { error: authError.message },
+          "[requireAuth] Auth verification failed",
+        );
+      }
       return handleUnauthorized(req, res);
     }
 
-    // Get user profile from database
-    const userProfile = await getUserById(scopedClient, user.id);
+    // 4. Get user profile from database
+    const userProfile = await getUserById(supabase, user.id);
     if (!userProfile) {
-      logger.warn({ userId: user.id }, "[requireAuth] Profile not found");
+      logger.warn({ userId: user.id }, "[requireAuth] User profile not found");
       return handleUnauthorized(req, res);
     }
 
-    req.supabase = scopedClient;
+    // 5. Attach to request
+    req.supabase = supabase;
     req.user = {
       id: userProfile.id,
       email: userProfile.email,
@@ -108,13 +113,21 @@ export async function requireAuth(
   }
 }
 
+/**
+ * Handle unauthorized requests appropriately based on request type.
+ */
 function handleUnauthorized(req: Request, res: Response) {
+  // HTMX requests: Use HX-Redirect for client-side navigation
   if (req.headers["hx-request"]) {
     res.set("HX-Redirect", "/login");
     return res.status(401).end();
   }
+
+  // API requests: JSON error response
   if (req.path.startsWith("/api/") || req.baseUrl.startsWith("/api")) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+
+  // Page requests: Server-side redirect
   return res.redirect("/login");
 }

@@ -1,10 +1,6 @@
 import express from "express";
 import { getAllUsers } from "../../lib/database/users.db.js";
 import { TaskService } from "../../lib/services/task.service.js";
-import {
-  getSupabaseClient,
-  getSupabaseClientForRequest,
-} from "../../lib/supabase.js";
 import { requireAdmin } from "../../middleware/requireAdmin.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 
@@ -18,13 +14,8 @@ router.get(
     try {
       if (!req.user) throw new Error("User not authenticated");
 
-      const client = await getSupabaseClientForRequest(req);
-      const _taskService = new TaskService(client);
-      // TODO: Add method to get all tasks for admin or filter by team
-
-      const users = await getAllUsers(client);
+      const users = await getAllUsers(req.supabase!);
       // TODO: Implement getAllTasks or getTasksForAdmin method to fetch assignedTasks
-      // For now, passing empty array so template doesn't break
       const assignedTasks: never[] = [];
 
       res.render("pages/tasks-admin", {
@@ -44,7 +35,8 @@ router.get("/tasks-team", requireAuth, async (req, res, next) => {
   try {
     if (!req.user) throw new Error("User not authenticated");
 
-    const taskService = new TaskService(getSupabaseClient());
+    // Use the authenticated client from requireAuth middleware
+    const taskService = new TaskService(req.supabase!);
     const tasks = await taskService.getTasksByAssignee(req.user.id);
 
     res.render("pages/tasks-team", {

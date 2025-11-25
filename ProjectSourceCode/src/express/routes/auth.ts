@@ -4,20 +4,17 @@
  * Handles:
  * - Login/Register pages (GET) and form submissions (POST)
  * - OAuth initiation and callbacks
- * - Session management via httpOnly cookies
+ * - Session management via httpOnly cookies (handled by @supabase/ssr)
  *
  * Uses PRG (Post-Redirect-Get) pattern for form submissions.
  */
 import { Router } from "express";
 import { env } from "@/config/env.js";
 import { logger } from "@/lib/logger.js";
-import { AuthService } from "@/lib/services/auth.service.js";
 import {
-  createSupabaseSSRClient,
+  createAuthenticatedClient,
   getServiceRoleClient,
-  getSupabaseClient,
 } from "@/lib/supabase.js";
-import { clearAuthCookies, setAuthCookies } from "@/lib/utils/auth-cookies.js";
 
 const router = Router();
 
@@ -41,22 +38,23 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const supabase = getSupabaseClient();
-    const authService = new AuthService(supabase);
-    const result = await authService.login({ email, password });
+    // Create SSR client - it will set cookies automatically on successful auth
+    const supabase = createAuthenticatedClient(req, res);
 
-    if (!result.session) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error || !data.session) {
+      logger.debug({ error: error?.message }, "Login failed");
       return res.render("auth/login", {
         layout: "auth",
         error: "Invalid credentials",
       });
     }
 
-    setAuthCookies(
-      res,
-      result.session.access_token,
-      result.session.refresh_token,
-    );
+    // SSR client has already set the auth cookies via setAll()
     res.redirect("/boards");
   } catch (error) {
     logger.error({ error }, "Login error");
@@ -78,7 +76,6 @@ router.get("/register", (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
-    // Accept snake_case from HTML forms
     const { email, password, password_confirm, display_name } = req.body;
 
     // Validation
@@ -103,31 +100,65 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const supabase = getSupabaseClient();
-    const authService = new AuthService(supabase);
-    const result = await authService.register({
+    // Create SSR client - it will set cookies automatically on successful auth
+    const supabase = createAuthenticatedClient(req, res);
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      display_name,
+      options: {
+        data: { display_name },
+      },
     });
 
-    if (!result.session) {
+    if (error || !data.session || !data.user) {
+      logger.debug({ error: error?.message }, "Registration failed");
+      return res.render("auth/register", {
+        layout: "auth",
+        error: error?.message || "Registration failed. Please try again.",
+      });
+    }
+
+    const userId = data.user.id;
+
+    // Create user profile in public.users table
+    const adminClient = getServiceRoleClient();
+    const { error: profileError } = await adminClient.from("users").insert({
+      id: userId,
+      email,
+      password_hash: "",
+      display_name,
+      role: "member",
+      team_id: null,
+      avatar_url: null,
+      total_points: 0,
+    });
+
+    if (profileError) {
+      logger.error(
+        { error: profileError, userId },
+        "Failed to create user profile after auth signup",
+      );
+      // Clean up: delete the auth user since profile creation failed
+      const { error: deleteError } =
+        await adminClient.auth.admin.deleteUser(userId);
+      if (deleteError) {
+        logger.error(
+          { error: deleteError, userId },
+          "Failed to clean up auth user after profile creation failure",
+        );
+      }
       return res.render("auth/register", {
         layout: "auth",
         error: "Registration failed. Please try again.",
       });
     }
 
-    setAuthCookies(
-      res,
-      result.session.access_token,
-      result.session.refresh_token,
-    );
+    // SSR client has already set the auth cookies via setAll()
     res.redirect("/boards");
   } catch (error) {
     logger.error({ error }, "Registration error");
 
-    // Handle specific errors
     const message =
       error instanceof Error && error.message.includes("already registered")
         ? "An account with this email already exists"
@@ -144,22 +175,27 @@ router.post("/register", async (req, res) => {
 // Logout
 // ============================================================================
 
-router.post("/logout", async (_req, res) => {
+router.post("/logout", async (req, res) => {
   try {
-    const supabase = getSupabaseClient();
-    const authService = new AuthService(supabase);
-    await authService.logout();
+    const supabase = createAuthenticatedClient(req, res);
+    await supabase.auth.signOut();
+    // signOut() clears the session cookies via setAll()
   } catch (error) {
     logger.error({ error }, "Logout error");
   }
 
-  clearAuthCookies(res);
   res.redirect("/login");
 });
 
-router.get("/logout", (_req, res) => {
+router.get("/logout", async (req, res) => {
   // Support GET for simple logout links
-  clearAuthCookies(res);
+  try {
+    const supabase = createAuthenticatedClient(req, res);
+    await supabase.auth.signOut();
+  } catch (error) {
+    logger.debug({ error }, "Logout via GET");
+  }
+
   res.redirect("/login");
 });
 
@@ -174,8 +210,7 @@ router.get("/auth/discord", async (req, res) => {
       return res.redirect("/login?error=OAuth not configured");
     }
 
-    // Use SSR client to properly store PKCE code verifier in cookies
-    const supabase = createSupabaseSSRClient(req, res);
+    const supabase = createAuthenticatedClient(req, res);
     const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -206,8 +241,7 @@ router.get("/auth/github", async (req, res) => {
       return res.redirect("/login?error=OAuth not configured");
     }
 
-    // Use SSR client to properly store PKCE code verifier in cookies
-    const supabase = createSupabaseSSRClient(req, res);
+    const supabase = createAuthenticatedClient(req, res);
     const redirectTo = `${env.AUTH_SITE_URL}/auth/callback`;
 
     logger.info(
@@ -225,22 +259,6 @@ router.get("/auth/github", async (req, res) => {
       return res.redirect("/login?error=OAuth initialization failed");
     }
 
-    // Debug: Log OAuth redirect (no sensitive data)
-    if (process.env.DEBUG_SUPABASE) {
-      const setCookieHeaders = res.getHeaders()["set-cookie"];
-      logger.info(
-        {
-          oauthUrlPrefix: data.url.substring(0, 50),
-          cookiesSet: Array.isArray(setCookieHeaders)
-            ? setCookieHeaders.length
-            : setCookieHeaders
-              ? 1
-              : 0,
-        },
-        "GitHub OAuth redirect",
-      );
-    }
-
     res.redirect(data.url);
   } catch (error) {
     logger.error({ error }, "GitHub OAuth initiation error");
@@ -255,14 +273,12 @@ router.get("/auth/github", async (req, res) => {
 router.get("/auth/callback", async (req, res) => {
   const { code } = req.query;
 
-  // Debug: Log incoming request details (no sensitive data)
   if (process.env.DEBUG_SUPABASE) {
     logger.info(
       {
         hasCode: !!code,
         codeLength: typeof code === "string" ? code.length : 0,
         hasCookies: Boolean(req.headers.cookie),
-        queryParams: Object.keys(req.query),
       },
       "OAuth callback received",
     );
@@ -274,25 +290,18 @@ router.get("/auth/callback", async (req, res) => {
   }
 
   try {
-    // Use SSR client to access the PKCE code verifier stored in cookies during initiation
-    const supabase = createSupabaseSSRClient(req, res);
-
-    if (process.env.DEBUG_SUPABASE) {
-      logger.info("Exchanging authorization code for session");
-    }
+    // SSR client reads PKCE code verifier from cookies and sets session cookies
+    const supabase = createAuthenticatedClient(req, res);
 
     const { data, error } = await supabase.auth.exchangeCodeForSession(
       code.trim(),
     );
 
-    // Debug: Log the full error details
     if (error) {
       logger.error(
         {
           errorName: error.name,
           errorMessage: error.message,
-          errorStatus: (error as { status?: number }).status,
-          errorCode: (error as { code?: string }).code,
         },
         "exchangeCodeForSession failed",
       );
@@ -309,9 +318,7 @@ router.get("/auth/callback", async (req, res) => {
     // Sync user profile to public.users table
     await syncOAuthUserProfile(data.user);
 
-    // Set our app's auth cookies (the SSR client also sets Supabase's internal cookies)
-    setAuthCookies(res, data.session.access_token, data.session.refresh_token);
-
+    // SSR client has already set the auth cookies via setAll()
     logger.info({ userId: data.user.id }, "OAuth login successful");
     res.redirect("/boards");
   } catch (error) {

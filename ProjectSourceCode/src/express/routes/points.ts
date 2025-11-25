@@ -1,29 +1,18 @@
-import type { Request } from "express";
 import express from "express";
 import { z } from "zod";
 import { manualAwardSchema } from "../../lib/schemas/points.js";
 import { LeaderboardService } from "../../lib/services/leaderboard.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
-import { getSupabaseClientForRequest } from "../../lib/supabase.js";
 import { requireAdmin } from "../../middleware/requireAdmin.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 import { validate } from "../../middleware/validation.js";
 
 const router = express.Router();
 
-async function getLeaderboardService(req: Request) {
-  const client = await getSupabaseClientForRequest(req);
-  return new LeaderboardService(client);
-}
-
-async function getPointsService(req: Request, userId?: string) {
-  const client = await getSupabaseClientForRequest(req);
-  return new PointsService(client, userId);
-}
-
 router.get("/leaderboard", requireAuth, async (req, res, next) => {
   try {
-    const leaderboardService = await getLeaderboardService(req);
+    // Use the authenticated client from requireAuth middleware
+    const leaderboardService = new LeaderboardService(req.supabase!);
     const limit = Math.min(
       Math.max(Number.parseInt(req.query.limit as string, 10) || 100, 1),
       1000,
@@ -41,12 +30,14 @@ router.get("/users/:id/points", requireAuth, async (req, res, next) => {
     if (!id) {
       return res.status(400).json({ error: "id parameter is required" });
     }
-    // Validate UUID format
+
     const uuidValidation = z.uuid().safeParse(id);
     if (!uuidValidation.success) {
       return res.status(400).json({ error: "id must be a valid UUID" });
     }
-    const pointsService = await getPointsService(req, req.user?.id);
+
+    // Use the authenticated client from requireAuth middleware
+    const pointsService = new PointsService(req.supabase!, req.user?.id);
     const points = await pointsService.getUserPoints(id);
     res.json({ user_id: id, total_points: points });
   } catch (error) {
@@ -64,15 +55,18 @@ router.post(
       if (!id) {
         return res.status(400).json({ error: "id parameter is required" });
       }
-      // Validate UUID format
+
       const uuidValidation = z.uuid().safeParse(id);
       if (!uuidValidation.success) {
         return res.status(400).json({ error: "id must be a valid UUID" });
       }
+
       if (!req.user) {
         return res.status(401).json({ error: "Unauthorized" });
       }
-      const pointsService = await getPointsService(req, req.user.id);
+
+      // Use the authenticated client from requireAuth middleware
+      const pointsService = new PointsService(req.supabase!, req.user.id);
       const history = await pointsService.awardManualPoints(
         {
           ...req.body,
