@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/**
+ * Team schemas using pure Zod
+ * API uses snake_case field names
+ */
+
 export const teamSchema = z.object({
   id: z.uuid(),
   name: z.string().trim().min(1).max(100),
@@ -15,7 +20,7 @@ export const updateTeamBodySchema = z.object({
 });
 
 export const updateTeamSchema = updateTeamBodySchema.extend({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export type Team = z.infer<typeof teamSchema>;

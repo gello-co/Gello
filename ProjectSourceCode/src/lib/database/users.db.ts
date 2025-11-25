@@ -91,6 +91,19 @@ export async function getUsersByTeam(
   return (data ?? []) as User[];
 }
 
+export async function getAllUsers(client: SupabaseClient): Promise<User[]> {
+  const { data, error } = await client
+    .from("users")
+    .select("*")
+    .order("display_name");
+
+  if (error) {
+    throw new Error(`Failed to get all users: ${error.message}`);
+  }
+
+  return (data ?? []) as User[];
+}
+
 export async function createUser(
   client: SupabaseClient,
   input: CreateUserInput,

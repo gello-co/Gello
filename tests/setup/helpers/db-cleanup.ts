@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
+import { logger } from "../../../ProjectSourceCode/src/lib/logger.js";
 import { resetSharedClient } from "./db.js";
 
 export async function cleanupTestData(client: SupabaseClient): Promise<void> {

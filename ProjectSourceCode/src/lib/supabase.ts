@@ -3,6 +3,7 @@ import type { Request } from "express";
 import { env } from "../config/env";
 
 let client: SupabaseClient | null = null;
+let serviceRoleClient: SupabaseClient | null = null;
 
 /**
  * Get global singleton Supabase client for server-side operations
@@ -99,14 +100,12 @@ export async function getSupabaseClientForRequest(
     try {
       const parts = token.split(".");
       if (parts.length !== 3) {
-        return null; // Not a valid JWT format
+        return null;
       }
-      // Decode the payload (second part)
       const payload = parts[1];
       if (!payload) {
         return null;
       }
-      // Add padding if needed for base64 decoding
       const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
       const decoded = Buffer.from(padded, "base64url").toString("utf-8");
       return JSON.parse(decoded) as { sub?: string; [key: string]: unknown };
@@ -115,17 +114,13 @@ export async function getSupabaseClientForRequest(
     }
   };
 
-  // Reuse the access token we already extracted for session restoration
-  // Also extract refresh token for session restoration
   let accessToken = accessTokenForClient;
   let refreshToken: string | undefined;
 
-  // Try to get refresh token from cookies first
   if ("cookies" in req && req.cookies) {
     refreshToken = req.cookies["sb-refresh-token"];
   }
 
-  // Fallback: Parse from Cookie header if cookie-parser didn't work
   if (!refreshToken) {
     let cookieHeader: string | undefined;
     if ("get" in req && typeof req.get === "function") {
@@ -158,13 +153,13 @@ export async function getSupabaseClientForRequest(
       if (!accessToken) accessToken = parseCookie("sb-access-token");
       if (!refreshToken) refreshToken = parseCookie("sb-refresh-token");
 
-      if (process.env.NODE_ENV === "test") {
+      if (process.env.DEBUG_SUPABASE) {
         console.debug(
           "[supabase] Manual parse result:",
           `accessToken: ${!!accessToken} (${accessToken?.length || 0} chars)${accessToken ? ` [${accessToken.substring(0, 50)}...]` : ""}, refreshToken: ${!!refreshToken} (${refreshToken?.length || 0} chars)${refreshToken ? ` [${refreshToken.substring(0, 50)}...]` : ""}`,
         );
       }
-    } else if (process.env.NODE_ENV === "test") {
+    } else if (process.env.DEBUG_SUPABASE) {
       console.debug("[supabase] No Cookie header found in request");
     }
   }
@@ -174,7 +169,7 @@ export async function getSupabaseClientForRequest(
   // Verify access token is a valid JWT with sub claim before attempting session restoration
   if (accessToken) {
     decodedToken = decodeJWT(accessToken);
-    if (process.env.NODE_ENV === "test") {
+    if (process.env.DEBUG_SUPABASE) {
       if (!decodedToken) {
         console.debug("[supabase] Access token is not a valid JWT format");
       } else if (!decodedToken.sub) {
@@ -196,7 +191,7 @@ export async function getSupabaseClientForRequest(
     // If token is missing sub claim, it's likely an API key, not a user JWT
     // Return client without session to avoid invalid session errors
     if (!decodedToken || !decodedToken.sub) {
-      if (process.env.NODE_ENV === "test") {
+      if (process.env.DEBUG_SUPABASE) {
         console.debug(
           "[supabase] Skipping session restoration - invalid or missing sub claim",
         );
@@ -223,7 +218,7 @@ export async function getSupabaseClientForRequest(
 
       if (verifiedSession) {
         // Session is established - success!
-        if (process.env.NODE_ENV === "test") {
+        if (process.env.DEBUG_SUPABASE) {
           console.debug(
             "[supabase] Session established successfully (User ID:",
             verifiedSession.user.id,
@@ -234,7 +229,7 @@ export async function getSupabaseClientForRequest(
       }
 
       // If setSession() reported an error but we don't have a session, log it
-      if (error && process.env.NODE_ENV === "test") {
+      if (error && process.env.DEBUG_SUPABASE) {
         console.debug(
           "[supabase] setSession() reported error but session not established:",
           error.message,
@@ -244,7 +239,7 @@ export async function getSupabaseClientForRequest(
       // If we have a valid JWT with sub claim, try to force the session
       // by directly setting it in the client's internal state
       if (accessToken && decodedToken && decodedToken.sub) {
-        if (process.env.NODE_ENV === "test") {
+        if (process.env.DEBUG_SUPABASE) {
           console.debug(
             "[supabase] Attempting to force session with valid JWT (sub:",
             decodedToken.sub,
@@ -259,7 +254,7 @@ export async function getSupabaseClientForRequest(
         if (!userError && userData.user) {
           // Token is valid - the Authorization header should work for RPC calls
           // Even if setSession() failed, the header is set and auth.uid() should work
-          if (process.env.NODE_ENV === "test") {
+          if (process.env.DEBUG_SUPABASE) {
             console.debug(
               "[supabase] Token validated via getUser(), relying on Authorization header for RPC",
             );
@@ -267,7 +262,7 @@ export async function getSupabaseClientForRequest(
           return client;
         }
 
-        if (process.env.NODE_ENV === "test") {
+        if (process.env.DEBUG_SUPABASE) {
           console.debug(
             "[supabase] Token validation failed:",
             userError?.message || "Unknown error",
@@ -275,7 +270,7 @@ export async function getSupabaseClientForRequest(
         }
       }
     } catch (err) {
-      if (process.env.NODE_ENV === "test") {
+      if (process.env.DEBUG_SUPABASE) {
         console.debug(
           "[supabase] setSession() exception:",
           err instanceof Error ? err.message : String(err),
@@ -286,4 +281,31 @@ export async function getSupabaseClientForRequest(
 
   // Return client with Authorization header set (may work for RPC even without session)
   return client;
+}
+
+/**
+ * Get service role Supabase client for admin operations (bypasses RLS)
+ * Used for operations like creating user profiles after OAuth, managing users, etc.
+ */
+export function getServiceRoleClient(): SupabaseClient {
+  if (serviceRoleClient) return serviceRoleClient;
+
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error(
+      "Service role key required for admin operations: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY",
+    );
+  }
+
+  serviceRoleClient = createClient(
+    env.SUPABASE_URL,
+    env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    },
+  );
+
+  return serviceRoleClient;
 }

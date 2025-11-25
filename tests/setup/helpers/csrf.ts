@@ -10,7 +10,7 @@ type CsrfResponse = {
 export async function getCsrfToken(
   cookies?: string[] | string,
 ): Promise<CsrfResponse> {
-  const app = (await import("../../../ProjectSourceCode/src/server/app.js"))
+  const app = (await import("../../../ProjectSourceCode/src/express/app.js"))
     .app;
   const { default: request } = await import("supertest");
 

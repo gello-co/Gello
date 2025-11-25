@@ -1,7 +1,35 @@
+/**
+ * Environment configuration
+ *
+ * Bun automatically loads .env files from the project root.
+ *
+ * Required environment variables:
+ * - NODE_ENV: Environment (development, test, production)
+ * - PORT: Server port (defaults to 3000)
+ * - SUPABASE_URL: Supabase project URL
+ * - SUPABASE_PUBLISHABLE_KEY: Supabase publishable/anonymous key
+ * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (JWT format, for admin operations)
+ *
+ * Optional:
+ * - DEV_BYPASS_AUTH: Set to "true" to bypass authentication in development
+ *
+ * Environment file locations (Bun loads automatically):
+ * - .env (project root)
+ * - .env.local (project root, gitignored)
+ * - ProjectSourceCode/.env.local (for local overrides)
+ */
+
+import { logger } from "../lib/logger.js";
+
 export type AppEnv = {
   NODE_ENV: string | undefined;
   PORT: string | undefined;
   DEV_BYPASS_AUTH?: string;
+  AUTH_SITE_URL?: string;
+  DATABASE_URL?: string;
+  DB_POOL_MAX?: number;
+  DB_IDLE_TIMEOUT?: number;
+  DB_CONNECT_TIMEOUT?: number;
   SUPABASE_URL?: string;
   SUPABASE_PUBLISHABLE_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
@@ -9,6 +37,24 @@ export type AppEnv = {
 
 function pick(...candidates: Array<string | undefined>) {
   for (const v of candidates) if (v && v.length > 0) return v;
+  return undefined;
+}
+
+function parseNumber(
+  value: string | undefined,
+  name?: string,
+): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  if (Number.isFinite(parsed)) return parsed;
+
+  logger.warn(
+    {
+      envVar: name ?? "UNKNOWN_ENV_VAR",
+      value,
+    },
+    "Invalid numeric environment variable value; falling back to default",
+  );
   return undefined;
 }
 
@@ -23,7 +69,7 @@ function validateServiceRoleKey(key: string): void {
     throw new Error(
       `Invalid service role key format: Key starts with "sb_" (new API key format). ` +
         `Service role operations require JWT format. ` +
-        `Set SERVICE_ROLE_KEY or SUPABASE_LOCAL_SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`,
+        `Set SUPABASE_SERVICE_ROLE_KEY or SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`,
     );
   }
 
@@ -33,52 +79,63 @@ function validateServiceRoleKey(key: string): void {
     throw new Error(
       `Invalid service role key format: Key does not appear to be a JWT (expected 3 parts separated by dots, found ${parts.length}). ` +
         `Service role operations require JWT format. ` +
-        `Set SERVICE_ROLE_KEY or SUPABASE_LOCAL_SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`,
+        `Set SUPABASE_SERVICE_ROLE_KEY or SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`,
     );
   }
 }
 
+const nodeEnv = process.env.NODE_ENV;
+const isDevelopment = (nodeEnv ?? "development") === "development";
+
 export const env: AppEnv = {
-  NODE_ENV: process.env.NODE_ENV,
+  NODE_ENV: nodeEnv,
   PORT: process.env.PORT,
+  // DEV_BYPASS_AUTH must be explicitly set - no default for security
   DEV_BYPASS_AUTH: process.env.DEV_BYPASS_AUTH,
-  SUPABASE_URL: pick(
-    // Local Supabase (for testing) takes priority
-    process.env.SUPABASE_LOCAL_URL,
-    process.env.SUPABASE_URL,
-    // Production/remote Supabase
-    process.env.APP_SUPABASE_URL,
-    process.env.BUN_PUBLIC_SUPABASE_URL,
-    process.env.SB_URL,
-    process.env.PUBLIC_SUPABASE_URL,
+  // AUTH_SITE_URL: OAuth redirect base URL (required for OAuth flows)
+  // Falls back to localhost with configured PORT for local development only
+  AUTH_SITE_URL: pick(
+    process.env.AUTH_SITE_URL,
+    isDevelopment ? `http://127.0.0.1:${process.env.PORT || "3000"}` : undefined,
   ),
+  // DATABASE_URL: PostgreSQL connection string (legacy, kept for compatibility)
+  // DB_URL is output by `bunx supabase status -o env`
+  DATABASE_URL: pick(
+    process.env.DATABASE_URL,
+    process.env.DB_URL,
+    process.env.SUPABASE_LOCAL_DB_URL,
+    process.env.POSTGRES_URL,
+  ),
+  // SUPABASE_URL: Supabase project URL
+  // Supports both SUPABASE_URL and SB_URL (Doppler naming convention)
+  // API_URL is output by `bunx supabase status -o env`
+  SUPABASE_URL: pick(
+    process.env.SUPABASE_URL,
+    process.env.SB_URL,
+    process.env.API_URL,
+    process.env.SUPABASE_LOCAL_URL,
+  ),
+  // SUPABASE_PUBLISHABLE_KEY: Supabase publishable/anonymous key
+  // Supports both new format (sb_publishable_...) and legacy JWT format
+  // Supports both SUPABASE_PUBLISHABLE_KEY and SB_PUBLISHABLE_KEY (Doppler naming)
+  // Fallback to local Supabase keys for development
   SUPABASE_PUBLISHABLE_KEY: pick(
-    // Local Supabase (for testing) takes priority
-    // New API key format (sb_publishable_...) from bunx supabase status -o env
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    process.env.SB_PUBLISHABLE_KEY,
     process.env.PUBLISHABLE_KEY,
     process.env.SUPABASE_LOCAL_ANON_KEY,
-    // Legacy format (JWT) from bunx supabase status -o env
     process.env.ANON_KEY,
-    process.env.SUPABASE_ANON_KEY,
-    process.env.SUPABASE_PUBLISHABLE_KEY,
-    // Production/remote Supabase
-    process.env.APP_SUPABASE_PUBLISHABLE_KEY,
-    process.env.BUN_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    process.env.SB_PUBLISHABLE_KEY,
-    process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   ),
+  // SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (JWT format required)
+  // Used for admin operations that bypass RLS
+  // Supports both SUPABASE_SERVICE_ROLE_KEY and SB_SERVICE_ROLE_KEY (Doppler naming)
+  // Fallback to local Supabase service role key for development
   SUPABASE_SERVICE_ROLE_KEY: (() => {
     const key = pick(
-      // Local Supabase (for testing) takes priority
-      // Legacy format (JWT) from bunx supabase status -o env (REQUIRED for service role operations)
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      process.env.SB_SERVICE_ROLE_KEY,
       process.env.SERVICE_ROLE_KEY,
       process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      // New API key format (sb_secret_...) - included for compatibility but validated below
-      process.env.SECRET_KEY,
-      // Production/remote Supabase
-      process.env.APP_SUPABASE_SERVICE_ROLE_KEY,
-      process.env.SB_SERVICE_ROLE_KEY,
     );
 
     // Runtime validation: Fail fast if key is not in JWT format
@@ -90,4 +147,11 @@ export const env: AppEnv = {
 
     return key;
   })(),
+  // Database connection pool tuning (postgres-js)
+  DB_POOL_MAX: parseNumber(process.env.DB_POOL_MAX, "DB_POOL_MAX"),
+  DB_IDLE_TIMEOUT: parseNumber(process.env.DB_IDLE_TIMEOUT, "DB_IDLE_TIMEOUT"),
+  DB_CONNECT_TIMEOUT: parseNumber(
+    process.env.DB_CONNECT_TIMEOUT,
+    "DB_CONNECT_TIMEOUT",
+  ),
 };

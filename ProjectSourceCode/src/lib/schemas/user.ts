@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/**
+ * User schemas using pure Zod
+ * API uses snake_case field names
+ */
+
 export const userRoleSchema = z.enum(["admin", "manager", "member"]);
 
 export const userSchema = z.object({
@@ -30,7 +35,6 @@ export const createUserSchema = z
     path: ["passwordConfirm"],
   })
   .transform((data) => {
-    // Remove passwordConfirm before passing to service
     const { passwordConfirm: _passwordConfirm, ...rest } = data;
     return rest;
   });
