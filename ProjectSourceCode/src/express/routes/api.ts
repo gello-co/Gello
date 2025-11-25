@@ -1,18 +1,12 @@
 import express from "express";
-// CSRF routes deferred to v0.2.0
-// import {
-//   csrfProtection,
-//   generateCsrfToken,
-//   getCsrfToken,
-// } from "../middleware/csrf.js";
-import { logger } from "../../lib/logger.js";
-import authRoutes from "../../server/routes/api/auth.js";
-import boardsRoutes from "../../server/routes/api/boards.js";
-import listsRoutes from "../../server/routes/api/lists.js";
-import pointsRoutes from "../../server/routes/api/points.js";
-import tasksRoutes from "../../server/routes/api/tasks.js";
-import teamsRoutes from "../../server/routes/api/teams.js";
-import sseRoutes from "../../server/routes/sse.js";
+import { checkHealth } from "@/lib/services/health.service.js";
+import authRoutes from "./auth-api.js";
+import boardsRoutes from "./boards/api.js";
+import listsRoutes from "./lists.js";
+import pointsRoutes from "./points.js";
+import sseRoutes from "./sse.js";
+import tasksRoutes from "./tasks/api.js";
+import teamsRoutes from "./teams.js";
 
 const router = express.Router();
 
@@ -20,9 +14,32 @@ const router = express.Router();
 // router.get("/csrf-token", getCsrfToken);
 // router.get("/csrf-debug", ...);
 
-// API routes
-router.get("/health", (_req, res) => {
-  res.json({ ok: true });
+// Health and readiness endpoints
+// /health - Liveness check (is the app running?)
+// /ready - Readiness check (can it handle traffic? checks dependencies)
+router.get("/health", async (_req, res, next) => {
+  try {
+    const status = await checkHealth();
+    const statusCode = status.ok ? 200 : 503;
+    res.status(statusCode).json(status);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/ready", async (_req, res, next) => {
+  try {
+    const status = await checkHealth();
+    const statusCode = status.ok ? 200 : 503;
+    res.status(statusCode).json({
+      ready: status.ok,
+      checks: {
+        database: status.db,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.use("/auth", authRoutes);
@@ -35,27 +52,53 @@ router.use("/sse", sseRoutes);
 
 // Note: Error handler is registered at app level in app.ts
 
-//CRUD user routes
+// ============================================================================
+// DEPRECATED LEGACY ROUTES
+// ============================================================================
 
-//"Create" user
-router.post("/register", (req, res) => {
-  const _username = req.body.username;
-  const _email = req.body.email;
-  try {
-    res.status(200).send("Success");
-  } catch (err) {
-    logger.error({ err }, "Registration failed");
-  }
+router.post("/register", (_req, res) => {
+  res.status(410).json({
+    error: "This endpoint is deprecated",
+    message: "Please use POST /api/auth/register instead",
+    deprecatedSince: "v0.2.0",
+    removedIn: "v0.3.0",
+  });
 });
 
-//CRUD board routes
+router.get("/viewBoards", (_req, res) => {
+  res.status(410).json({
+    error: "This endpoint is deprecated",
+    message: "Use GET /api/boards instead",
+    deprecatedSince: "v0.2.0",
+    removedIn: "v0.3.0",
+  });
+});
 
-router.get("/viewBoards", async (_req, _res) => {});
+router.post("/createBoard", (_req, res) => {
+  res.status(410).json({
+    error: "This endpoint is deprecated",
+    message: "Use POST /api/boards instead",
+    deprecatedSince: "v0.2.0",
+    removedIn: "v0.3.0",
+  });
+});
 
-router.post("/createBoard", async (_req, _res) => {});
+router.put("/updateBoard", (_req, res) => {
+  res.status(410).json({
+    error: "This endpoint is deprecated",
+    message: "Use PUT /api/boards/:id instead",
+    deprecatedSince: "v0.2.0",
+    removedIn: "v0.3.0",
+  });
+});
 
-router.put("/updateBoard", async (_req, _res) => {});
-
-router.delete("/deleteBoard", async (_req, _res) => {});
+router.delete("/deleteBoard", (_req, res) => {
+  res.status(410).json({
+    error: "This endpoint is deprecated",
+    message: "Use DELETE /api/boards/:id instead",
+    deprecatedSince: "v0.2.0",
+    removedIn: "v0.3.0",
+  });
+});
 
 export default router;

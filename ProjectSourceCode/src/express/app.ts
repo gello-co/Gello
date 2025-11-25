@@ -11,6 +11,7 @@ import { requestLogger } from "../middleware/request-logger.js";
 import { expressApp } from "./express-app.js";
 import { helpers } from "./helpers/handlebars.js";
 import apiRoutes from "./routes/api.js";
+import authRoutes from "./routes/auth.js";
 import boardsApiRouter from "./routes/boards/api.js";
 import boardsPagesRouter from "./routes/boards/pages.js";
 import leaderboardPagesRouter from "./routes/leaderboard/pages.js";
@@ -113,6 +114,7 @@ app.use(devAuth);
 // app.use(csrfTokenToLocals);
 
 // Feature-based routes
+app.use(authRoutes);
 app.use("/api", apiRoutes);
 app.use("/api/boards", boardsApiRouter);
 app.use("/api/tasks", tasksApiRouter);

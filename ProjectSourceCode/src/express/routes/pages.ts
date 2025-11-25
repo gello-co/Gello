@@ -1,29 +1,19 @@
 import express from "express";
 import "../../types/express.d.js";
 import { BoardService } from "../../lib/services/board.service.js";
-import { ListService } from "../../lib/services/list.service.js";
 import { PointsService } from "../../lib/services/points.service.js";
 import { TaskService } from "../../lib/services/task.service.js";
 import { TeamService } from "../../lib/services/team.service.js";
-import { getSupabaseClient } from "../../lib/supabase.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 
 const router = express.Router();
 
-function getBoardService() {
-  return new BoardService(getSupabaseClient());
-}
+function getSupabase(req: express.Request) {
+  if (!req.supabase) {
+    throw new Error("Supabase client is not available on the request context.");
+  }
 
-function getTaskService() {
-  return new TaskService(getSupabaseClient());
-}
-
-function getTeamService() {
-  return new TeamService(getSupabaseClient());
-}
-
-function getPointsService(userId?: string) {
-  return new PointsService(getSupabaseClient(), userId);
+  return req.supabase;
 }
 
 router.get("/", (req, res) => {
@@ -53,7 +43,8 @@ router.get("/register", (_req, res) => {
 
 router.get("/teams", requireAuth, async (req, res, next) => {
   try {
-    const teamService = getTeamService();
+    const supabase = getSupabase(req);
+    const teamService = new TeamService(supabase);
     const teams = await teamService.getAllTeams();
     res.render("pages/teams/index", {
       title: "Teams",
@@ -75,8 +66,9 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
         layout: "main",
       });
     }
-    const teamService = getTeamService();
-    const boardService = getBoardService();
+    const supabase = getSupabase(req);
+    const teamService = new TeamService(supabase);
+    const boardService = new BoardService(supabase);
     const team = await teamService.getTeam(id);
     if (!team) {
       return res.status(404).render("pages/404", {
@@ -103,8 +95,9 @@ router.get("/profile", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
     // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-    const pointsService = getPointsService(req.user!.id);
-    const taskService = getTaskService();
+    const supabase = getSupabase(req);
+    const pointsService = new PointsService(supabase, req.user!.id);
+    const taskService = new TaskService(supabase);
 
     // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
     const pointsHistory = await pointsService.getPointsHistory(req.user!.id);

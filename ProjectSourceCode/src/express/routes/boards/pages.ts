@@ -4,31 +4,23 @@ import { BoardService } from "../../../lib/services/board.service.js";
 import { ListService } from "../../../lib/services/list.service.js";
 import { TaskService } from "../../../lib/services/task.service.js";
 import { TeamService } from "../../../lib/services/team.service.js";
-import { getSupabaseClient } from "../../../lib/supabase.js";
 import { requireAuth } from "../../../middleware/requireAuth.js";
 
 const router = express.Router();
 
-function getBoardService() {
-  return new BoardService(getSupabaseClient());
-}
+function getSupabase(req: express.Request) {
+  if (!req.supabase) {
+    throw new Error("Supabase client is not available on the request context.");
+  }
 
-function getListService() {
-  return new ListService(getSupabaseClient());
-}
-
-function getTaskService() {
-  return new TaskService(getSupabaseClient());
-}
-
-function getTeamService() {
-  return new TeamService(getSupabaseClient());
+  return req.supabase;
 }
 
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
-    const boardService = getBoardService();
+    const supabase = getSupabase(req);
+    const boardService = new BoardService(supabase);
     const teamId = req.query.team_id as string | undefined;
     let boards: Awaited<ReturnType<typeof boardService.getBoardsByTeam>> = [];
     if (teamId) {
@@ -58,10 +50,11 @@ router.get("/:id", requireAuth, async (req, res, next) => {
         layout: "main",
       });
     }
-    const boardService = getBoardService();
-    const listService = getListService();
-    const taskService = getTaskService();
-    const teamService = getTeamService();
+    const supabase = getSupabase(req);
+    const boardService = new BoardService(supabase);
+    const listService = new ListService(supabase);
+    const taskService = new TaskService(supabase);
+    const teamService = new TeamService(supabase);
 
     const board = await boardService.getBoard(id);
     if (!board) {

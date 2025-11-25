@@ -1,39 +1,106 @@
-import express, { type Request, type Response } from "express";
-import { getSupabaseClient } from "../../lib/supabase.js";
+import { Router } from "express";
+import { z } from "zod";
+import {
+  createListSchema,
+  listIdSchema,
+  updateListSchema,
+} from "@/lib/schemas/list.js";
+import { ListService } from "@/lib/services/list.service.js";
+import { requireAuth } from "@/middleware/requireAuth.js";
+import {
+  validateBody,
+  validateParams,
+  validateQuery,
+} from "@/middleware/validation.js";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", async (_req: Request, res: Response) => {
-  const supabase = getSupabaseClient();
-  const { data } = await supabase.from("lists").select("*");
-  res.json(data);
+const listQuerySchema = z.object({
+  board_id: z.string().uuid("Invalid board ID"),
 });
 
-router.post("/", async (req: Request, res: Response) => {
-  const supabase = getSupabaseClient();
-  const { data } = await supabase
-    .from("lists")
-    .insert(req.body)
-    .select()
-    .single();
-  res.json(data);
-});
+router.get(
+  "/",
+  requireAuth,
+  validateQuery(listQuerySchema),
+  async (req, res, next) => {
+    try {
+      if (!req.supabase) {
+        return res
+          .status(500)
+          .json({ error: "Supabase client not initialized" });
+      }
+      const service = new ListService(req.supabase);
+      const lists = await service.getListsByBoard(req.query.board_id as string);
+      res.json(lists);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
-router.put("/:id", async (req: Request, res: Response) => {
-  const supabase = getSupabaseClient();
-  const { data } = await supabase
-    .from("lists")
-    .update(req.body)
-    .eq("id", req.params.id)
-    .select()
-    .single();
-  res.json(data);
-});
+router.post(
+  "/",
+  requireAuth,
+  validateBody(createListSchema),
+  async (req, res, next) => {
+    try {
+      if (!req.supabase) {
+        return res
+          .status(500)
+          .json({ error: "Supabase client not initialized" });
+      }
+      const service = new ListService(req.supabase);
+      const list = await service.createList(req.body);
+      res.status(201).json(list);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
-router.delete("/:id", async (req: Request, res: Response) => {
-  const supabase = getSupabaseClient();
-  await supabase.from("lists").delete().eq("id", req.params.id);
-  res.json({ ok: true });
-});
+router.put(
+  "/:id",
+  requireAuth,
+  validateParams(listIdSchema),
+  validateBody(updateListSchema),
+  async (req, res, next) => {
+    try {
+      if (!req.supabase) {
+        return res
+          .status(500)
+          .json({ error: "Supabase client not initialized" });
+      }
+      const service = new ListService(req.supabase);
+      const list = await service.updateList({
+        id: req.params.id,
+        ...req.body,
+      });
+      res.json(list);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.delete(
+  "/:id",
+  requireAuth,
+  validateParams(listIdSchema),
+  async (req, res, next) => {
+    try {
+      if (!req.supabase) {
+        return res
+          .status(500)
+          .json({ error: "Supabase client not initialized" });
+      }
+      const service = new ListService(req.supabase);
+      await service.deleteList(req.params.id as string);
+      res.json({ ok: true });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 export default router;

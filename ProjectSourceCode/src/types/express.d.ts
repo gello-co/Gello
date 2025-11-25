@@ -12,9 +12,8 @@ declare global {
         total_points: number;
         avatar_url: string | null;
       } | null;
+      supabase?: import("@supabase/supabase-js").SupabaseClient;
       boardService?: BoardService;
-      // CSRF types deferred to v0.2.0
-      // csrfToken?: () => string;
     }
   }
 }
