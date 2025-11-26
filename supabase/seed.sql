@@ -45,8 +45,8 @@ INSERT INTO auth.users (
     '',
     '',
     '',
-    '',
-    ''
+    NULL,
+    NULL
 ),
 -- Test member user
 (
@@ -69,8 +69,8 @@ INSERT INTO auth.users (
     '',
     '',
     '',
-    '',
-    ''
+    NULL,
+    NULL
 )
 ON CONFLICT (id) DO NOTHING;
 
