@@ -5,7 +5,7 @@
 
 import { beforeAll, describe, expect, it } from "bun:test";
 import request from "supertest";
-import { app } from "../../ProjectSourceCode/src/server/app.js";
+import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
   generateTestEmail,

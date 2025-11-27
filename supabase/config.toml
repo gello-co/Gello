@@ -101,7 +101,7 @@ port = 54324
 # sender_name = "Admin"
 
 [storage]
-enabled = true
+enabled = false
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
@@ -131,7 +131,12 @@ site_url = "env(AUTH_SITE_URL)"
 # For production/staging, manually update this array with your actual redirect URLs.
 # To use environment variable, you can set AUTH_ADDITIONAL_REDIRECT_URLS and manually parse it,
 # or update this array directly in the config file.
-additional_redirect_urls = ["http://127.0.0.1:3000", "https://127.0.0.1:3000"]
+additional_redirect_urls = [
+  "http://127.0.0.1:3000",
+  "https://127.0.0.1:3000",
+  "http://localhost:3000",
+  "https://localhost:3000",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # Path to JWT signing key. DO NOT commit your signing keys file to git.
@@ -291,6 +296,26 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
+# Discord OAuth provider
+[auth.external.discord]
+enabled = true
+client_id = "env(SB_AUTH_EXTERNAL_DISCORD_CLIENT_ID)"
+secret = "env(SB_AUTH_EXTERNAL_DISCORD_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
+email_optional = false
+
+# GitHub OAuth provider
+[auth.external.github]
+enabled = true
+client_id = "env(SB_AUTH_EXTERNAL_GITHUB_CLIENT_ID)"
+secret = "env(SB_AUTH_EXTERNAL_GITHUB_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
+email_optional = false
+
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
 [auth.web3.solana]
@@ -343,7 +368,7 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"

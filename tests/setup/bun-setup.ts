@@ -137,6 +137,12 @@ if (supabaseReady) {
     process.env.SUPABASE_LOCAL_ANON_KEY = process.env.PUBLISHABLE_KEY;
     process.env.SUPABASE_PUBLISHABLE_KEY = process.env.PUBLISHABLE_KEY;
   }
+  // Map DB_URL to DATABASE_URL (legacy compatibility)
+  // Supabase CLI outputs DB_URL
+  if (process.env.DB_URL) {
+    process.env.DATABASE_URL = process.env.DB_URL;
+    process.env.SUPABASE_LOCAL_DB_URL = process.env.DB_URL;
+  }
   if (process.env.API_URL) {
     // Convert HTTPS to HTTP for local development (TLS disabled in config.toml)
     // This avoids WSL2/Docker TLS handshake issues

@@ -10,6 +10,7 @@ import {
   DuplicateUserError,
   InvalidCredentialsError,
 } from "../errors/app.errors.js";
+import { logger } from "../logger.js";
 import type { CreateUserInput, LoginInput } from "../schemas/user.js";
 
 export type AuthResult = {
@@ -33,9 +34,6 @@ export type SessionUser = {
 export class AuthService {
   private readonly serviceRoleClient: SupabaseClient | null;
 
-  // Cached service-role client (singleton pattern) for production use
-  // private static serviceRoleClientCache: SupabaseClient | null = null;
-
   constructor(
     private client: SupabaseClient,
     serviceRoleClient?: SupabaseClient,
@@ -56,9 +54,8 @@ export class AuthService {
     }
 
     // Return cached client if it exists
-    if (AuthService.serviceRoleClientCache) {
-      return AuthService.serviceRoleClientCache;
-    }
+    const cache = getCachedServiceRoleClient();
+    if (cache) return cache;
 
     // Validate environment variables
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -68,7 +65,7 @@ export class AuthService {
     }
 
     // Create and cache the service-role client
-    AuthService.serviceRoleClientCache = createClient(
+    const client = createClient(
       env.SUPABASE_URL,
       env.SUPABASE_SERVICE_ROLE_KEY,
       {
@@ -79,7 +76,8 @@ export class AuthService {
       },
     );
 
-    return AuthService.serviceRoleClientCache;
+    setCachedServiceRoleClient(client);
+    return client;
   }
 
   /**
@@ -162,7 +160,7 @@ export class AuthService {
         await adminClient.auth.admin.deleteUser(authData.user.id);
       } catch (cleanupError) {
         // Log but don't throw - original error is more important
-        console.error("Failed to cleanup auth user:", cleanupError);
+        logger.error({ cleanupError }, "Failed to cleanup auth user");
       }
       throw new Error(`Failed to create user profile: ${userError?.message}`);
     }
@@ -278,3 +276,13 @@ export class AuthService {
     }
   }
 }
+
+let cachedServiceRoleClient: SupabaseClient | null = null;
+const getCachedServiceRoleClient = (): SupabaseClient | null =>
+  cachedServiceRoleClient;
+const setCachedServiceRoleClient = (client: SupabaseClient): void => {
+  cachedServiceRoleClient = client;
+};
+export const resetServiceRoleClientCache = (): void => {
+  cachedServiceRoleClient = null;
+};

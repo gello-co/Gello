@@ -219,6 +219,14 @@ jobs:
       - name: Start Supabase local instance
         run: bunx supabase start
 
+      - name: Export Supabase environment variables
+        run: |
+          bunx supabase status -o env | while IFS='=' read -r key value; do
+            # Remove quotes from value if present
+            value=$(echo "$value" | sed 's/^"//;s/"$//')
+            echo "$key=$value" >> $GITHUB_ENV
+          done
+
       - name: Run unit and integration tests
         run: bun test --bail tests/unit tests/integration tests/health.test.ts
 

@@ -8,6 +8,7 @@
     "jsx": "react-jsx",
     "allowJs": true,
     "checkJs": false,
+    "pretty": true,
 
     // Bundler mode
     "moduleResolution": "bundler",

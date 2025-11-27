@@ -150,6 +150,9 @@ logs
 # Testing
 coverage/
 .tmp/
+test-results/
+playwright-report/
+.playwright-mcp/
 
 # IDE
 .vscode/

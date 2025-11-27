@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 const BASE_URL = "http://localhost:3000";
-const ADMIN_EMAIL = "admin@test.com";
-const MEMBER_EMAIL = "member@test.com";
+const ADMIN_EMAIL = "admin@gello.dev";
+const MEMBER_EMAIL = "test@gello.dev";
 const PASSWORD = "password123";
 
 async function login(email: string, password: string) {

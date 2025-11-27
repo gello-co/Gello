@@ -3,6 +3,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import * as tasksDb from "../../../ProjectSourceCode/src/lib/database/tasks.db.js";
 import * as usersDb from "../../../ProjectSourceCode/src/lib/database/users.db.js";
+import type {
+  LeaderboardEntry,
+  PointsHistory,
+} from "../../../ProjectSourceCode/src/lib/schemas/points.js";
 import { PointsService } from "../../../ProjectSourceCode/src/lib/services/points.service.js";
 import * as pointsUtils from "../../../ProjectSourceCode/src/lib/utils/points.js";
 import { mockFn } from "../../setup/helpers/mock.js";
@@ -26,6 +30,32 @@ vi.mock("../../../ProjectSourceCode/src/lib/utils/points.js", () => ({
   validateManualAward: vi.fn(),
 }));
 
+const createMockPointsHistory = (
+  overrides: Partial<PointsHistory> = {},
+): PointsHistory => ({
+  id: "points-1",
+  user_id: "user-1",
+  points_earned: 10,
+  reason: "manual_award",
+  task_id: null,
+  awarded_by: "admin-id",
+  notes: null,
+  created_at: "2024-01-01T00:00:00Z",
+  ...overrides,
+});
+
+const createMockLeaderboardEntry = (
+  overrides: Partial<LeaderboardEntry> = {},
+): LeaderboardEntry => ({
+  user_id: "user-1",
+  display_name: "Test User",
+  email: "user@example.com",
+  avatar_url: null,
+  total_points: 10,
+  rank: 1,
+  ...overrides,
+});
+
 describe("PointsService (bun)", () => {
   let service: PointsService;
   let mockClient: SupabaseClient;
@@ -43,13 +73,12 @@ describe("PointsService (bun)", () => {
         story_points: 5,
         completed_at: null,
       };
-      const mockPointsHistory = {
-        id: "points-1",
-        user_id: "user-1",
+      const mockPointsHistory = createMockPointsHistory({
         points_earned: 5,
         reason: "task_complete",
         task_id: "task-1",
-      };
+        awarded_by: "user-1",
+      });
 
       mockFn(tasksDb.getTaskById).mockResolvedValue(mockTask as any);
       mockFn(pointsUtils.calculateTaskPoints).mockReturnValue(5);
@@ -103,12 +132,7 @@ describe("PointsService (bun)", () => {
         id: "user-1",
         email: "test@example.com",
       };
-      const mockPointsHistory = {
-        id: "points-1",
-        user_id: "user-1",
-        points_earned: 10,
-        reason: "manual_award",
-      };
+      const mockPointsHistory = createMockPointsHistory();
 
       mockFn(pointsUtils.validateManualAward).mockReturnValue(true);
       mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
@@ -117,7 +141,7 @@ describe("PointsService (bun)", () => {
       );
 
       const result = await service.awardManualPoints(
-        { user_id: "user-1", points_earned: 10 },
+        { user_id: "user-1", points_earned: 10, notes: null },
         "admin-id",
       );
 
@@ -138,7 +162,7 @@ describe("PointsService (bun)", () => {
 
       await expect(
         service.awardManualPoints(
-          { user_id: "user-1", points_earned: -5 },
+          { user_id: "user-1", points_earned: -5, notes: null },
           "admin-id",
         ),
       ).rejects.toThrow("Invalid points amount");
@@ -150,7 +174,7 @@ describe("PointsService (bun)", () => {
 
       await expect(
         service.awardManualPoints(
-          { user_id: "user-1", points_earned: 10 },
+          { user_id: "user-1", points_earned: 10, notes: null },
           "admin-id",
         ),
       ).rejects.toThrow("User not found");
@@ -158,7 +182,7 @@ describe("PointsService (bun)", () => {
 
     it("should include notes when provided", async () => {
       const mockUser = { id: "user-1" };
-      const mockPointsHistory = { id: "points-1" };
+      const mockPointsHistory = createMockPointsHistory({ id: "points-1" });
 
       mockFn(pointsUtils.validateManualAward).mockReturnValue(true);
       mockFn(usersDb.getUserById).mockResolvedValue(mockUser as any);
@@ -184,7 +208,7 @@ describe("PointsService (bun)", () => {
   describe("getPointsHistory", () => {
     it("should return points history for user", async () => {
       const mockHistory = [
-        { id: "points-1", user_id: "user-1", points_earned: 5 },
+        createMockPointsHistory({ id: "points-1", points_earned: 5 }),
       ];
 
       mockFn(pointsDb.getPointsHistoryByUser).mockResolvedValue(
@@ -203,7 +227,9 @@ describe("PointsService (bun)", () => {
 
   describe("getLeaderboard", () => {
     it("should return leaderboard with default limit", async () => {
-      const mockLeaderboard = [{ user_id: "user-1", total_points: 100 }];
+      const mockLeaderboard = [
+        createMockLeaderboardEntry({ total_points: 100 }),
+      ];
 
       mockFn(pointsDb.getLeaderboard).mockResolvedValue(mockLeaderboard as any);
 
@@ -214,7 +240,9 @@ describe("PointsService (bun)", () => {
     });
 
     it("should return leaderboard with custom limit", async () => {
-      const mockLeaderboard = [{ user_id: "user-1", total_points: 100 }];
+      const mockLeaderboard = [
+        createMockLeaderboardEntry({ total_points: 100 }),
+      ];
 
       mockFn(pointsDb.getLeaderboard).mockResolvedValue(mockLeaderboard as any);
 

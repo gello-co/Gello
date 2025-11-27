@@ -5,7 +5,7 @@
 
 import { spawn } from "node:child_process";
 import { Client } from "pg";
-import { logger } from "../../ProjectSourceCode/src/server/lib/logger.js";
+import { logger } from "../../ProjectSourceCode/src/lib/logger.js";
 
 const TEMPLATE_DB_NAME = "gello_test_template";
 const MAIN_DB_URL =

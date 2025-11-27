@@ -1,0 +1,179 @@
+<!-- Dashboard Page - Protected (requires auth) -->
+<div class="container-fluid py-4">
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1 class="h2">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Welcome back, {{user.display_name}}!
+      </h1>
+      <p class="text-muted mb-0">
+        Here's your overview for today.
+        {{#if mockMode}}
+          <span class="badge bg-info ms-2">
+            <i class="fas fa-flask me-1"></i>Mock Mode
+          </span>
+        {{/if}}
+      </p>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                <i class="fas fa-star text-primary fa-2x"></i>
+              </div>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-1">Total Points</h6>
+              <h3 class="mb-0">{{user.total_points}}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                <i class="fas fa-tasks text-success fa-2x"></i>
+              </div>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-1">Assigned Tasks</h6>
+              <h3 class="mb-0">{{stats.assignedTasks}}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                <i class="fas fa-columns text-warning fa-2x"></i>
+              </div>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-1">Active Boards</h6>
+              <h3 class="mb-0">{{stats.boards}}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                <i class="fas fa-trophy text-info fa-2x"></i>
+              </div>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-1">Leaderboard Rank</h6>
+              <h3 class="mb-0">#{{stats.rank}}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions & Recent Activity -->
+  <div class="row g-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="mb-0">
+            <i class="fas fa-bolt me-2"></i>Quick Actions
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="/boards" class="btn btn-outline-primary">
+              <i class="fas fa-columns me-2"></i>View Boards
+            </a>
+            <a href="/leaderboard" class="btn btn-outline-warning">
+              <i class="fas fa-trophy me-2"></i>Leaderboard
+            </a>
+            <a href="/profile" class="btn btn-outline-secondary">
+              <i class="fas fa-user me-2"></i>My Profile
+            </a>
+            {{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+            <a href="/teams" class="btn btn-outline-success">
+              <i class="fas fa-users me-2"></i>Manage Teams
+            </a>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Tasks -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-clock me-2"></i>Recent Tasks
+          </h5>
+          <a href="/boards" class="btn btn-sm btn-link">View All</a>
+        </div>
+        <div class="card-body">
+          {{#if recentTasks.length}}
+            <ul class="list-group list-group-flush">
+              {{#each recentTasks}}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div>
+                  <h6 class="mb-1">{{this.title}}</h6>
+                  <small class="text-muted">
+                    {{#if this.completed_at}}
+                      <i class="fas fa-check-circle text-success me-1"></i>Completed
+                    {{else}}
+                      <i class="fas fa-hourglass-half text-warning me-1"></i>In Progress
+                    {{/if}}
+                  </small>
+                </div>
+                <span class="badge bg-primary rounded-pill">{{this.story_points}} pts</span>
+              </li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <div class="text-center py-4 text-muted">
+              <i class="fas fa-inbox fa-3x mb-3"></i>
+              <p>No recent tasks. Start by creating a board!</p>
+              <a href="/boards" class="btn btn-primary btn-sm">Go to Boards</a>
+            </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Info Card (for debugging/development) -->
+  {{#if mockMode}}
+  <div class="row mt-4">
+    <div class="col">
+      <div class="card border-info">
+        <div class="card-header bg-info text-white">
+          <i class="fas fa-bug me-2"></i>Debug: Current User (Mock Mode)
+        </div>
+        <div class="card-body">
+          <pre class="mb-0"><code>{{json user}}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+</div>
