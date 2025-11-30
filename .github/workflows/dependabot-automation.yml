@@ -1,0 +1,76 @@
+name: Dependabot automation
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, labeled]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: dependabot-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependabot-auto:
+    name: Automate Dependabot PR
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - id: metadata
+        name: Fetch Dependabot metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add informative labels
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: |
+            dependencies
+            ${{ steps.metadata.outputs.package-ecosystem }}
+            ${{ steps.metadata.outputs.update-type }}
+            ${{ steps.metadata.outputs.dependency-type }}
+
+      - name: Auto-approve safe updates
+        if: >
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          (steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+           steps.metadata.outputs.dependency-type == 'direct:development')
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (squash)
+        if: >
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          (steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+           steps.metadata.outputs.dependency-type == 'direct:development')
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
+
+      - name: Comment on major updates
+        if: startsWith(steps.metadata.outputs.update-type, 'version-update:semver-major')
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            This is a major dependency update from Dependabot. Auto-merge is disabled.
+            Please review, test, and merge manually.
+
+      - name: Rebase on label
+        if: github.event.action == 'labeled' && github.event.label.name == 'rebase'
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: "@dependabot rebase"

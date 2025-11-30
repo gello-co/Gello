@@ -1,0 +1,94 @@
+/ProjectSourceCoe
+├── src/
+│   ├── app.ts                      # Express app setup
+│   ├── server.ts                   # Entry point (starts server)
+│   │
+│   ├── routes/                     # Route definitions
+│   │   ├── auth.routes.ts
+│   │   ├── user.routes.ts
+│   │   └── index.ts
+│   │
+│   ├── controllers/                # Route handlers (thin)
+│   │   ├── auth.controller.ts
+│   │   ├── user.controller.ts
+│   │   └── home.controller.ts
+│   │
+│   ├── services/                   # Business logic & data operations
+│   │   ├── auth.service.ts
+│   │   ├── user.service.ts
+│   │   └── email.service.ts
+│   │
+│   ├── middleware/                 # Express middleware
+│   │   ├── authGuard.ts
+│   │   ├── rateLimit.ts
+│   │   ├── csrfProtection.ts
+│   │   └── errorHandler.ts
+│   │
+│   ├── db/                         # Database layer
+│   │   ├── client.ts               # Supabase or PG client
+│   │   ├── repositories/           # Repository pattern
+│   │   │   ├── user.repo.ts
+│   │   │   └── session.repo.ts
+│   │   └── migrations/             # SQL migrations
+│   │
+│   ├── schemas/                    # Zod schemas & form validation
+│   │   ├── auth.schema.ts
+│   │   ├── user.schema.ts
+│   │   └── index.ts
+│   │
+│   ├── errors/                     # Custom error classes
+│   │   ├── AppError.ts
+│   │   ├── HttpError.ts
+│   │   └── ValidationError.ts
+│   │
+│   ├── lib/                        # Larger reusable modules
+│   │   ├── logger.ts               # Pino wrapper
+│   │   ├── supabase.ts
+│   │   └── mailer.ts
+│   │
+│   ├── utils/                      # Small helper functions
+│   │   ├── crypto.ts
+│   │   ├── env.ts
+│   │   ├── strings.ts
+│   │   └── dates.ts
+│   │
+│   ├── views/                      # Server-rendered templates
+│   │   ├── layouts/
+│   │   │   └── main.hbs
+│   │   ├── partials/
+│   │   │   ├── header.hbs
+│   │   │   ├── footer.hbs
+│   │   │   └── navbar.hbs
+│   │   ├── pages/
+│   │   │   ├── index.hbs
+│   │   │   ├── login.hbs
+│   │   │   └── dashboard.hbs
+│   │   └── components/             # Reusable htmx/alpine snippets
+│   │       ├── modal.hbs
+│   │       └── table.hbs
+│   │
+│   └── public/                     # Everything Express serves statically
+│       ├── js/
+│       │   ├── app.js
+│       │   └── components/
+│       ├── css/
+│       │   └── main.css
+│       ├── images/
+│       └── favicon.ico
+│
+├── tests/                          # Playwright + backend tests
+│   ├── e2e/
+│   ├── integration/
+│   └── unit/
+│
+├── scripts/                        # tooling scripts (migrations, seeds)
+│   ├── seed.ts
+│   └── migrate.ts
+│
+├── dist/                           # TypeScript output
+│
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── postcss.config.js
+└── README.md

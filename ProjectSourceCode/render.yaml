@@ -1,0 +1,24 @@
+version: "1"
+projects:
+  - name: Gello
+    environments:
+      - name: Production
+        services:
+          - type: web
+            name: Gello
+            runtime: node
+            repo: https://github.com/gello-co/Gello
+            plan: free
+            region: ohio
+            buildCommand: bun install && bun run build
+            startCommand: bun run start:prd
+            healthCheckPath: /api/health
+            # Environment variables are synced from Doppler automatically
+            envVars: []
+            domains:
+              - www.gello.co
+              - gello.co
+            autoDeployTrigger: off
+            rootDir: .
+            previews:
+              generation: manual

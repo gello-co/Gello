@@ -1,0 +1,99 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    },
+    "enabled": true
+  },
+  "css": {
+    "formatter": {
+      "enabled": true,
+      "lineEnding": "auto"
+    },
+    "linter": {
+      "enabled": false
+    }
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "ProjectSourceCode/**/*.{js,ts,json,css}",
+      "tests/**/*.{js,ts}",
+      "supabase/migrations/**/*.sql",
+      "supabase/seed/**/*.{ts,js}",
+      "*.{json,js,ts}",
+      "!!**/node_modules",
+      "!!**/.bun",
+      "!!**/.bun-cache",
+      "!!**/dist",
+      "!!**/build",
+      "!!**/coverage",
+      "!!**/.next",
+      "!!**/.cache",
+      "!!**/.venv",
+      "!!**/.serena",
+      "!!**/.snaplet",
+      "!!**/playwright-report",
+      "!!**/test-results",
+      "!!**/.test-locks",
+      "!!**/supabase/.branches",
+      "!!**/supabase/.temp",
+      "!!**/supabase/certs",
+      "!!**/.agents",
+      "!!**/.ops",
+      "!!**/.devOps",
+      "!!**/.DevOps",
+      "!!**/.release-preview",
+      "!!**/*.lock",
+      "!!**/*.tsbuildinfo",
+      "!!**/bun.lockb",
+      "!!**/bun.lock",
+      "!!**/output.css"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "semicolons": "always"
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["tests/**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
+  "root": true,
+  "vcs": {
+    "clientKind": "git",
+    "defaultBranch": "dev",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
+}
