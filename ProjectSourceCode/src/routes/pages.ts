@@ -196,4 +196,34 @@ router.get("/profile", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/leaderboard", requireAuth, async (req, res, next) => {
+  try {
+    // requireAuth guarantees req.user is set when next() is called
+
+    res.render("pages/leaderboard/index", {
+      title: "Leaderboard",
+      layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      user: req.user!,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/points-shop", requireAuth, async (req, res, next) => {
+
+  try {
+    res.render("pages/points-shop/index", {
+      title: "Points Shop",
+      layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      user: req.user!,
+    });
+    
+  }catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -27,7 +27,7 @@ start_supabase() {
 
 # Function: Setup environment variables
 setup_environment() {
-  echo -e "${YELLOW}📝 Writing environment variables to ProjectSourceCode/.env.local...${NC}"
+  echo -e "${YELLOW}📝 Writing environment variables to .env.local...${NC}"
 
   # Get Supabase env vars and transform variable names to match app expectations
   # Supabase outputs: API_URL, ANON_KEY, PUBLISHABLE_KEY, SERVICE_ROLE_KEY
@@ -37,12 +37,11 @@ setup_environment() {
     -e 's/^ANON_KEY=/SUPABASE_ANON_KEY=/' \
     -e 's/^PUBLISHABLE_KEY=/SUPABASE_PUBLISHABLE_KEY=/' \
     -e 's/^SERVICE_ROLE_KEY=/SUPABASE_SERVICE_ROLE_KEY=/' \
-    > ProjectSourceCode/.env.local
+    > .env.local
 
   # Add fallback environment variables
-  echo "SESSION_SECRET=${SESSION_SECRET:-local-dev-secret-min-32-chars}" >> ProjectSourceCode/.env.local
-  echo "NODE_ENV=${NODE_ENV:-development}" >> ProjectSourceCode/.env.local
-
+  echo "SESSION_SECRET=${SESSION_SECRET:-local-dev-secret-min-32-chars}" >> .env.local
+  echo "NODE_ENV=${NODE_ENV:-development}" >> .env.local
   echo -e "${GREEN}✓${NC} Environment variables ready"
 }
 
@@ -52,6 +51,7 @@ reset_and_seed() {
   echo -e "${YELLOW}🗄️  Resetting database...${NC}"
   # This will automatically run supabase/seed.sql because we enabled it in config.toml
   bunx supabase db reset
+  bunx supabase db seed
   echo -e "${GREEN}✓${NC} Database ready"
 }
 
@@ -66,15 +66,14 @@ start_dev_server() {
 
   # Change to ProjectSourceCode directory so Bun can find .env.local
   # Bun looks for .env files in the directory containing package.json
-  cd ProjectSourceCode
 
   # Start server with hot reload
   # INTEGRATION: Use Doppler if available to inject shared dev secrets
   if command -v doppler >/dev/null 2>&1 && [ -f "../doppler.yaml" ]; then
     echo -e "${YELLOW}🔐 Doppler detected. Starting with secrets injection...${NC}"
-    exec doppler run -- bun --hot src/index.ts
+    exec doppler run -- bun --hot src/app.ts
   else
-    exec bun --hot src/index.ts
+    exec bun --hot src/app.ts
   fi
 }
 

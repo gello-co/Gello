@@ -192,8 +192,8 @@ test.describe("Admin Pages Access Verification", () => {
 
     // Verify admin can access profile with visual snapshot
     console.log("\n👤 Verifying profile access...");
-    await page.goto(`${BASE_URL}/profile`, { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(`${BASE_URL}/profile`);
+    await page.goto(`${BASE_URL}/pages/profile`, { waitUntil: "networkidle" });
+    await expect(page).toHaveURL(`${BASE_URL}/pages/profile`);
     await expect(page).toHaveScreenshot("admin-profile-navigated.png", {
       fullPage: true,
       animations: "disabled",

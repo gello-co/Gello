@@ -65,7 +65,7 @@ test.describe("Visual Page Snapshots", () => {
   test("should capture profile page snapshot", async ({ page }) => {
     await setupAuthenticatedPage(page);
 
-    await page.goto(`${BASE_URL}/profile`);
+    await page.goto(`${BASE_URL}/pages/profile`);
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveScreenshot("profile.png");
   });

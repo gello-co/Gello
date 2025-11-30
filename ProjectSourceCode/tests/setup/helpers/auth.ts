@@ -332,7 +332,7 @@ export async function loginAsUser(
   const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
   // Call the real login endpoint
-  let loginReq = request(app).post("/api/auth/login");
+  let loginReq = request(app).post("/auth/login");
   loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
 
   const response = await loginReq.send({ email, password });

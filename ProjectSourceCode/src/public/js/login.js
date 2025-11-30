@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = formData.get("password");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       hideError();
 
       // Redirect to boards page on success (authenticated area)
-      window.location.href = "/boards";
+      window.location.href = "/pages/boards";
     } catch (error) {
       // Show error message inline
       showError(error.message || "Login failed. Please try again.");

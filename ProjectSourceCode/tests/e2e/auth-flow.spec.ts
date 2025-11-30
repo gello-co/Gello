@@ -64,7 +64,7 @@ test.describe("Auth Flow", () => {
       await logoutButton.click();
     } else {
       // Try API logout if no UI button
-      await page.goto(`${BASE_URL}/api/auth/logout`);
+      await page.goto(`${BASE_URL}/auth/logout`);
     }
 
     // Should be redirected to login or home

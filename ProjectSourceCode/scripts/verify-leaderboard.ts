@@ -6,7 +6,7 @@ const MEMBER_EMAIL = "member@test.com";
 const PASSWORD = "password123";
 
 async function login(email: string, password: string) {
-  const response = await fetch(`${BASE_URL}/api/auth/login`, {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

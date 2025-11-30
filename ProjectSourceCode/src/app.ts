@@ -10,6 +10,7 @@ import indexRouter from "./routes/index";
 
 import { logger } from "./lib/logger.js";
 import {errorHandler} from "./middleware/errorHandler.js"
+import { helpers } from "./utils/handelbars.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -75,6 +76,7 @@ app.engine(
     defaultLayout: "main",
     layoutsDir: path.join(__dirname, "./views/layouts"),
     partialsDir: path.join(__dirname, "./views/partials"),
+    helpers,
   }),
 );
 
@@ -121,5 +123,8 @@ app.listen(PORT, () => {
     logger.debug("Development environment details logged above");
   }
 });
+
+import { getSupabaseClient} from "./lib/supabase.js";
+getSupabaseClient();
 
 export default app;

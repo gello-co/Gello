@@ -45,7 +45,7 @@ test.describe
 
     test("CSRF error handling works correctly", async ({ request }) => {
       // Make request without CSRF token
-      const response = await request.post(`${BASE_URL}/api/auth/login`, {
+      const response = await request.post(`${BASE_URL}/auth/login`, {
         data: { email: "admin@example.com", password: "password123" },
       });
 
@@ -74,7 +74,7 @@ test.describe
       expect(csrfCookie).toBeTruthy();
 
       // Try login with CSRF token
-      const response = await request.post(`${BASE_URL}/api/auth/login`, {
+      const response = await request.post(`${BASE_URL}/auth/login`, {
         headers: {
           "x-csrf-token": csrfToken || "",
           cookie: cookies.map((c) => `${c.name}=${c.value}`).join("; "),
