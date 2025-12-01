@@ -32,7 +32,7 @@
     "e2e:debug": "playwright test --debug"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.84.0",
+    "@supabase/supabase-js": "^2.86.0",
     "alpinejs": "^3.15.2",
     "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
