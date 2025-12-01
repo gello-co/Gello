@@ -25,6 +25,11 @@ export type UserItemAssociation = {
     item_id: string;
 };
 
+export type CreateUserItemAssociationInput = {
+    user_id: string;
+    item_id: string;
+};
+
 export async function createItem(
     client: SupabaseClient,
     input: CreateItemInput,
