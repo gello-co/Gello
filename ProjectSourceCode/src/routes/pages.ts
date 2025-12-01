@@ -212,7 +212,7 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
 });
 
 router.get("/points-shop", requireAuth, async (req, res, next) => {
-
+  //let item = await getItemsService().getAllItems();
   try {
     res.render("pages/points-shop/index", {
       title: "Points Shop",

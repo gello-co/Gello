@@ -139,3 +139,5 @@ export async function createUserItemAssociation(
         throw new Error(`Failed to associate item with user: ${error.message}`);
     }
 }
+
+//TODO: Delete association when item is deleted

@@ -9,16 +9,19 @@
     </div>
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
+      {{#each item}}
       <div class="col">
         <div class="card h-100">
-          <img src="/images/moon-pfp.png" class="card-img-top" alt="...">
+          <img src="{{item.image}}" class="card-img-top" alt="item-image">
           <div class="card-body">
-            <h5 class="card-title">Moon Profile Border</h5>
-            <h4><strong>50 points</strong></h4>
+            <h5 class="card-title">{{item.name}}</h5>
+            <h4><strong>{{item.points}} points</strong></h4>
+            {{!-- TODO: make button call a function to check user points to see if there is enough and then redeem --}}
             <button class="btn btn-primary">Redeem</button>
           </div>
         </div>
       </div>
+      {{/each}}
       <div class="col">
         <div class="card h-100">
           <img src="/images/pink-pfp.png" class="card-img-top" alt="...">
