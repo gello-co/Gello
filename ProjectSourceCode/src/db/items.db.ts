@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "../errors/ValidationError.js";
 
+//TODO  handle errors like other files
+
 export type Item = {
     id: string;
     name: string;
@@ -39,6 +41,38 @@ export async function createItem(
     return data as Item;
 }
 
+export async function updateItem(
+    client: SupabaseClient,
+    input: UpdateItemInput,
+): Promise<Item> {
+    const { id, ...updates } = input;
+    
+    const { data, error } = await client
+        .from("items")
+        .update(updates)
+        .eq("id", id)
+        .select("*")
+        .single();
+    if (error) {
+        throw new Error(`Failed to update item: ${error.message}`);
+    }
+    
+    return data as Item;
+}
+
+export async function deleteItem(
+    client: SupabaseClient,
+    id: string,
+): Promise<void> {
+    const { error } = await client
+        .from("items")
+        .delete()
+        .eq("id", id);
+    if (error) {
+        throw new Error(`Failed to delete item: ${error.message}`);
+    }
+}
+
 export async function getItemById(
     client: SupabaseClient,
     id: string,
@@ -68,6 +102,32 @@ export async function getAllItems(
     if (error) {
         throw new Error(`Failed to get items: ${error.message}`);
     }
-    
     return (data ?? []) as Item[];
+}
+
+//TODO: Join with item table
+export async function getItemsbyUser(
+    client: SupabaseClient,
+    userId: string,
+): Promise<void> {
+    const { data, error } = await client
+        .from("user_to_items")
+        .select("item_id")
+        .eq("user_id", userId);
+    if (error) {
+        throw new Error(`Failed to get items for user: ${error.message}`);
+    }
+}
+
+export async function createUserItemAssociation(
+    client: SupabaseClient,
+    userId: string,
+    itemId: string,
+): Promise<void> {
+    const { error } = await client
+        .from("user_to_items")
+        .insert({ user_id: userId, item_id: itemId });
+    if (error) {
+        throw new Error(`Failed to associate item with user: ${error.message}`);
+    }
 }
