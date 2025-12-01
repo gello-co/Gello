@@ -7,17 +7,20 @@ export type Item = {
     id: string;
     name: string;
     points: number;
+    image_url?: string;
 };
 
 export type CreateItemInput = {
     name: string;
     points: number;
+    image_url?: string;
 };
 
 export type UpdateItemInput = {
     id: string;
     name?: string;
     points?: number;
+    image_url?: string;
 };
 
 export type UserItemAssociation = {
@@ -111,7 +114,7 @@ export async function getAllItems(
 }
 
 //TODO: Join with item table
-export async function getItemsbyUser(
+export async function getItemsByUser(
     client: SupabaseClient,
     userId: string,
 ): Promise<void> {
