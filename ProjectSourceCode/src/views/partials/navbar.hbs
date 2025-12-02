@@ -13,11 +13,19 @@
 					</li>
 				{{/if}}
 				<li class="nav-item">
-					<a class="nav-link" href="/pages/leaderboard">Leaderboard</a>
+					<a class="nav-link" 
+					{{#if (eq user.role "admin")}}
+					href="/pages/admin/leaderboard"
+					{{else}}
+					href="/pages/member/leaderboard"
+					{{/if}}
+					>Leaderboard</a>
 				</li>
+				{{#if (eq user.role "member")}}
 				<li class="nav-item">
 					<a class="nav-link" href="/pages/points-shop">Points Shop</a>
 				</li>
+				{{/if}}
 			{{/if}}
       </ul>
     </div>
