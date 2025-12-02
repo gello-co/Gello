@@ -134,6 +134,30 @@ router.get("/tasks", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/admin/tasks", requireAuth, async (req, res, next) => {
+  try {
+    // requireAuth guarantees req.user is set when next() is called
+    const boardService = getBoardService();
+    const teamId = req.query.team_id as string | undefined;
+    let boards: Awaited<ReturnType<typeof boardService.getBoardsByTeam>> = [];
+    if (teamId) {
+      boards = await boardService.getBoardsByTeam(teamId);
+    } else {
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      boards = await boardService.getBoardsForUser(req.user!.id);
+    }
+    res.render("pages/admin/tasks", {
+      title: "Boards",
+      layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      user: req.user!,
+      boards,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/tasks/:id", requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;

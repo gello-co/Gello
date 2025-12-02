@@ -7,7 +7,7 @@ import { validate } from "../middleware/validation.js";
 
 const router = express.Router();
 
-router.post("/register", validate(createUserSchema), async (req, res, next) => {
+router.post("/admin/register", validate(createUserSchema), async (req, res, next) => {
   try {
     const supabase = await getSupabaseClientForRequest(req);
     const authService = new AuthService(supabase);
@@ -36,7 +36,66 @@ router.post("/register", validate(createUserSchema), async (req, res, next) => {
   }
 });
 
-router.post("/login", validate(loginSchema), async (req, res, next) => {
+router.post("/admin/login", validate(loginSchema), async (req, res, next) => {
+  try {
+    const supabase = await getSupabaseClientForRequest(req);
+    const authService = new AuthService(supabase);
+
+    const result = await authService.login(req.body);
+
+    // Set session cookies
+    if (result.session) {
+      res.cookie("sb-access-token", result.session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
+        maxAge: 3600000, // 1 hour
+      });
+      res.cookie("sb-refresh-token", result.session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
+        maxAge: 604800000, // 7 days
+      });
+    }
+
+    res.redirect("/pages/admin/tasks");
+    res.status(201)
+  } catch (error) {
+    next(error);
+  } 
+});
+
+router.post("/member/register", validate(createUserSchema), async (req, res, next) => {
+  try {
+    const supabase = await getSupabaseClientForRequest(req);
+    const authService = new AuthService(supabase);
+
+    const result = await authService.register(req.body);
+
+    // Set session cookies if session was created
+    if (result.session) {
+      res.cookie("sb-access-token", result.session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
+        maxAge: 3600000, // 1 hour
+      });
+      res.cookie("sb-refresh-token", result.session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax", // Changed from "strict" to match CSRF cookie
+        maxAge: 604800000, // 7 days
+      });
+    }
+
+    res.status(201).json({ user: result.user });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/member/login", validate(loginSchema), async (req, res, next) => {
   try {
     const supabase = await getSupabaseClientForRequest(req);
     const authService = new AuthService(supabase);
