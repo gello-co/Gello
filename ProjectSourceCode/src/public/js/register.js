@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const role = formData.get("role");
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "/";
     } catch (error) {
       // Show error message inline
+      console.log("Error during registration:", error);
       showError(error.message || "Registration failed. Please try again.");
 
       // Re-enable submit button

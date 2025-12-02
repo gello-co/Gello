@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Request } from "express";
-import { env } from "../config/env";
+import { env } from "../utils/env.js";
 
 let client: SupabaseClient | null = null;
 

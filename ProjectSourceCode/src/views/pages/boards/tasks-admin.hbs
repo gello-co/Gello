@@ -1,0 +1,107 @@
+<div class="tasks-page">
+    <button class="btn btn-primary btn-new-task" data-bs-toggle="modal" data-bs-target="#newTaskModal">New
+        Task</button>
+    <div class="container-fluid px-4">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="tasks-card">
+                    <div class="login-card-body">
+                        <h3>Assigned Tasks</h3>
+                        <div class="tasks">
+                            <div>
+                                <input type="checkbox" id="task1" name="task1" />
+                                <label for="task1"> Task 1</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="task2" name="task2" />
+                                <label for="task2"> Task 2</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="task3" name="task3" />
+                                <label for="task3"> Task 3</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="task4" name="task4" />
+                                <label for="task4"> Task 4</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="task5" name="task5" />
+                                <label for="task5"> Task 5</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="tasks-card">
+                    <div class="login-card-body">
+                        <h3>User Stats</h3>
+                        <div class="mb-3">
+                            <select class="form-select" id="userSelect">
+                                <option value="">Select User</option>
+                            </select>
+                        </div>
+
+                        <div id="userStats" class="mt-3">
+                            <p>Tasks Completed: —</p>
+                            <p>Current Points: —</p>
+                            <p>High Priority Tasks: —</p>
+                            <p>Medium Priority Tasks: —</p>
+                            <p>Low Priority Tasks: —</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="newTaskForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newTaskModalLabel">Add New Task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="taskName" class="form-label">Task Name</label>
+                            <input type="text" class="form-control" id="taskName" placeholder="Enter task name"
+                                required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="low" selected>Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskDifficulty" class="form-label">Difficulty</label>
+                            <select class="form-select" id="taskDifficulty">
+                                <option value="easy" selected>Easy</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="difficult">Difficult</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="assignedUser" class="form-label">Assign To</label>
+                            <select class="form-select" id="assignedUser" required>
+                                <option value="">Select user...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">Add Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

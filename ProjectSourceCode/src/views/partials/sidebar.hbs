@@ -8,12 +8,12 @@
 	</div>
 	<nav class="sidebar-nav">
 		<ul>
-			<li><a href="/boards"><i class="fas fa-columns"></i> Boards</a></li>
+			<li><a href="pages/boards"><i class="fas fa-columns"></i> Boards</a></li>
 			{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
 				<li><a href="/teams"><i class="fas fa-users"></i> {{#if (eq user.role "admin")}}Teams{{else}}My Team{{/if}}</a></li>
 			{{/if}}
-			<li><a href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a></li>
-			<li><a href="/profile"><i class="fas fa-user"></i> Profile</a></li>
+			<li><a href="pages/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+			<li><a href="pages/profile"><i class="fas fa-user"></i> Profile</a></li>
 		</ul>
 	</nav>
 	<div class="sidebar-footer">
