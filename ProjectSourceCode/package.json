@@ -4,7 +4,7 @@
   "version": "0.2.0-dev",
   "type": "module",
   "scripts": {
-    "dev": "bun src/app.ts",
+    "dev": "bun --hot src/app.ts",
     "start": "bash scripts/bootstrap.sh",
     "start:fresh": "RESET_DB=true bash scripts/bootstrap.sh",
     "restart": "pkill -f 'bun --hot' && bash scripts/bootstrap.sh",
