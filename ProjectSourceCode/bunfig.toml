@@ -7,3 +7,6 @@ preload = ["./ProjectSourceCode/happydom.ts", "./tests/setup/bun-setup.ts"]
 # Integration tests with local Supabase should be fast
 # TRUNCATE-based cleanup is much faster than full db reset
 timeout = 30000
+
+[transpiler]
+target = "bun"
