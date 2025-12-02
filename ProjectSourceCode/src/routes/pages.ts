@@ -122,37 +122,24 @@ router.get("/tasks", requireAuth, async (req, res, next) => {
       // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       boards = await boardService.getBoardsForUser(req.user!.id);
     }
-    res.render("pages/boards/index", {
-      title: "Boards",
-      layout: "dashboard",
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      user: req.user!,
-      boards,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get("/admin/tasks", requireAuth, async (req, res, next) => {
-  try {
-    // requireAuth guarantees req.user is set when next() is called
-    const boardService = getBoardService();
-    const teamId = req.query.team_id as string | undefined;
-    let boards: Awaited<ReturnType<typeof boardService.getBoardsByTeam>> = [];
-    if (teamId) {
-      boards = await boardService.getBoardsByTeam(teamId);
-    } else {
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      boards = await boardService.getBoardsForUser(req.user!.id);
+    const isAdmin = req.user?.role === "admin";
+    if(isAdmin){
+      res.render("pages/admin/tasks", {
+        title: "Boards",
+        layout: "dashboard",
+        // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+        user: req.user!,
+        boards,
+      });
+    }else{
+      res.render("pages/member/tasks", {
+        title: "Boards",
+        layout: "dashboard",
+        // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+        user: req.user!,
+        boards,
+      });
     }
-    res.render("pages/admin/tasks", {
-      title: "Boards",
-      layout: "dashboard",
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      user: req.user!,
-      boards,
-    });
   } catch (error) {
     next(error);
   }
@@ -197,7 +184,7 @@ router.get("/tasks/:id", requireAuth, async (req, res, next) => {
       }));
     }
 
-    res.render("pages/boards/detail", {
+    res.render("pages/tasks", {
       title: board.name,
       layout: "dashboard",
       user: req.user,
@@ -221,15 +208,28 @@ router.get("/profile", requireAuth, async (req, res, next) => {
     const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
     // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
     const assignedTasks = await taskService.getTasksByAssignee(req.user!.id);
+    const isManager = req.user.role === "manager" || req.user.role === "admin";
 
-    res.render("pages/profile/index", {
+    if(isManager){
+      res.render("pages/admin/profile", {
       title: "Profile",
       layout: "dashboard",
       // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       pointsHistory,
       assignedTasks,
-    });
+      })
+    }else{
+      res.render("pages/member/profile", {
+      title: "Profile",
+      layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      user: req.user!,
+      pointsHistory,
+      assignedTasks,
+      });
+    }
+    
   } catch (error) {
     next(error);
   }
@@ -245,15 +245,26 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
     const topThree = leaderboard.slice(0, 3);
     const others = leaderboard.slice(3);
     const isManager = req.user.role === "manager" || req.user.role === "admin";
-
-    res.render("pages/leaderboard/index", {
+    
+    if(isManager){
+      res.render("pages/admin/leaderboard", {
       title: "Leaderboard",
       layout: "dashboard",
       user: req.user,
       topThree,
       others,
       isManager,
-    });
+      });
+    } else{
+      res.render("pages/member/leaderboard", {
+        title: "Leaderboard",
+        layout: "dashboard",
+        user: req.user,
+        topThree,
+        others,
+        isManager,
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -273,5 +284,7 @@ router.get("/points-shop", requireAuth, async (req, res, next) => {
     next(error);
   }
 });
+
+
 
 export default router;

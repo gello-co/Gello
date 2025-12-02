@@ -4,28 +4,31 @@
     <div id="navbarSupportedContent">
       <ul class="navbar-nav me-auto d-flex flex-row">
         <li class="nav-item">
-				<a class="nav-link" href="/pages/boards">Boards</a>
-			</li>
+			<a class="nav-link" href="/pages/tasks">Tasks</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="/pages/leaderboard">Leaderboard</a>
+		</li>
+		<li class="nav-item"></li>
+			<a class="nav-link" href="/pages/profile">Profile</a>
+		</li>
 			{{#if user}}
 				{{#if (eq user.role "admin")}}
 					<li class="nav-item">
 						<a class="nav-link" href="/pages/teams">Teams</a>
 					</li>
 				{{/if}}
-				<li class="nav-item">
-					<a class="nav-link" 
-					{{#if (eq user.role "admin")}}
-					href="/pages/admin/leaderboard"
-					{{else}}
-					href="/pages/member/leaderboard"
-					{{/if}}
-					>Leaderboard</a>
-				</li>
 				{{#if (eq user.role "member")}}
-				<li class="nav-item">
-					<a class="nav-link" href="/pages/points-shop">Points Shop</a>
-				</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/pages/points-shop">Points Shop</a>
+					</li>
 				{{/if}}
+				<li class="nav-item">
+					{{!-- <a class="nav-link" href="/auth/logout">Logout</a> --}}
+					<form method="POST" action="/auth/logout" style="display:inline;">
+ 						<button type="submit" class="submit">Logout</button>
+					</form>
+				</li>
 			{{/if}}
       </ul>
     </div>

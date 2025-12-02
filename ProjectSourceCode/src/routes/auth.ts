@@ -30,7 +30,7 @@ router.post("/admin/register", validate(createUserSchema), async (req, res, next
       });
     }
 
-    res.status(201).json({ user: result.user });
+    res.redirect("/pages/tasks");
   } catch (error) {
     next(error);
   }
@@ -59,7 +59,7 @@ router.post("/admin/login", validate(loginSchema), async (req, res, next) => {
       });
     }
 
-    res.redirect("/pages/admin/tasks");
+    res.redirect("/pages/tasks");
     res.status(201)
   } catch (error) {
     next(error);
@@ -89,7 +89,7 @@ router.post("/member/register", validate(createUserSchema), async (req, res, nex
       });
     }
 
-    res.status(201).json({ user: result.user });
+    res.redirect("/pages/tasks");
   } catch (error) {
     next(error);
   }
@@ -139,7 +139,7 @@ router.post("/logout", requireAuth, async (req, res, next) => {
     res.clearCookie("sb-access-token");
     res.clearCookie("sb-refresh-token");
 
-    res.json({ message: "Logged out successfully" });
+    res.redirect("/")
   } catch (error) {
     next(error);
   }

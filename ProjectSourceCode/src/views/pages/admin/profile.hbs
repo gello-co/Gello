@@ -5,8 +5,8 @@
                 <div class="profile-card">
                     <div class="login-card-body">
                         <!-- change later so the name of user shows instead-->
-                        <h3>Name</h3>
-                        <p>Role: ____</p>
+                        <h3>{{user.name}}</h3>
+                        <p>Role: {{user.role}}</p>
                         <p>Tasks Assigned</p>
                         <div class="tasks">
                             <!--  need to change later so tasks show up for user  -->
@@ -23,20 +23,19 @@
                                 <label for="task3"> Task 3</label>
                             </div>
                         </div>
-                        <a class="prof-link" href="./admin-tasks.hbs">See all tasks</a>
+                        <a class="prof-link" href="pags/tasks">See all tasks</a>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <a href="./admin-tasks.hbs" style="text-decoration: none; color: inherit">
+                <a href="pages/tasks" style="text-decoration: none; color: inherit">
                     <div class="profile-card">
                         <div class="login-card-body">
                             <!-- change later so the name of user shows instead-->
                             <h3>Leaderboard</h3>
                             <!--  discuss with team how the mini leaderboard should look  -->
                             <p>placeholder</p>
-                            <a class="prof-link" href="../../General_layouts/leaderboard.html">View leaderboard and use
-                                points</a>
+                            <a class="prof-link" href="pages/leaderboard">View leaderboard</a>
                         </div>
                     </div>
                 </a>
