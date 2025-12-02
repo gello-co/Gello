@@ -4,6 +4,7 @@
 import express from "express";
 import "../types/express.d.js";
 import { BoardService } from "../services/board.service.js";
+import { LeaderboardService } from "../services/leaderboard.service.js";
 import { ListService } from "../services/list.service.js";
 import { PointsService } from "../services/points.service.js";
 import { TaskService } from "../services/task.service.js";
@@ -95,7 +96,7 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/boards", requireAuth, async (req, res, next) => {
+router.get("/tasks", requireAuth, async (req, res, next) => {
   try {
     // requireAuth guarantees req.user is set when next() is called
     const boardService = getBoardService();
@@ -119,7 +120,7 @@ router.get("/boards", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/boards/:id", requireAuth, async (req, res, next) => {
+router.get("/tasks/:id", requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;
     if (!id) {
@@ -198,13 +199,22 @@ router.get("/profile", requireAuth, async (req, res, next) => {
 
 router.get("/leaderboard", requireAuth, async (req, res, next) => {
   try {
-    // requireAuth guarantees req.user is set when next() is called
+    if (!req.user) throw new Error("User not authenticated");
+
+    const leaderboardService = new LeaderboardService(getSupabaseClient());
+    const leaderboard = await leaderboardService.getLeaderboard(100);
+
+    const topThree = leaderboard.slice(0, 3);
+    const others = leaderboard.slice(3);
+    const isManager = req.user.role === "manager" || req.user.role === "admin";
 
     res.render("pages/leaderboard/index", {
       title: "Leaderboard",
       layout: "dashboard",
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      user: req.user!,
+      user: req.user,
+      topThree,
+      others,
+      isManager,
     });
   } catch (error) {
     next(error);

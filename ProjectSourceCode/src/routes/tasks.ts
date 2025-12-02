@@ -1,5 +1,5 @@
 import express from "express";
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import { TaskService } from "../services/task.service.js";
 import { getSupabaseClient } from "../lib/supabase.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
@@ -15,46 +15,37 @@ declare global {
 
 const router = express.Router();
 
-router.get(
-  "/tasks-admin",
-  requireAuth,
-  requireAdmin,
-  async (req, res, next) => {
-    try {
-      if (!req.user) 
-        throw new Error("User not authenticated");
+router.get("/", async (_req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase.from("tasks").select("*");
+  res.json(data);
+});
 
-      const _taskService = new TaskService(getSupabaseClient());
+router.post("/", async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase
+    .from("tasks")
+    .insert(req.body)
+    .select()
+    .single();
+  res.json(data);
+});
 
-      // TODO: Add method to get all tasks for admin or filter by team
+router.put("/:id", async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase
+    .from("tasks")
+    .update(req.body)
+    .eq("id", req.params.id)
+    .select()
+    .single();
+  res.json(data);
+});
 
-      res.render("pages/tasks-admin", {
-        title: "Tasks Administration",
-        layout: "dashboard",
-        user: req.user,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-router.get("/tasks-team", requireAuth, async (req, res, next) => {
-  try {
-    if (!req.user) throw new Error("User not authenticated");
-
-    const taskService = new TaskService(getSupabaseClient());
-    const tasks = await taskService.getTasksByAssignee(req.user.id);
-
-    res.render("pages/tasks-team", {
-      title: "My Tasks",
-      layout: "dashboard",
-      user: req.user,
-      tasks,
-    });
-  } catch (error) {
-    next(error);
-  }
+router.delete("/:id", async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  await supabase.from("tasks").delete().eq("id", req.params.id);
+  res.json({ ok: true });
 });
 
 export default router;
