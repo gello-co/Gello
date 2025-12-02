@@ -6,7 +6,7 @@
                     <h2 class = "login-form-title">Login as Team Member</h2>
                     <p class="text-muted">Access your tasks and earn points</p>
                 </div>
-                <form id="loginForm" action="/login" method="POST">
+                <form id="loginForm" action="/auth/login" method="POST">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
                         <input type="text" class="form-control login-input" id="username" name="username" style="width: 100%;">
@@ -22,10 +22,10 @@
                     <button type="submit" form="eventForm" class="btn btn-signin w-100" onclick="document.getElementById('loginForm').submit();">Login</button>
                 </form>
                 <div class="text-center mt-4">
-                    <p class="mb-0">Don't have an account? <a href="./member-register.hbs" class="register-link">Register</a></p>
+                    <p class="mb-0">Don't have an account? <a href="/pages/member/register" class="register-link">Register</a></p>
                 </div>
                 <div class="text-center mt-4">
-                    <p class = "mb-0">Are you an admin? <a href="../Admin View/admin-login.hbs" class = "register-link">Sign in here if you are an admin!</a></p>
+                    <p class = "mb-0">Are you an admin? <a href="/pages/admin/login" class = "register-link">Sign in here if you are an admin!</a></p>
                 </div>
             </div>
         </div>

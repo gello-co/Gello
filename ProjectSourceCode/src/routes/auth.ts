@@ -59,10 +59,10 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
       });
     }
 
-    res.json({ user: result.user });
+    res.redirect("/pages/tasks");
   } catch (error) {
     next(error);
-  }
+  } 
 });
 
 router.get("/session", requireAuth, async (req, res) => {
