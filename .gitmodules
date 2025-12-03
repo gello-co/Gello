@@ -1,3 +1,0 @@
-[submodule "docs/dev/.devOps"]
-	path = docs/dev/.devOps
-	url = git@github.com:gello-co/DevOps.git
