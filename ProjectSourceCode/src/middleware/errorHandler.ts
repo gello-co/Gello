@@ -1,4 +1,4 @@
-import type { ErrorRequestHandler, Request, Response } from "express";
+import type { ErrorRequestHandler, Request, Response } from 'express';
 import {
   DuplicateUserError,
   ForbiddenError,
@@ -6,117 +6,120 @@ import {
   ResourceNotFoundError,
   UserNotFoundError,
   ValidationError,
-} from "../lib/errors/app.errors.js";
-import { logger } from "../lib/logger.js";
+} from '../lib/errors/app.errors.js';
+import { logger } from '../lib/logger.js';
+
+interface ErrorMapping {
+  // biome-ignore lint/suspicious/noExplicitAny: Error type checker functions accept any
+  check: (err: any) => boolean;
+  status: number;
+  error: string;
+  // biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type
+  // biome-ignore lint/suspicious/noConfusingVoidType: Express handlers can return void or Response
+  handler?: (err: any, req: Request, res: Response) => Response | void;
+}
+
+function wantsJson(req: Request): boolean {
+  return req.headers.accept?.includes('application/json') || req.path.startsWith('/api/');
+}
+
+const ERROR_MAPPINGS: Array<ErrorMapping> = [
+  {
+    check: DuplicateUserError.isDuplicateUserError,
+    status: 409,
+    error: 'User already exists',
+  },
+  {
+    check: InvalidCredentialsError.isInvalidCredentialsError,
+    status: 401,
+    error: 'Invalid credentials',
+  },
+  {
+    check: UserNotFoundError.isUserNotFoundError,
+    status: 404,
+    error: 'User not found',
+  },
+  {
+    check: (err) => ValidationError.isValidationError(err) || /validation/i.test(err.message),
+    status: 400,
+    error: 'Validation error',
+  },
+  {
+    check: (err) =>
+      ResourceNotFoundError.isResourceNotFoundError(err) || /not found/i.test(err.message),
+    status: 404,
+    error: 'Not found',
+    handler: (err, req, res) => {
+      if (wantsJson(req)) {
+        return res.status(404).json({ error: 'Not found', message: err.message });
+      }
+      return res
+        .status(404)
+        .render('errors/404', { message: err.message, title: '404 - Not Found' });
+    },
+  },
+  {
+    check: ForbiddenError.isForbiddenError,
+    status: 403,
+    error: 'Forbidden',
+  },
+  {
+    check: (err) => err.message?.includes('Unauthorized') || err.message?.includes('Forbidden'),
+    status: 403,
+    error: 'Access denied',
+  },
+];
+
+// biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type
+function findErrorMapping(err: any): ErrorMapping | undefined {
+  return ERROR_MAPPINGS.find((mapping) => mapping.check(err));
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type
+// biome-ignore lint/suspicious/noConfusingVoidType: Express handlers can return void or Response
+function handleInternalError(err: any, req: Request, res: Response): Response | void {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  if (wantsJson(req)) {
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: isDevelopment ? err.message : undefined,
+    });
+  }
+
+  res.status(500).render('errors/error', {
+    error: isDevelopment ? err.message : 'Something went wrong',
+    stack: isDevelopment ? err.stack : undefined,
+    title: '500 - Server Error',
+  });
+}
 
 export const errorHandler: ErrorRequestHandler = (
   // biome-ignore lint/suspicious/noExplicitAny: Error handler needs to accept any error type
   err: Error | any,
   req: Request,
   res: Response,
-  _next,
+  _next
 ) => {
-  // Add request context to error logging
   logger.error(
     {
       err,
-      requestId: req.headers["x-request-id"],
+      requestId: req.headers['x-request-id'],
       path: req.path,
       method: req.method,
       userId: req.user?.id,
     },
-    "Error handler",
+    'Error handler'
   );
 
-  // Custom application errors (using symbolic methods)
-  if (DuplicateUserError.isDuplicateUserError(err)) {
-    return res.status(409).json({
-      error: "User already exists",
-      message: err.message,
-    });
-  }
+  const mapping = findErrorMapping(err);
 
-  if (InvalidCredentialsError.isInvalidCredentialsError(err)) {
-    return res.status(401).json({
-      error: "Invalid credentials",
-      message: err.message,
-    });
-  }
-
-  if (UserNotFoundError.isUserNotFoundError(err)) {
-    return res.status(404).json({
-      error: "User not found",
-      message: err.message,
-    });
-  }
-
-  // Validation errors - prefer instanceof check, fallback to case-insensitive regex
-  if (
-    ValidationError.isValidationError(err) ||
-    /validation/i.test(err.message)
-  ) {
-    return res.status(400).json({
-      error: "Validation error",
-      message: err.message,
-    });
-  }
-
-  // Resource not found errors - prefer instanceof check, fallback to case-insensitive regex
-  if (
-    ResourceNotFoundError.isResourceNotFoundError(err) ||
-    /not found/i.test(err.message)
-  ) {
-    // Check if client wants HTML or JSON
-    const wantsJson = req.headers.accept?.includes("application/json");
-
-    if (wantsJson || req.path.startsWith("/api/")) {
-      return res.status(404).json({
-        error: "Not found",
-        message: err.message,
-      });
+  if (mapping) {
+    if (mapping.handler) {
+      return mapping.handler(err, req, res);
     }
-
-    // Render 404 page for browser requests
-    return res.status(404).render("errors/404", {
-      message: err.message,
-      title: "404 - Not Found",
-    });
+    return res.status(mapping.status).json({ error: mapping.error, message: err.message });
   }
 
-  // Forbidden errors
-  if (ForbiddenError.isForbiddenError(err)) {
-    return res.status(403).json({
-      error: "Forbidden",
-      message: err.message,
-    });
-  }
-
-  // Authorization errors (fallback string matching)
-  if (
-    err.message.includes("Unauthorized") ||
-    err.message.includes("Forbidden")
-  ) {
-    return res.status(403).json({
-      error: "Access denied",
-      message: err.message,
-    });
-  }
-
-  // Default: Internal server error
-  const wantsJson = req.headers.accept?.includes("application/json");
-  const isDevelopment = process.env.NODE_ENV === "development";
-
-  if (wantsJson || req.path.startsWith("/api/")) {
-    return res.status(500).json({
-      error: "Internal server error",
-      message: isDevelopment ? err.message : undefined,
-    });
-  }
-
-  // Render 500 error page for browser requests
-  res.status(500).render("errors/error", {
-    error: isDevelopment ? err.message : "Something went wrong",
-    stack: isDevelopment ? err.stack : undefined,
-    title: "500 - Server Error",
-  });
+  return handleInternalError(err, req, res);
 };
