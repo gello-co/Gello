@@ -1,22 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
-import { isMockMode } from "../contracts/container.js";
-import { DEFAULT_MOCK_USER } from "../contracts/fixtures/index.js";
 import { logger } from "../lib/logger.js";
 
 /**
  * Development Authentication Middleware
  *
  * Automatically logs in as a user when in development mode.
- *
- * In Mock Mode (MOCK_MODE=true + MOCK_AUTO_LOGIN=true):
- * - Uses mock fixture data, no database required
- * - Auto-logs in as DEFAULT_MOCK_USER (admin)
- *
- * In Real Mode (development):
- * - Fetches the REAL admin user from the database
- * - Requires SUPABASE_SERVICE_ROLE_KEY
+ * Fetches the REAL admin user from the database.
+ * Requires SUPABASE_SERVICE_ROLE_KEY.
  */
 export const devAuth = async (
   req: Request,
@@ -28,26 +20,7 @@ export const devAuth = async (
     return next();
   }
 
-  // Mock Mode: Use fixture user
-  if (isMockMode() && process.env.MOCK_AUTO_LOGIN === "true") {
-    req.user = {
-      id: DEFAULT_MOCK_USER.id,
-      email: DEFAULT_MOCK_USER.email,
-      display_name: DEFAULT_MOCK_USER.display_name,
-      role: DEFAULT_MOCK_USER.role,
-      team_id: DEFAULT_MOCK_USER.team_id,
-      total_points: DEFAULT_MOCK_USER.total_points,
-      avatar_url: DEFAULT_MOCK_USER.avatar_url,
-    };
-    req.headers["x-dev-auth"] = "mock";
-    logger.debug(
-      { userId: DEFAULT_MOCK_USER.id },
-      "[DevAuth] Mock auto-login enabled",
-    );
-    return next();
-  }
-
-  // Real Mode: Auto-login in development
+  // Auto-login in development mode only
   if (env.NODE_ENV === "development") {
     try {
       // Use Service Role Key to bypass RLS and fetch the admin user

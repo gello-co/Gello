@@ -7,11 +7,6 @@
  * - Refreshes expired tokens
  * - Sets updated tokens on response
  *
- * Mock Mode (MOCK_MODE=true):
- * - Uses mock services from contracts system
- * - No database/auth calls required
- * - UI/UX developers can work without backend
- *
  * Dev Cookie Bypass:
  * - Set `dev-user` cookie in browser to bypass auth
  * - Format: JSON object with id, email, role, etc.
@@ -20,13 +15,13 @@
 import { createClient } from "@supabase/supabase-js";
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
-import { isMockMode } from "../contracts/container.js";
-import {
-  DEFAULT_MOCK_USER,
-  getMockUserById,
-} from "../contracts/fixtures/index.js";
 import { getUserById } from "../lib/database/users.db.js";
 import { logger } from "../lib/logger.js";
+import { BoardService } from "../lib/services/board.service.js";
+import { LeaderboardService } from "../lib/services/leaderboard.service.js";
+import { ListService } from "../lib/services/list.service.js";
+import { PointsService } from "../lib/services/points.service.js";
+import { TaskService } from "../lib/services/task.service.js";
 import { createAuthenticatedClient } from "../lib/supabase.js";
 
 const isBypassEnabled =
@@ -37,6 +32,21 @@ const isBypassEnabled =
 const isDevCookieBypassEnabled =
   process.env.NODE_ENV === "development" ||
   process.env.DEV_COOKIE_BYPASS === "true";
+
+/**
+ * Inject services into res.locals after req.supabase is set
+ */
+function injectServicesAfterAuth(req: Request, res: Response): void {
+  if (req.supabase) {
+    res.locals.services = {
+      board: new BoardService(req.supabase),
+      list: new ListService(req.supabase),
+      task: new TaskService(req.supabase),
+      points: new PointsService(req.supabase),
+      leaderboard: new LeaderboardService(req.supabase),
+    };
+  }
+}
 
 /**
  * Middleware that requires authentication.
@@ -55,28 +65,12 @@ export async function requireAuth(
   res: Response,
   next: NextFunction,
 ) {
-  // 0. Mock Mode - Use fixture data, no real auth
-  if (isMockMode()) {
-    const mockUserId = req.headers["x-mock-user-id"] as string | undefined;
-    const mockUser = mockUserId
-      ? (getMockUserById(mockUserId) ?? DEFAULT_MOCK_USER)
-      : DEFAULT_MOCK_USER;
-
-    req.user = {
-      id: mockUser.id,
-      email: mockUser.email,
-      display_name: mockUser.display_name,
-      role: mockUser.role,
-      team_id: mockUser.team_id,
-      total_points: mockUser.total_points,
-      avatar_url: mockUser.avatar_url,
-    };
-    // Don't set req.supabase in mock mode - views should use contracts instead
-    logger.debug(
-      { path: req.path, userId: mockUser.id },
-      "[requireAuth] Mock mode bypass",
-    );
-    return next();
+  // TEMP DEBUG
+  if (process.env.DEBUG_AUTH) {
+    console.log("\n=== requireAuth Debug ===");
+    console.log("Path:", req.path);
+    console.log("Cookie header exists:", !!req.headers.cookie);
+    console.log("req.cookies keys:", Object.keys(req.cookies || {}));
   }
 
   // 1. Dev Cookie Bypass (for UI/UX development)
@@ -103,6 +97,7 @@ export async function requireAuth(
         { path: req.path, userId: req.user.id, role: req.user.role },
         "[requireAuth] Dev cookie bypass",
       );
+      injectServicesAfterAuth(req, res);
       return next();
     } catch {
       logger.warn("[requireAuth] Invalid dev-user cookie, ignoring");
@@ -113,11 +108,13 @@ export async function requireAuth(
   if (isBypassEnabled && req.headers["x-test-bypass"] === "true") {
     const testUserId =
       (req.headers["x-test-user-id"] as string) || "test-user-id";
+    const testUserRole =
+      (req.headers["x-test-user-role"] as string) || "member";
     req.user = {
       id: testUserId,
       email: "test@test.local",
       display_name: "Test User",
-      role: "member",
+      role: testUserRole as "admin" | "manager" | "member",
       team_id: null,
       total_points: 0,
       avatar_url: null,
@@ -132,9 +129,10 @@ export async function requireAuth(
       );
     }
     logger.info(
-      { path: req.path, userId: testUserId },
+      { path: req.path, userId: testUserId, role: testUserRole },
       "[requireAuth] Test bypass",
     );
+    injectServicesAfterAuth(req, res);
     return next();
   }
 
@@ -149,6 +147,14 @@ export async function requireAuth(
       error: authError,
     } = await supabase.auth.getUser();
 
+    // TEMP DEBUG
+    if (process.env.DEBUG_AUTH) {
+      console.log("getUser result:");
+      console.log("  User email:", user?.email || "null");
+      console.log("  User ID:", user?.id || "null");
+      console.log("  Error:", authError?.message || "none");
+    }
+
     if (authError || !user) {
       if (authError) {
         logger.warn(
@@ -159,14 +165,22 @@ export async function requireAuth(
       return handleUnauthorized(req, res);
     }
 
-    // 4. Get user profile from database
+    // 5. Get user profile from database
     const userProfile = await getUserById(supabase, user.id);
+
+    // TEMP DEBUG
+    if (process.env.DEBUG_AUTH) {
+      console.log("getUserById result:");
+      console.log("  Profile found:", !!userProfile);
+      console.log("  Profile email:", userProfile?.email || "null");
+    }
+
     if (!userProfile) {
       logger.warn({ userId: user.id }, "[requireAuth] User profile not found");
       return handleUnauthorized(req, res);
     }
 
-    // 5. Attach to request
+    // 6. Attach to request
     req.supabase = supabase;
     req.user = {
       id: userProfile.id,
@@ -177,6 +191,8 @@ export async function requireAuth(
       total_points: userProfile.total_points,
       avatar_url: userProfile.avatar_url,
     };
+
+    injectServicesAfterAuth(req, res);
 
     return next();
   } catch (error) {
