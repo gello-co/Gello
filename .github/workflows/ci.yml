@@ -1,4 +1,11 @@
 name: Gello CI
+# =============================================================================
+# CI/CD Pipeline for Gello
+#
+# This workflow runs validation checks (lint, typecheck, tests) on pushes and PRs.
+# It does NOT deploy to Render - deployments are handled by Render's git integration:
+#
+# =============================================================================
 on:
   push:
     branches: [main, dev]
