@@ -1,7 +1,9 @@
 import type { ErrorRequestHandler, Request, Response } from "express";
 import {
   DuplicateUserError,
+  ForbiddenError,
   InvalidCredentialsError,
+  ResourceNotFoundError,
   UserNotFoundError,
   ValidationError,
 } from "../lib/errors/app.errors.js";
@@ -14,7 +16,10 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next,
 ) => {
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const isDevelopment =
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test" ||
+    process.env.NODE_ENV === undefined;
 
   // Compute the actual status code first
   let status = 500;
@@ -24,6 +29,10 @@ export const errorHandler: ErrorRequestHandler = (
     status = 401;
   } else if (UserNotFoundError.isUserNotFoundError(err)) {
     status = 404;
+  } else if (ResourceNotFoundError.isResourceNotFoundError(err)) {
+    status = 404;
+  } else if (ForbiddenError.isForbiddenError(err)) {
+    status = 403;
   } else if (ValidationError.isValidationError(err)) {
     status = 400;
   } else if (err.name === "ZodError" || err.issues) {
@@ -82,6 +91,20 @@ export const errorHandler: ErrorRequestHandler = (
     });
   }
 
+  if (ResourceNotFoundError.isResourceNotFoundError(err)) {
+    return res.status(status).json({
+      error: "Not found",
+      message: err.message,
+    });
+  }
+
+  if (ForbiddenError.isForbiddenError(err)) {
+    return res.status(status).json({
+      error: "Access denied",
+      message: err.message,
+    });
+  }
+
   if (ValidationError.isValidationError(err)) {
     // Validation errors (custom ValidationError)
     return res.status(status).json({
@@ -123,7 +146,9 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Default: Internal server error
   // Always show error details in development (check both NODE_ENV and if message exists)
-  return res.status(status).json({
+  // Ensure we're setting status to 500 for unhandled errors
+  const finalStatus = status === 200 ? 500 : status;
+  return res.status(finalStatus).json({
     error: "Internal server error",
     message: isDevelopment ? err.message || String(err) : undefined,
     stack: isDevelopment ? err.stack : undefined,

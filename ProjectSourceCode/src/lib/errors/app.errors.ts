@@ -10,6 +10,7 @@ const INVALID_CREDENTIALS_ERROR = Symbol("InvalidCredentialsError");
 const USER_NOT_FOUND_ERROR = Symbol("UserNotFoundError");
 const VALIDATION_ERROR = Symbol("ValidationError");
 const RESOURCE_NOT_FOUND_ERROR = Symbol("ResourceNotFoundError");
+const FORBIDDEN_ERROR = Symbol("ForbiddenError");
 const RETRYABLE_ERROR = Symbol("RetryableError");
 const NON_RETRYABLE_ERROR = Symbol("NonRetryableError");
 
@@ -96,6 +97,21 @@ export class ResourceNotFoundError extends Error {
       (error !== null &&
         typeof error === "object" &&
         RESOURCE_NOT_FOUND_ERROR in error)
+    );
+  }
+}
+
+export class ForbiddenError extends Error {
+  constructor(message: string = "Forbidden") {
+    super(message);
+    this.name = "ForbiddenError";
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  static isForbiddenError(error: unknown): error is ForbiddenError {
+    return (
+      error instanceof ForbiddenError ||
+      (error !== null && typeof error === "object" && FORBIDDEN_ERROR in error)
     );
   }
 }
