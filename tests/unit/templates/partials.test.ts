@@ -293,5 +293,208 @@ describe('Handlebars Partials', () => {
       const placeholders = doc.querySelectorAll('.placeholder');
       expect(placeholders.length).toBeGreaterThan(0);
     });
+
+    it('should have skeleton-card class', () => {
+      const template = loadPartial('skeleton-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const skeletonCard = doc.querySelector('.skeleton-card');
+      expect(skeletonCard).toBeTruthy();
+    });
+
+    it('should be aria-hidden for accessibility', () => {
+      const template = loadPartial('skeleton-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const card = doc.querySelector('.skeleton-card');
+      expect(card?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('should have skeleton avatar placeholder', () => {
+      const template = loadPartial('skeleton-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const skeletonAvatar = doc.querySelector('.skeleton-avatar');
+      expect(skeletonAvatar).toBeTruthy();
+    });
+  });
+
+  describe('skeleton-board-card partial', () => {
+    it('should render skeleton placeholder structure', () => {
+      const template = loadPartial('skeleton-board-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const card = doc.querySelector('.card');
+      expect(card).toBeTruthy();
+
+      // Should have placeholder elements
+      const placeholders = doc.querySelectorAll('.placeholder');
+      expect(placeholders.length).toBeGreaterThan(0);
+    });
+
+    it('should have skeleton-board-card class', () => {
+      const template = loadPartial('skeleton-board-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const skeletonCard = doc.querySelector('.skeleton-board-card');
+      expect(skeletonCard).toBeTruthy();
+    });
+
+    it('should be aria-hidden for accessibility', () => {
+      const template = loadPartial('skeleton-board-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const card = doc.querySelector('.skeleton-board-card');
+      expect(card?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('should be wrapped in col-md-4 for grid layout', () => {
+      const template = loadPartial('skeleton-board-card');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const wrapper = doc.querySelector('.col-md-4');
+      expect(wrapper).toBeTruthy();
+    });
+  });
+
+  describe('skeleton-list-column partial', () => {
+    beforeAll(() => {
+      // Register skeleton-card partial (referenced by skeleton-list-column)
+      const skeletonCardSource = readFileSync(
+        resolve(VIEWS_DIR, 'partials', 'skeleton-card.hbs'),
+        'utf-8'
+      );
+      Handlebars.registerPartial('skeleton-card', skeletonCardSource);
+    });
+
+    it('should render skeleton placeholder structure', () => {
+      const template = loadPartial('skeleton-list-column');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const listColumn = doc.querySelector('.skeleton-list-column');
+      expect(listColumn).toBeTruthy();
+    });
+
+    it('should be aria-hidden for accessibility', () => {
+      const template = loadPartial('skeleton-list-column');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const column = doc.querySelector('.skeleton-list-column');
+      expect(column?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('should contain multiple skeleton cards', () => {
+      const template = loadPartial('skeleton-list-column');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const skeletonCards = doc.querySelectorAll('.skeleton-card');
+      expect(skeletonCards.length).toBe(3);
+    });
+
+    it('should have list-column class for styling', () => {
+      const template = loadPartial('skeleton-list-column');
+      const html = template({});
+      const doc = parseHTML(html);
+
+      const column = doc.querySelector('.list-column');
+      expect(column).toBeTruthy();
+    });
+  });
+
+  describe('list-column partial', () => {
+    beforeAll(() => {
+      // Register task-card partial (referenced by list-column)
+      const taskCardSource = readFileSync(resolve(VIEWS_DIR, 'partials', 'task-card.hbs'), 'utf-8');
+      Handlebars.registerPartial('task-card', taskCardSource);
+    });
+
+    const baseList = {
+      id: 'list-123',
+      name: 'To Do',
+    };
+
+    const adminUser = {
+      id: 'user-admin',
+      role: 'admin',
+    };
+
+    const memberUser = {
+      id: 'user-member',
+      role: 'member',
+    };
+
+    it('should render list name', () => {
+      const template = loadPartial('list-column');
+      const html = template({ ...baseList, tasks: [], user: memberUser });
+      const doc = parseHTML(html);
+
+      const header = doc.querySelector('.list-header h3');
+      expect(header?.textContent).toBe('To Do');
+    });
+
+    it('should show empty message when no tasks', () => {
+      const template = loadPartial('list-column');
+      const html = template({ ...baseList, tasks: [], user: memberUser });
+      const doc = parseHTML(html);
+
+      const emptyMessage = doc.querySelector('.empty-tasks-message');
+      expect(emptyMessage).toBeTruthy();
+      expect(emptyMessage?.textContent).toContain('No tasks yet');
+    });
+
+    it('should render tasks when present', () => {
+      const template = loadPartial('list-column');
+      const tasks = [
+        { id: 'task-1', title: 'Task 1', story_points: 3 },
+        { id: 'task-2', title: 'Task 2', story_points: 5 },
+      ];
+      const html = template({ ...baseList, tasks, user: memberUser });
+      const doc = parseHTML(html);
+
+      const taskCards = doc.querySelectorAll('.task-card');
+      expect(taskCards.length).toBe(2);
+
+      const emptyMessage = doc.querySelector('.empty-tasks-message');
+      expect(emptyMessage).toBeFalsy();
+    });
+
+    it('should show edit button for admin users', () => {
+      const template = loadPartial('list-column');
+      const html = template({ ...baseList, tasks: [], user: adminUser });
+      const doc = parseHTML(html);
+
+      const editButton = doc.querySelector('[data-action="edit-list"]');
+      expect(editButton).toBeTruthy();
+    });
+
+    it('should show add task button for managers', () => {
+      const template = loadPartial('list-column');
+      const html = template({ ...baseList, tasks: [], user: adminUser });
+      const doc = parseHTML(html);
+
+      const addButton = doc.querySelector('[data-action="create-task"]');
+      expect(addButton).toBeTruthy();
+    });
+
+    it('should hide admin controls for members', () => {
+      const template = loadPartial('list-column');
+      const html = template({ ...baseList, tasks: [], user: memberUser });
+      const doc = parseHTML(html);
+
+      const editButton = doc.querySelector('[data-action="edit-list"]');
+      const addButton = doc.querySelector('[data-action="create-task"]');
+      expect(editButton).toBeFalsy();
+      expect(addButton).toBeFalsy();
+    });
   });
 });
