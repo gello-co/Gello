@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -93,7 +93,8 @@
       "linter": {
         "rules": {
           "style": {
-            "useImportType": "off"
+            "useImportType": "off",
+            "noNonNullAssertion": "warn"
           }
         }
       }
