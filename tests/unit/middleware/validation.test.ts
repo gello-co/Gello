@@ -1,5 +1,5 @@
-import { describe, expect, it } from "bun:test";
 import type { NextFunction, Request, Response } from "express";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
   validateBody,

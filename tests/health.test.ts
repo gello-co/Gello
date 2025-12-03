@@ -3,7 +3,7 @@
  * Run before integration tests to catch connection issues early
  */
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { getTestSupabaseClient } from "./setup/helpers/index.js";
 
 describe("Test Environment Health", () => {

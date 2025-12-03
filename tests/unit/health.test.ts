@@ -1,6 +1,6 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
-describe("placeholder (bun)", () => {
+describe("Health Check", () => {
   it("passes trivially", () => {
     expect(true).toBe(true);
   });

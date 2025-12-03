@@ -3,8 +3,8 @@
  * Tests leaderboard, user points, and manual point awards
  */
 
-import { beforeAll, describe, expect, it } from "bun:test";
 import request from "supertest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,

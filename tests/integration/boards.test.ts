@@ -3,8 +3,8 @@
  * Tests CRUD operations for boards
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
@@ -19,6 +19,7 @@ describe("Boards API", () => {
   let managerCookies: string = "";
   let memberCookies: string = "";
   let teamId: string;
+  let memberId: string;
 
   beforeAll(async () => {
     await prepareTestDb();
@@ -33,7 +34,13 @@ describe("Boards API", () => {
       "manager",
       "Manager User",
     );
-    await createTestUser(memberEmail, "password123", "member", "Member User");
+    const member = await createTestUser(
+      memberEmail,
+      "password123",
+      "member",
+      "Member User",
+    );
+    memberId = member.user.id;
 
     const { cookieHeader: managerCookieHeader } = await loginAsUser(
       managerEmail,
@@ -54,31 +61,43 @@ describe("Boards API", () => {
     const teamResponse = await req.send({ name: "Test Team" });
 
     teamId = teamResponse.body.id;
+
+    // Add member to team so RLS allows them to access team resources
+    const { token: memberCsrfToken } = await getCsrfToken(managerCookies);
+    await request(app)
+      .post(`/api/teams/${teamId}/members`)
+      .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", memberCsrfToken)
+      .send({ user_id: memberId });
   });
 
   describe("GET /api/boards", () => {
-    it("should return boards for a team", async () => {
+    it("should return boards for the authenticated user", async () => {
       const response = await request(app)
         .get("/api/boards")
-        .query({ team_id: teamId })
         .set("Cookie", memberCookies);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
 
-    it("should require team_id query parameter", async () => {
+    it("should return empty array if user has no boards", async () => {
+      // Create a new user with no boards
+      const newEmail = generateTestEmail("noboards");
+      await createTestUser(newEmail, "password123", "member", "No Boards User");
+      const { cookieHeader } = await loginAsUser(newEmail, "password123");
+
       const response = await request(app)
         .get("/api/boards")
-        .set("Cookie", memberCookies);
+        .set("Cookie", cookieHeader);
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBe(0);
     });
 
     it("should require authentication", async () => {
-      const response = await request(app)
-        .get("/api/boards")
-        .query({ team_id: teamId });
+      const response = await request(app).get("/api/boards");
 
       expect(response.status).toBe(401);
     });
@@ -197,6 +216,14 @@ describe("Boards API", () => {
         name: "Updated Board",
         description: "Updated Description",
       });
+
+      if (response.status !== 200) {
+        console.error("Update board failed:", {
+          status: response.status,
+          body: response.body,
+          text: response.text?.slice(0, 500),
+        });
+      }
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("name", "Updated Board");

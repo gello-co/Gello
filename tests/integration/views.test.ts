@@ -3,8 +3,8 @@
  * Tests that page routes return correct Handlebars templates with proper data
  */
 
-import { beforeAll, describe, expect, it } from "bun:test";
 import request from "supertest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
@@ -84,11 +84,8 @@ describe("View Rendering", () => {
     });
 
     it("should render team detail page for authenticated user", async () => {
-      const userEmail = generateTestEmail("team-detail");
-      await createTestUser(userEmail, "password123", "member", "Test User");
-      const { cookieHeader } = await loginAsUser(userEmail, "password123");
-
-      // Create a team first (use manager instead of admin)
+      // Create a manager who will create and view the team
+      // The manager is automatically added to the team via createTeamWithManager
       const managerEmail = generateTestEmail("team-detail-manager");
       await createTestUser(
         managerEmail,
@@ -109,9 +106,10 @@ describe("View Rendering", () => {
 
       const teamId = teamResponse.body.id;
 
+      // Manager views their own team (RLS allows access)
       const response = await request(app)
         .get(`/teams/${teamId}`)
-        .set("Cookie", cookieHeader);
+        .set("Cookie", managerCookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");
@@ -153,11 +151,8 @@ describe("View Rendering", () => {
     });
 
     it("should render board detail page for authenticated user", async () => {
-      const userEmail = generateTestEmail("board-detail");
-      await createTestUser(userEmail, "password123", "member", "Test User");
-      const { cookieHeader } = await loginAsUser(userEmail, "password123");
-
-      // Create a team and board first (use manager instead of admin)
+      // Create a manager who will create and view the board
+      // The manager is automatically added to the team via createTeamWithManager
       const managerEmail = generateTestEmail("board-detail-manager");
       await createTestUser(
         managerEmail,
@@ -191,9 +186,10 @@ describe("View Rendering", () => {
 
       const boardId = boardResponse.body.id;
 
+      // Manager views their own board (RLS allows access)
       const response = await request(app)
         .get(`/boards/${boardId}`)
-        .set("Cookie", cookieHeader);
+        .set("Cookie", managerCookieHeader);
 
       expect(response.status).toBe(200);
       expect(response.headers["content-type"]).toContain("text/html");

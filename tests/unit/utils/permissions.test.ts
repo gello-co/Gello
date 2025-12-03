@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   canManageBoard,
   canManageList,
@@ -11,7 +11,7 @@ import {
   isMember,
 } from "../../../ProjectSourceCode/src/lib/utils/permissions";
 
-describe("Permission Utilities (bun)", () => {
+describe("Permission Utilities", () => {
   describe("isAdmin", () => {
     it("returns true for admin", () => {
       expect(isAdmin("admin")).toBe(true);

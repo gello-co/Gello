@@ -3,8 +3,8 @@
  * Tests CRUD operations, task assignment, completion, and movement
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
@@ -65,6 +65,14 @@ describe("Tasks API", () => {
 
     teamId = teamResponse.body.id;
 
+    // Add member to team so RLS allows them to access team resources
+    const { token: memberCsrfToken } = await getCsrfToken(managerCookies);
+    await request(app)
+      .post(`/api/teams/${teamId}/members`)
+      .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", memberCsrfToken)
+      .send({ user_id: userId });
+
     const { token: boardCsrfToken } = await getCsrfToken(managerCookies);
     const boardResponse = await request(app)
       .post("/api/boards")
@@ -79,11 +87,12 @@ describe("Tasks API", () => {
 
     const { token: listCsrfToken } = await getCsrfToken(managerCookies);
     const listResponse = await request(app)
-      .post(`/api/lists/boards/${boardId}/lists`)
+      .post("/api/lists")
       .set("Cookie", managerCookies)
       .set("X-CSRF-Token", listCsrfToken)
       .send({
         name: "Test List",
+        board_id: boardId,
       });
 
     listId = listResponse.body.id;
@@ -349,6 +358,85 @@ describe("Tasks API", () => {
 
       expect(response.status).toBe(401);
     });
+
+    it("should return 404 for non-existent task", async () => {
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
+        .patch("/api/tasks/00000000-0000-0000-0000-000000000000/complete")
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
+
+      expect(response.status).toBe(404);
+    });
+
+    it("should return 403 if task belongs to another user", async () => {
+      // Create a task assigned to a different user (manager, not member)
+      const { token: createCsrfToken } = await getCsrfToken(managerCookies);
+      let createReq = request(app)
+        .post(`/api/tasks/lists/${listId}/tasks`)
+        .set("Cookie", managerCookies);
+      createReq = setCsrfHeadersIfEnabled(createReq, createCsrfToken);
+      const createResponse = await createReq.send({
+        title: "Manager's Task",
+        story_points: 3,
+      });
+      const managerTaskId = createResponse.body.id;
+
+      // Try to complete it as member (not assigned)
+      const { token: csrfToken } = await getCsrfToken(memberCookies);
+      let req = request(app)
+        .patch(`/api/tasks/${managerTaskId}/complete`)
+        .set("Cookie", memberCookies);
+      req = setCsrfHeadersIfEnabled(req, csrfToken);
+      const response = await req;
+
+      expect(response.status).toBe(403);
+    });
+
+    it("should be idempotent - completing twice works, points awarded once", async () => {
+      // Complete the task first time
+      const { token: csrfToken1 } = await getCsrfToken(memberCookies);
+      let req1 = request(app)
+        .patch(`/api/tasks/${taskId}/complete`)
+        .set("Cookie", memberCookies);
+      req1 = setCsrfHeadersIfEnabled(req1, csrfToken1);
+      const response1 = await req1;
+
+      expect(response1.status).toBe(200);
+      expect(response1.body.completed_at).not.toBeNull();
+
+      // Get initial points
+      const pointsResponse1 = await request(app)
+        .get("/api/points")
+        .set("Cookie", memberCookies);
+      const initialPoints = pointsResponse1.body.reduce(
+        (sum: number, p: { points: number }) => sum + p.points,
+        0,
+      );
+
+      // Complete the same task again
+      const { token: csrfToken2 } = await getCsrfToken(memberCookies);
+      let req2 = request(app)
+        .patch(`/api/tasks/${taskId}/complete`)
+        .set("Cookie", memberCookies);
+      req2 = setCsrfHeadersIfEnabled(req2, csrfToken2);
+      const response2 = await req2;
+
+      expect(response2.status).toBe(200);
+      expect(response2.body.completed_at).toBe(response1.body.completed_at);
+
+      // Verify points weren't awarded again
+      const pointsResponse2 = await request(app)
+        .get("/api/points")
+        .set("Cookie", memberCookies);
+      const finalPoints = pointsResponse2.body.reduce(
+        (sum: number, p: { points: number }) => sum + p.points,
+        0,
+      );
+
+      expect(finalPoints).toBe(initialPoints);
+    });
   });
 
   describe("PATCH /api/tasks/:id/move", () => {
@@ -369,11 +457,12 @@ describe("Tasks API", () => {
 
       const { token: listCsrfToken } = await getCsrfToken(managerCookies);
       const listResponse = await request(app)
-        .post(`/api/lists/boards/${boardId}/lists`)
+        .post("/api/lists")
         .set("Cookie", managerCookies)
         .set("X-CSRF-Token", listCsrfToken)
         .send({
           name: "Target List",
+          board_id: boardId,
         });
 
       targetListId = listResponse.body.id;

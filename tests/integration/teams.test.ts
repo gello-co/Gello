@@ -3,8 +3,8 @@
  * Tests CRUD operations and team member management
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
@@ -98,9 +98,10 @@ describe("Teams API", () => {
     });
 
     it("should return team by id", async () => {
+      // Manager should be able to see their own team
       const response = await request(app)
         .get(`/api/teams/${teamId}`)
-        .set("Cookie", memberCookies);
+        .set("Cookie", managerCookies);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("id", teamId);
@@ -110,7 +111,7 @@ describe("Teams API", () => {
     it("should return 404 for non-existent team", async () => {
       const response = await request(app)
         .get("/api/teams/00000000-0000-0000-0000-000000000000")
-        .set("Cookie", memberCookies);
+        .set("Cookie", managerCookies);
 
       expect(response.status).toBe(404);
     });
@@ -274,9 +275,10 @@ describe("Teams API", () => {
     });
 
     it("should return team members", async () => {
+      // Manager should be able to see members of their own team
       const response = await request(app)
         .get(`/api/teams/${teamId}/members`)
-        .set("Cookie", memberCookies);
+        .set("Cookie", managerCookies);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);

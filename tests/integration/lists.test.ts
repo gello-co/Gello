@@ -3,8 +3,8 @@
  * Tests CRUD operations and list reordering
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../ProjectSourceCode/src/express/app.js";
 import {
   createTestUser,
@@ -20,6 +20,7 @@ describe("Lists API", () => {
   let memberCookies: string = "";
   let managerEmail: string;
   let memberEmail: string;
+  let memberId: string;
   let teamId: string;
   let boardId: string;
 
@@ -35,7 +36,13 @@ describe("Lists API", () => {
       "manager",
       "Manager User",
     );
-    await createTestUser(memberEmail, "password123", "member", "Member User");
+    const member = await createTestUser(
+      memberEmail,
+      "password123",
+      "member",
+      "Member User",
+    );
+    memberId = member.user.id;
 
     const { cookieHeader: managerCookieHeader } = await loginAsUser(
       managerEmail,
@@ -66,6 +73,14 @@ describe("Lists API", () => {
     expect(teamResponse.status).toBe(201);
     expect(teamResponse.body).toHaveProperty("id");
     teamId = teamResponse.body.id;
+
+    // Add member to team so RLS allows them to access team resources
+    const { token: memberCsrfToken } = await getCsrfToken(managerCookies);
+    await request(app)
+      .post(`/api/teams/${teamId}/members`)
+      .set("Cookie", managerCookies)
+      .set("X-CSRF-Token", memberCsrfToken)
+      .send({ user_id: memberId });
 
     const { token: boardCsrfToken } = await getCsrfToken(managerCookies);
     let boardReq = request(app)

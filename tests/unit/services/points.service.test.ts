@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
 import * as tasksDb from "../../../ProjectSourceCode/src/lib/database/tasks.db.js";
 import * as usersDb from "../../../ProjectSourceCode/src/lib/database/users.db.js";
@@ -56,7 +56,7 @@ const createMockLeaderboardEntry = (
   ...overrides,
 });
 
-describe("PointsService (bun)", () => {
+describe("PointsService", () => {
   let service: PointsService;
   let mockClient: SupabaseClient;
 

@@ -1,10 +1,10 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   calculateTaskPoints,
   validateManualAward,
 } from "../../../ProjectSourceCode/src/lib/utils/points";
 
-describe("Points Utilities (bun)", () => {
+describe("Points Utilities", () => {
   describe("calculateTaskPoints", () => {
     it("maps Fibonacci story points directly", () => {
       [1, 2, 3, 5, 8, 13].forEach((value) => {

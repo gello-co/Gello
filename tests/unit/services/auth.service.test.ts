@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "bun:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as usersDb from "../../../ProjectSourceCode/src/lib/database/users.db.js";
 import { AuthService } from "../../../ProjectSourceCode/src/lib/services/auth.service.js";
 import { mockFn } from "../../setup/helpers/mock.js";
@@ -13,7 +13,7 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(),
 }));
 
-describe("AuthService (bun)", () => {
+describe("AuthService", () => {
   let service: AuthService;
   let mockClient: SupabaseClient;
   let mockServiceRoleClient: SupabaseClient;
