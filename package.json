@@ -44,6 +44,7 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
+    "e2e:staging": "EXTERNAL_SERVER=true BASE_URL=https://stg.gello.co playwright test",
     "doppler:dev": "doppler run --config dev --",
     "doppler:stg": "doppler run --config stg --",
     "doppler:prd": "doppler run --config prd --"

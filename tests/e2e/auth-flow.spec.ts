@@ -6,12 +6,19 @@
  *
  * Run: bun run e2e
  * Debug: bun run e2e:debug
+ * Staging: bun run e2e:staging
  */
 import { expect, test } from '@playwright/test';
 
+// Detect staging environment from BASE_URL
+const isStaging = process.env.BASE_URL?.includes('stg.gello.co') ?? false;
+
 // Generate unique test user to avoid conflicts
-const generateTestEmail = () =>
-  `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@test.local`;
+// Uses 'e2e-stg-' prefix for staging to identify test users for future cleanup
+const generateTestEmail = () => {
+  const prefix = isStaging ? 'e2e-stg' : 'e2e';
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@test.local`;
+};
 
 test.describe('Authentication Flow', () => {
   test.describe('Login Page', () => {

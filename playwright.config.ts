@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const IS_EXTERNAL = process.env.EXTERNAL_SERVER === 'true';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -13,7 +14,7 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    headless: !!process.env.CI,
+    headless: !!process.env.CI || IS_EXTERNAL,
   },
   expect: {
     // Visual snapshot configuration
@@ -31,14 +32,19 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'bun run test:server',
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    env: {
-      NODE_ENV: 'test',
-      PORT: '3000',
-    },
-  },
+  // Skip webServer when testing against external servers (staging/production)
+  ...(IS_EXTERNAL
+    ? {}
+    : {
+        webServer: {
+          command: 'bun run test:server',
+          url: BASE_URL,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+          env: {
+            NODE_ENV: 'test',
+            PORT: '3000',
+          },
+        },
+      }),
 });

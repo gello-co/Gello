@@ -168,6 +168,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
   try {
     // 4. Verify user session
+    logger.debug({ path: req.path }, '[requireAuth] Calling supabase.auth.getUser()');
     const {
       data: { user },
       error: authError,
@@ -187,6 +188,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     }
 
     // 5. Get user profile from database
+    logger.debug({ userId: user.id, path: req.path }, '[requireAuth] Calling getUserById()');
     const userProfile = await getUserById(supabase, user.id);
 
     logDebugInfo('getUserById result', {
@@ -214,7 +216,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     injectServicesAfterAuth(req, res);
     return next();
   } catch (error) {
-    logger.error({ error }, '[requireAuth] Unexpected error');
+    // Extract error details for better logging (Error objects don't serialize to JSON well)
+    const errorDetails =
+      error instanceof Error
+        ? { message: error.message, name: error.name, stack: error.stack }
+        : { raw: String(error) };
+    logger.error({ error: errorDetails, path: req.path }, '[requireAuth] Unexpected error');
     return handleUnauthorized(req, res);
   }
 }
