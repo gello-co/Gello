@@ -7,18 +7,17 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { devAuth } from "../middleware/dev-auth.js";
 import { errorHandler } from "../middleware/error-handler.js";
+import { notFoundHandler } from "../middleware/notFoundHandler.js";
 import { requestLogger } from "../middleware/request-logger.js";
-import { expressApp } from "./express-app.js";
 import { helpers } from "./helpers/handlebars.js";
+import adminPermissionsRouter from "./routes/admin-permissions.js";
 import apiRoutes from "./routes/api.js";
 import authRoutes from "./routes/auth.js";
-import boardsApiRouter from "./routes/boards/api.js";
 import boardsPagesRouter from "./routes/boards/pages.js";
 import leaderboardPagesRouter from "./routes/leaderboard/pages.js";
-import listsRouter from "./routes/lists.js";
-import mockPagesRouter from "./routes/mock-pages.js";
 import pageRoutes from "./routes/pages.js";
-import tasksApiRouter from "./routes/tasks/api.js";
+import pointsShopRouter from "./routes/points-shop-pages.js";
+import tasksRouter from "./routes/tasks-pages.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -113,26 +112,19 @@ app.use(cookieParser());
 app.use(requestLogger);
 app.use(devAuth);
 
-// CSRF protection deferred to v0.2.0
-// import { csrfProtection, csrfTokenToLocals } from "../../middleware/csrf.js";
-
-// Apply CSRF protection to all routes (except GET requests which are safe)
-// app.use(csrfProtection);
-// Make CSRF token available to all views
-// app.use(csrfTokenToLocals);
-
 // Feature-based routes
 app.use(authRoutes);
 app.use("/api", apiRoutes);
-app.use("/api/boards", boardsApiRouter);
-app.use("/api/tasks", tasksApiRouter);
-app.use("/api/lists", listsRouter);
 app.use("/boards", boardsPagesRouter);
 app.use("/leaderboard", leaderboardPagesRouter);
-// Mock-aware routes (contracts system) - registered before pageRoutes for priority
-app.use("/", mockPagesRouter);
 app.use("/", pageRoutes);
-app.use("/", expressApp);
+// Routes from express-app.ts (devAuth already applied above)
+app.use(pointsShopRouter);
+app.use(tasksRouter);
+app.use(adminPermissionsRouter);
+
+// 404 handler must be after all routes but before error handler
+app.use(notFoundHandler);
 
 // Error handler must be last
 app.use(errorHandler);

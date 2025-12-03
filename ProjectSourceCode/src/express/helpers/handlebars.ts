@@ -16,7 +16,21 @@ export const helpers = {
   lte: (a: number, b: number) => a <= b,
   ne: (a: unknown, b: unknown) => a !== b,
   and: (a: unknown, b: unknown) => a && b,
-  or: (a: unknown, b: unknown) => a || b,
+  // or helper - handles variable number of args, ignores Handlebars options object
+  or: (...args: unknown[]) => {
+    // Filter out Handlebars options object (has 'name', 'hash', 'data' properties)
+    const values = args.filter(
+      (arg) =>
+        !(
+          arg &&
+          typeof arg === "object" &&
+          "name" in arg &&
+          "hash" in arg &&
+          "data" in arg
+        ),
+    );
+    return values.some((v) => Boolean(v));
+  },
   not: (a: unknown) => !a,
   // Array helpers
   contains: (arr: unknown[], item: unknown) => arr?.includes(item) ?? false,

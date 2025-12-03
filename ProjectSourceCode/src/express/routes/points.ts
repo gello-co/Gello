@@ -1,18 +1,55 @@
 import express from "express";
 import { z } from "zod";
 import { manualAwardSchema } from "../../lib/schemas/points.js";
-import { LeaderboardService } from "../../lib/services/leaderboard.service.js";
-import { PointsService } from "../../lib/services/points.service.js";
 import { requireAdmin } from "../../middleware/requireAdmin.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 import { validate } from "../../middleware/validation.js";
 
 const router = express.Router();
 
+// GET /api/points - Get current user's points history
+router.get("/", requireAuth, async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const pointsService = res.locals.services.points;
+    const history = await pointsService.getPointsHistory(req.user.id);
+    // Transform to include 'points' field for API compatibility
+    const transformed = history.map((h) => ({
+      ...h,
+      points: h.points_earned,
+    }));
+    res.json(transformed);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/points/history - Alias for getting current user's points history
+router.get("/history", requireAuth, async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const pointsService = res.locals.services.points;
+    const history = await pointsService.getPointsHistory(req.user.id);
+    // Transform to include 'points' field for API compatibility
+    const transformed = history.map((h) => ({
+      ...h,
+      points: h.points_earned,
+    }));
+    res.json(transformed);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/leaderboard", requireAuth, async (req, res, next) => {
   try {
-    // Use the authenticated client from requireAuth middleware
-    const leaderboardService = new LeaderboardService(req.supabase!);
+    const leaderboardService = res.locals.services.leaderboard;
     const limit = Math.min(
       Math.max(Number.parseInt(req.query.limit as string, 10) || 100, 1),
       1000,
@@ -36,8 +73,7 @@ router.get("/users/:id/points", requireAuth, async (req, res, next) => {
       return res.status(400).json({ error: "id must be a valid UUID" });
     }
 
-    // Use the authenticated client from requireAuth middleware
-    const pointsService = new PointsService(req.supabase!, req.user?.id);
+    const pointsService = res.locals.services.points;
     const points = await pointsService.getUserPoints(id);
     res.json({ user_id: id, total_points: points });
   } catch (error) {
@@ -65,8 +101,7 @@ router.post(
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      // Use the authenticated client from requireAuth middleware
-      const pointsService = new PointsService(req.supabase!, req.user.id);
+      const pointsService = res.locals.services.points;
       const history = await pointsService.awardManualPoints(
         {
           ...req.body,
