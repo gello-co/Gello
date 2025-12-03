@@ -826,3 +826,21 @@ body {
   margin-top: 0;
 }
 
+.dashboard-container {
+  display: flex;
+  height: 100%;
+  align-items: stretch;
+}
+
+.dashboard-sidebar {
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  height: 100%
+}
+
+.dashboard-main {
+  flex: 1; 
+  height: 100%;
+  align-items: stretch;
+}

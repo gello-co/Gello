@@ -1,23 +1,22 @@
-<aside class="sidebar">
-	<div class="sidebar-header">
+<aside class="dashboard-sidebar d-flex flex-column">
+	<div class="sidebar-header mx-3 my-3">
 		{{> user-avatar user=user}}
 		<div class="user-info">
-			<div class="user-name">{{user.display_name}}</div>
-			<div class="user-role">{{user.role}}</div>
+			<div class="user-name">Name: {{user.display_name}}</div>
+			<div class="user-role">Role: {{user.role}}</div>
 		</div>
 	</div>
-	<nav class="sidebar-nav">
-		<ul>
-			<li><a href="pages/boards"><i class="fas fa-columns"></i> Boards</a></li>
+	<ul class="nav nav-pills flex-column mb-auto mx-3 my-3">
+			<li><a href="/pages/tasks"><i class="fas fa-columns"></i> Boards</a></li>
 			{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
 				<li><a href="/teams"><i class="fas fa-users"></i> {{#if (eq user.role "admin")}}Teams{{else}}My Team{{/if}}</a></li>
 			{{/if}}
-			<li><a href="pages/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a></li>
-			<li><a href="pages/profile"><i class="fas fa-user"></i> Profile</a></li>
-		</ul>
-	</nav>
-	<div class="sidebar-footer">
-		{{> points-badge points=user.total_points}}
-	</div>
+			<li><a href="/pages/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+			<li><a href="/pages/profile"><i class="fas fa-user"></i> Profile</a></li>
+			<li>
+				{{> points-badge points=user.total_points}}
+			</li>
+	</ul>
+	
 </aside>
 
