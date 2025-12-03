@@ -10,7 +10,6 @@ export type Board = {
   team_id: string;
   created_by: string | null;
   created_at: string;
-  updated_at: string | null;
 };
 
 export class BoardService {
@@ -102,9 +101,7 @@ export class BoardService {
     try {
       const { id, ...updates } = input;
 
-      const updateData: Record<string, string | number | boolean | null> = {
-        updated_at: new Date().toISOString(),
-      };
+      const updateData: Record<string, string | number | boolean | null> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.description !== undefined)
         updateData.description = updates.description;

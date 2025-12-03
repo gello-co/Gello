@@ -19,7 +19,6 @@ export type Task = {
   due_date: string | null;
   completed_at: string | null;
   created_at: string;
-  updated_at: string | null;
 };
 
 export class TaskService {
@@ -112,9 +111,7 @@ export class TaskService {
     try {
       const { id, ...updates } = input;
 
-      const updateData: Record<string, string | number | boolean | null> = {
-        updated_at: new Date().toISOString(),
-      };
+      const updateData: Record<string, string | number | boolean | null> = {};
 
       if (updates.list_id !== undefined) updateData.list_id = updates.list_id;
       if (updates.title !== undefined) updateData.title = updates.title;
@@ -166,7 +163,6 @@ export class TaskService {
         .update({
           list_id: input.list_id,
           position: input.position,
-          updated_at: new Date().toISOString(),
         })
         .eq("id", input.id)
         .select()
@@ -226,6 +222,17 @@ export class TaskService {
 
   async completeTask(id: string): Promise<Task> {
     try {
+      // First, get the task to check if it's already completed
+      const existingTask = await this.getTask(id);
+      if (!existingTask) {
+        throw new ResourceNotFoundError(`Task not found: ${id}`);
+      }
+
+      // If already completed, return the existing task (idempotent)
+      if (existingTask.completed_at) {
+        return existingTask;
+      }
+
       const { data, error } = await this.supabase
         .from("tasks")
         .update({

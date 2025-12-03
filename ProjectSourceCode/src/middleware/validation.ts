@@ -26,10 +26,13 @@ export const validateBody = (schema: z.ZodSchema) => {
 export const validateQuery = (schema: z.ZodSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsedQuery = (await schema.parseAsync(
-        req.query,
-      )) as Request["query"];
-      req.query = parsedQuery;
+      const parsedQuery = await schema.parseAsync(req.query);
+      // Since req.query is read-only, we copy parsed values back to it
+      // First clear existing keys, then copy new values
+      for (const key of Object.keys(req.query)) {
+        delete (req.query as Record<string, unknown>)[key];
+      }
+      Object.assign(req.query, parsedQuery);
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
