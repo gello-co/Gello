@@ -8,10 +8,10 @@
  */
 export function calculateTaskPoints(storyPoints: number): number {
   if (storyPoints === null || storyPoints === undefined) {
-    throw new Error("Story points cannot be null or undefined");
+    throw new Error('Story points cannot be null or undefined');
   }
   if (storyPoints < 0) {
-    throw new Error("Story points cannot be negative");
+    throw new Error('Story points cannot be negative');
   }
   return storyPoints;
 }

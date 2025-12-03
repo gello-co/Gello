@@ -1,5 +1,5 @@
-import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 
 /**
  * Vitest global setup.
@@ -11,56 +11,61 @@ import { existsSync, readFileSync } from "node:fs";
  */
 
 // Check if verbose logging is enabled
-const VERBOSE =
-  process.env.VERBOSE === "true" || process.env.VERBOSE_TESTS === "true";
+const VERBOSE = process.env.VERBOSE === 'true' || process.env.VERBOSE_TESTS === 'true';
 
 // Store mkcert CA certificate for direct use in TLS configuration
 let mkcertCACert: string | null = null;
 
+function tryConfigureMkcert(): boolean {
+  try {
+    const mkcertCARoot = execSync('mkcert -CAROOT 2>/dev/null', {
+      encoding: 'utf-8',
+    })
+      .toString()
+      .trim();
+
+    if (!mkcertCARoot) return false;
+
+    const rootCAPath = `${mkcertCARoot}/rootCA.pem`;
+    if (!existsSync(rootCAPath)) return false;
+
+    mkcertCACert = readFileSync(rootCAPath, 'utf-8');
+    process.env.NODE_EXTRA_CA_CERTS = rootCAPath;
+
+    if (VERBOSE) {
+      console.log(`[vitest-setup] Configured mkcert root CA: ${rootCAPath}`);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function configureTlsFallback(): void {
+  const warningHandler = (warning: Error) => {
+    if (warning.message.includes('NODE_TLS_REJECT_UNAUTHORIZED')) {
+      return;
+    }
+    process.removeListener('warning', warningHandler);
+    console.warn(warning);
+    process.on('warning', warningHandler);
+  };
+  process.on('warning', warningHandler);
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  if (VERBOSE) {
+    console.log('[vitest-setup] Using NODE_TLS_REJECT_UNAUTHORIZED=0 (mkcert not configured)');
+  }
+}
+
 function configureLocalHttps(): void {
   const url = process.env.API_URL || process.env.SUPABASE_URL;
-  if (url && (url.includes("127.0.0.1") || url.includes("localhost"))) {
-    // Try to use mkcert root CA for proper certificate trust
-    try {
-      const mkcertCARoot = execSync("mkcert -CAROOT 2>/dev/null", {
-        encoding: "utf-8",
-      })
-        .toString()
-        .trim();
-      if (mkcertCARoot) {
-        const rootCAPath = `${mkcertCARoot}/rootCA.pem`;
-        if (existsSync(rootCAPath)) {
-          mkcertCACert = readFileSync(rootCAPath, "utf-8");
-          process.env.NODE_EXTRA_CA_CERTS = rootCAPath;
+  const isLocalUrl = url && (url.includes('127.0.0.1') || url.includes('localhost'));
 
-          if (VERBOSE) {
-            console.log(
-              `[vitest-setup] Configured mkcert root CA: ${rootCAPath}`,
-            );
-          }
-          return;
-        }
-      }
-    } catch {
-      // mkcert not available - fall back to disabling verification
-    }
+  if (!isLocalUrl) return;
 
-    // Fallback: Disable certificate verification for localhost
-    const warningHandler = (warning: Error) => {
-      if (warning.message.includes("NODE_TLS_REJECT_UNAUTHORIZED")) {
-        return;
-      }
-      process.removeListener("warning", warningHandler);
-      console.warn(warning);
-      process.on("warning", warningHandler);
-    };
-    process.on("warning", warningHandler);
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-    if (VERBOSE) {
-      console.log(
-        "[vitest-setup] Using NODE_TLS_REJECT_UNAUTHORIZED=0 (mkcert not configured)",
-      );
-    }
+  // Try mkcert first, fall back to disabling TLS verification
+  if (!tryConfigureMkcert()) {
+    configureTlsFallback();
   }
 }
 
@@ -70,33 +75,31 @@ export function getMkcertCACert(): string | null {
 }
 
 function validateSupabaseEnvVars(): void {
-  const missing: string[] = [];
-  const attempted: Record<string, string[]> = {};
+  const missing: Array<string> = [];
+  const attempted: Record<string, Array<string>> = {};
 
-  attempted.SUPABASE_URL = ["API_URL", "SUPABASE_URL"];
+  attempted.SUPABASE_URL = ['API_URL', 'SUPABASE_URL'];
   const supabaseUrl = process.env.API_URL || process.env.SUPABASE_URL;
   if (!supabaseUrl) {
-    missing.push("SUPABASE_URL");
+    missing.push('SUPABASE_URL');
   }
 
   attempted.SUPABASE_SERVICE_ROLE_KEY = [
-    "SERVICE_ROLE_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "SECRET_KEY",
+    'SERVICE_ROLE_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SECRET_KEY',
   ];
   const supabaseServiceRoleKey =
-    process.env.SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SECRET_KEY;
+    process.env.SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SECRET_KEY;
   if (!supabaseServiceRoleKey) {
-    missing.push("SUPABASE_SERVICE_ROLE_KEY");
+    missing.push('SUPABASE_SERVICE_ROLE_KEY');
   }
 
   attempted.SUPABASE_ANON_KEY = [
-    "PUBLISHABLE_KEY",
-    "SUPABASE_ANON_KEY",
-    "ANON_KEY",
-    "SUPABASE_PUBLISHABLE_KEY",
+    'PUBLISHABLE_KEY',
+    'SUPABASE_ANON_KEY',
+    'ANON_KEY',
+    'SUPABASE_PUBLISHABLE_KEY',
   ];
   const supabaseAnonKey =
     process.env.PUBLISHABLE_KEY ||
@@ -104,7 +107,7 @@ function validateSupabaseEnvVars(): void {
     process.env.ANON_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseAnonKey) {
-    missing.push("SUPABASE_ANON_KEY");
+    missing.push('SUPABASE_ANON_KEY');
   }
 
   if (missing.length > 0) {
@@ -114,16 +117,16 @@ function validateSupabaseEnvVars(): void {
         return `  - ${varName}: Validation error (fallback list not found)`;
       }
       const checked = fallbacks
-        .map((fb) => `${fb} (${process.env[fb] ? "found" : "missing"})`)
-        .join(", ");
+        .map((fb) => `${fb} (${process.env[fb] ? 'found' : 'missing'})`)
+        .join(', ');
       return `  - ${varName}: Checked ${fallbacks.length} fallback(s): ${checked}`;
     });
 
     throw new Error(
-      `Missing required Supabase environment variables:\n\n${errorMessages.join("\n")}\n\n` +
+      `Missing required Supabase environment variables:\n\n${errorMessages.join('\n')}\n\n` +
         `These variables must be loaded from 'bunx supabase status -o env'.\n` +
         `Ensure Supabase is running: bun run supabase:start\n` +
-        `Then verify credentials: bunx supabase status -o env`,
+        `Then verify credentials: bunx supabase status -o env`
     );
   }
 }
@@ -133,26 +136,21 @@ let supabaseReady = false;
 
 // Use synchronous loading since we need env vars before tests run
 try {
-  const output = require("node:child_process")
-    .execSync("bunx supabase status -o env 2>&1", {
-      encoding: "utf-8",
+  const output = require('node:child_process')
+    .execSync('bunx supabase status -o env 2>&1', {
+      encoding: 'utf-8',
       cwd: process.cwd(),
     })
     .toString()
-    .split("\n")
+    .split('\n')
     .filter(
       (line: string) =>
-        !line.includes("Stopped services") &&
-        !line.startsWith("WARN:") &&
-        line.trim().length > 0,
+        !(line.includes('Stopped services') || line.startsWith('WARN:')) && line.trim().length > 0
     );
 
   if (
     output.length > 0 &&
-    output.some(
-      (line: string) =>
-        line.includes("API_URL") || line.includes("SERVICE_ROLE_KEY"),
-    )
+    output.some((line: string) => line.includes('API_URL') || line.includes('SERVICE_ROLE_KEY'))
   ) {
     for (const line of output) {
       const match = line.match(/^([A-Z_]+)=(?:"([^"]+)"|([^" \n]+))$/);
@@ -176,20 +174,19 @@ try {
     }
 
     if (process.env.API_URL) {
-      const apiUrl = process.env.API_URL.replace(/^https:/, "http:");
+      const apiUrl = process.env.API_URL.replace(/^https:/, 'http:');
       process.env.SUPABASE_LOCAL_URL = apiUrl;
       process.env.SUPABASE_URL = apiUrl;
     }
 
     if (!process.env.AUTH_SITE_URL) {
-      process.env.AUTH_SITE_URL = "http://127.0.0.1:3000";
+      process.env.AUTH_SITE_URL = 'http://127.0.0.1:3000';
     }
 
     configureLocalHttps();
 
     if (process.env.SERVICE_ROLE_KEY) {
-      process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY =
-        process.env.SERVICE_ROLE_KEY;
+      process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = process.env.SERVICE_ROLE_KEY;
       process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SERVICE_ROLE_KEY;
     } else if (process.env.SECRET_KEY) {
       process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY = process.env.SECRET_KEY;
@@ -205,7 +202,7 @@ try {
 
     if (VERBOSE) {
       console.log(
-        `[vitest-setup] Loaded Supabase env: URL=${process.env.SUPABASE_URL ? "[set]" : "[missing]"}, PUBLISHABLE_KEY=${process.env.PUBLISHABLE_KEY ? "[set]" : "[missing]"}, SECRET_KEY=${process.env.SECRET_KEY ? "[set]" : "[missing]"}`,
+        `[vitest-setup] Loaded Supabase env: URL=${process.env.SUPABASE_URL ? '[set]' : '[missing]'}, PUBLISHABLE_KEY=${process.env.PUBLISHABLE_KEY ? '[set]' : '[missing]'}, SECRET_KEY=${process.env.SECRET_KEY ? '[set]' : '[missing]'}`
       );
     }
   }
@@ -214,23 +211,21 @@ try {
 }
 
 if (!supabaseReady) {
-  console.warn(
-    "⚠️  Could not load Supabase environment variables. Supabase may not be running.",
-  );
-  console.warn("   Ensure Supabase is started: bun run db:start");
+  console.warn('⚠️  Could not load Supabase environment variables. Supabase may not be running.');
+  console.warn('   Ensure Supabase is started: bun run db:start');
 }
 
 // Only validate Supabase env vars for integration tests (not unit tests)
 // Unit tests should be able to run without Supabase
 const isIntegrationTest =
   process.env.VITEST_POOL_ID !== undefined &&
-  (process.argv.some((arg) => arg.includes("integration")) ||
-    process.env.TEST_TYPE === "integration");
+  (process.argv.some((arg) => arg.includes('integration')) ||
+    process.env.TEST_TYPE === 'integration');
 
 // Skip validation if explicitly disabled or running unit tests only
 const skipValidation =
-  process.env.SKIP_SUPABASE_VALIDATION === "true" ||
-  process.argv.some((arg) => arg.includes("tests/unit"));
+  process.env.SKIP_SUPABASE_VALIDATION === 'true' ||
+  process.argv.some((arg) => arg.includes('tests/unit'));
 
 if (!skipValidation && (supabaseReady || isIntegrationTest)) {
   validateSupabaseEnvVars();

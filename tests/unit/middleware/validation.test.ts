@@ -1,23 +1,19 @@
-import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it } from "vitest";
-import { z } from "zod";
-import {
-  validateBody,
-  validateParams,
-  validateQuery,
-} from "@/middleware/validation";
+import type { NextFunction, Request, Response } from 'express';
+import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import { validateBody, validateParams, validateQuery } from '@/middleware/validation';
 
-describe("Validation Middleware Unit Tests", () => {
+describe('Validation Middleware Unit Tests', () => {
   const testSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    age: z.number().min(0, "Age must be positive"),
+    name: z.string().min(1, 'Name is required'),
+    age: z.number().min(0, 'Age must be positive'),
   });
 
-  describe("validateBody", () => {
-    it("should pass valid data through", async () => {
+  describe('validateBody', () => {
+    it('should pass valid data through', async () => {
       const req = {
-        body: { name: "John", age: 30 },
-        path: "/test",
+        body: { name: 'John', age: 30 },
+        path: '/test',
       } as Request;
       const res = {} as Response;
       let nextCalled = false;
@@ -29,13 +25,13 @@ describe("Validation Middleware Unit Tests", () => {
       await middleware(req, res, next);
 
       expect(nextCalled).toBe(true);
-      expect(req.body).toEqual({ name: "John", age: 30 });
+      expect(req.body).toEqual({ name: 'John', age: 30 });
     });
 
-    it("should reject invalid data with 400", async () => {
+    it('should reject invalid data with 400', async () => {
       const req = {
-        body: { name: "", age: -1 },
-        path: "/test",
+        body: { name: '', age: -1 },
+        path: '/test',
       } as Request;
 
       let statusCode = 0;
@@ -65,16 +61,16 @@ describe("Validation Middleware Unit Tests", () => {
     });
   });
 
-  describe("validateQuery", () => {
+  describe('validateQuery', () => {
     const querySchema = z.object({
       page: z.coerce.number().min(1),
       limit: z.coerce.number().min(1).max(100),
     });
 
-    it("should validate query parameters", async () => {
+    it('should validate query parameters', async () => {
       const req = {
-        query: { page: "1", limit: "10" },
-        path: "/test",
+        query: { page: '1', limit: '10' },
+        path: '/test',
       } as unknown as Request;
       const res = {} as Response;
       let nextCalled = false;
@@ -95,10 +91,10 @@ describe("Validation Middleware Unit Tests", () => {
       expect(parsedQuery.limit).toBe(10);
     });
 
-    it("should reject invalid query parameters", async () => {
+    it('should reject invalid query parameters', async () => {
       const req = {
-        query: { page: "0", limit: "200" },
-        path: "/test",
+        query: { page: '0', limit: '200' },
+        path: '/test',
       } as unknown as Request;
 
       let statusCode = 0;
@@ -112,7 +108,9 @@ describe("Validation Middleware Unit Tests", () => {
         },
       } as unknown as Response;
 
-      const next = (() => {}) as NextFunction;
+      const next = (() => {
+        /* noop - testing error path */
+      }) as NextFunction;
 
       const middleware = validateQuery(querySchema);
       await middleware(req, res, next);
@@ -121,16 +119,16 @@ describe("Validation Middleware Unit Tests", () => {
     });
   });
 
-  describe("validateParams", () => {
+  describe('validateParams', () => {
     const paramsSchema = z.object({
-      id: z.string().uuid("Invalid ID format"),
+      id: z.string().uuid('Invalid ID format'),
     });
 
-    it("should validate URL parameters", async () => {
-      const validUuid = "123e4567-e89b-12d3-a456-426614174000";
+    it('should validate URL parameters', async () => {
+      const validUuid = '123e4567-e89b-12d3-a456-426614174000';
       const req = {
         params: { id: validUuid },
-        path: "/test",
+        path: '/test',
       } as unknown as Request;
       const res = {} as Response;
       let nextCalled = false;
@@ -145,10 +143,10 @@ describe("Validation Middleware Unit Tests", () => {
       expect(req.params.id).toBe(validUuid);
     });
 
-    it("should reject invalid UUID format", async () => {
+    it('should reject invalid UUID format', async () => {
       const req = {
-        params: { id: "not-a-uuid" },
-        path: "/test",
+        params: { id: 'not-a-uuid' },
+        path: '/test',
       } as unknown as Request;
 
       let statusCode = 0;
@@ -162,7 +160,9 @@ describe("Validation Middleware Unit Tests", () => {
         },
       } as unknown as Response;
 
-      const next = (() => {}) as NextFunction;
+      const next = (() => {
+        /* noop - testing error path */
+      }) as NextFunction;
 
       const middleware = validateParams(paramsSchema);
       await middleware(req, res, next);

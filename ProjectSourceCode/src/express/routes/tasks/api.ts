@@ -1,9 +1,6 @@
-import { Router } from "express";
-import { z } from "zod";
-import {
-  ForbiddenError,
-  ResourceNotFoundError,
-} from "@/lib/errors/app.errors.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { ForbiddenError, ResourceNotFoundError } from '@/lib/errors/app.errors.js';
 import {
   assignTaskSchema,
   createTaskBodySchema,
@@ -11,14 +8,10 @@ import {
   moveTaskSchema,
   taskIdSchema,
   updateTaskSchema,
-} from "@/lib/schemas/task.js";
-import { requireAuth } from "@/middleware/requireAuth.js";
-import { requireManager } from "@/middleware/requireManager.js";
-import {
-  validateBody,
-  validateParams,
-  validateQuery,
-} from "@/middleware/validation.js";
+} from '@/lib/schemas/task.js';
+import { requireAuth } from '@/middleware/requireAuth.js';
+import { requireManager } from '@/middleware/requireManager.js';
+import { validateBody, validateParams, validateQuery } from '@/middleware/validation.js';
 
 const router = Router();
 
@@ -28,11 +21,11 @@ const listQuerySchema = z
     assignee_id: z.string().uuid().optional(),
   })
   .refine((data) => data.list_id || data.assignee_id, {
-    message: "Provide list_id or assignee_id",
+    message: 'Provide list_id or assignee_id',
   });
 
 const listIdParamSchema = z.object({
-  listId: z.string().uuid("Invalid list ID"),
+  listId: z.string().uuid('Invalid list ID'),
 });
 
 // ============================================================================
@@ -40,7 +33,7 @@ const listIdParamSchema = z.object({
 // ============================================================================
 
 router.get(
-  "/lists/:listId/tasks",
+  '/lists/:listId/tasks',
   requireAuth,
   validateParams(listIdParamSchema),
   async (req, res, next) => {
@@ -52,11 +45,11 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.post(
-  "/lists/:listId/tasks",
+  '/lists/:listId/tasks',
   requireAuth,
   requireManager,
   validateParams(listIdParamSchema),
@@ -72,57 +65,45 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 // ============================================================================
 // INDIVIDUAL TASK ROUTES: /api/tasks/:id
 // ============================================================================
 
-router.get(
-  "/:id",
-  requireAuth,
-  validateParams(taskIdSchema),
-  async (req, res, next) => {
-    try {
-      const service = res.locals.services.task;
-      // id is guaranteed after validation
-      const task = await service.getTask(req.params.id as string);
-      if (!task) {
-        throw new ResourceNotFoundError(`Task not found: ${req.params.id}`);
-      }
-      res.json(task);
-    } catch (error) {
-      next(error);
+router.get('/:id', requireAuth, validateParams(taskIdSchema), async (req, res, next) => {
+  try {
+    const service = res.locals.services.task;
+    // id is guaranteed after validation
+    const task = await service.getTask(req.params.id as string);
+    if (!task) {
+      throw new ResourceNotFoundError(`Task not found: ${req.params.id}`);
     }
-  },
-);
+    res.json(task);
+  } catch (error) {
+    next(error);
+  }
+});
 
-router.get(
-  "/",
-  requireAuth,
-  validateQuery(listQuerySchema),
-  async (req, res, next) => {
-    try {
-      const service = res.locals.services.task;
-      if (req.query.list_id) {
-        const tasks = await service.getTasksByList(req.query.list_id as string);
-        return res.json(tasks);
-      }
-      if (req.query.assignee_id) {
-        const tasks = await service.getTasksByAssignee(
-          req.query.assignee_id as string,
-        );
-        return res.json(tasks);
-      }
-    } catch (error) {
-      next(error);
+router.get('/', requireAuth, validateQuery(listQuerySchema), async (req, res, next) => {
+  try {
+    const service = res.locals.services.task;
+    if (req.query.list_id) {
+      const tasks = await service.getTasksByList(req.query.list_id as string);
+      return res.json(tasks);
     }
-  },
-);
+    if (req.query.assignee_id) {
+      const tasks = await service.getTasksByAssignee(req.query.assignee_id as string);
+      return res.json(tasks);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post(
-  "/",
+  '/',
   requireAuth,
   requireManager,
   validateBody(createTaskSchema),
@@ -134,11 +115,11 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.put(
-  "/:id",
+  '/:id',
   requireAuth,
   requireManager,
   validateParams(taskIdSchema),
@@ -154,7 +135,7 @@ router.put(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 // ============================================================================
@@ -162,7 +143,7 @@ router.put(
 // ============================================================================
 
 router.patch(
-  "/:id/assign",
+  '/:id/assign',
   requireAuth,
   requireManager,
   validateParams(taskIdSchema),
@@ -179,64 +160,59 @@ router.patch(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
-router.patch(
-  "/:id/complete",
-  requireAuth,
-  validateParams(taskIdSchema),
-  async (req, res, next) => {
-    try {
-      if (!req.user?.id) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const taskService = res.locals.services.task;
-      const pointsService = res.locals.services.points;
-
-      // id is guaranteed after validation
-      const taskId = req.params.id as string;
-
-      // Get the task first to check authorization
-      const task = await taskService.getTask(taskId);
-      if (!task) {
-        throw new ResourceNotFoundError(`Task not found: ${taskId}`);
-      }
-
-      // Check if the task is assigned to the current user
-      if (task.assigned_to !== req.user.id) {
-        throw new ForbiddenError("You can only complete tasks assigned to you");
-      }
-
-      // Complete the task (sets completed_at timestamp)
-      const completedTask = await taskService.completeTask(taskId);
-
-      // Award points for task completion
-      try {
-        await pointsService.awardPointsForTaskCompletion(taskId, req.user.id);
-      } catch {
-        // Points may have already been awarded (idempotent) - continue anyway
-      }
-
-      // Check if this is an HTMX request (for partial rendering)
-      if (req.headers["hx-request"] === "true") {
-        return res.render("partials/task-card", {
-          layout: false,
-          task: completedTask,
-          user: req.user,
-        });
-      }
-
-      res.json(completedTask);
-    } catch (error) {
-      next(error);
+router.patch('/:id/complete', requireAuth, validateParams(taskIdSchema), async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-  },
-);
+
+    const taskService = res.locals.services.task;
+    const pointsService = res.locals.services.points;
+
+    // id is guaranteed after validation
+    const taskId = req.params.id as string;
+
+    // Get the task first to check authorization
+    const task = await taskService.getTask(taskId);
+    if (!task) {
+      throw new ResourceNotFoundError(`Task not found: ${taskId}`);
+    }
+
+    // Check if the task is assigned to the current user
+    if (task.assigned_to !== req.user.id) {
+      throw new ForbiddenError('You can only complete tasks assigned to you');
+    }
+
+    // Complete the task (sets completed_at timestamp)
+    const completedTask = await taskService.completeTask(taskId);
+
+    // Award points for task completion
+    try {
+      await pointsService.awardPointsForTaskCompletion(taskId, req.user.id);
+    } catch {
+      // Points may have already been awarded (idempotent) - continue anyway
+    }
+
+    // Check if this is an HTMX request (for partial rendering)
+    if (req.headers['hx-request'] === 'true') {
+      return res.render('partials/task-card', {
+        layout: false,
+        task: completedTask,
+        user: req.user,
+      });
+    }
+
+    res.json(completedTask);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.patch(
-  "/:id/move",
+  '/:id/move',
   requireAuth,
   requireManager,
   validateParams(taskIdSchema),
@@ -254,11 +230,11 @@ router.patch(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   requireAuth,
   requireManager,
   validateParams(taskIdSchema),
@@ -271,7 +247,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 export default router;

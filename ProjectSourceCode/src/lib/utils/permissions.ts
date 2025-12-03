@@ -3,27 +3,27 @@
  * Pure functions for role-based permission checks
  */
 
-export type UserRole = "admin" | "manager" | "member";
+export type UserRole = 'admin' | 'manager' | 'member';
 
 /**
  * Check if role is admin
  */
 export function isAdmin(role: UserRole | string): boolean {
-  return role === "admin";
+  return role === 'admin';
 }
 
 /**
  * Check if role is manager
  */
 export function isManager(role: UserRole | string): boolean {
-  return role === "manager";
+  return role === 'manager';
 }
 
 /**
  * Check if role is member
  */
 export function isMember(role: UserRole | string): boolean {
-  return role === "member";
+  return role === 'member';
 }
 
 /**
@@ -31,7 +31,7 @@ export function isMember(role: UserRole | string): boolean {
  * Used by canManage* functions to avoid duplication
  */
 function canManageResource(role: UserRole | string): boolean {
-  return role === "admin" || role === "manager";
+  return role === 'admin' || role === 'manager';
 }
 
 /**
@@ -66,12 +66,12 @@ export function canManageTask(role: UserRole | string): boolean {
  * Check if role can view all users (admin only)
  */
 export function canViewAllUsers(role: UserRole | string): boolean {
-  return role === "admin";
+  return role === 'admin';
 }
 
 /**
  * Check if role can manage users (admin only)
  */
 export function canManageUsers(role: UserRole | string): boolean {
-  return role === "admin";
+  return role === 'admin';
 }

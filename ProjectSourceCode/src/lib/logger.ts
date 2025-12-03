@@ -8,15 +8,13 @@
  * - Rotation: Handled by external tools (logrotate, PM2, systemd) or process managers
  */
 
-import pino from "pino";
+import pino from 'pino';
 
-const isDevelopment = process.env.NODE_ENV === "development";
-const isProduction = process.env.NODE_ENV === "production";
-const isTest = process.env.NODE_ENV === "test";
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
+const isTest = process.env.NODE_ENV === 'test';
 // Silent by default in test mode to reduce noise; override with LOG_LEVEL=debug for verbose test output
-const logLevel =
-  process.env.LOG_LEVEL ||
-  (isTest ? "silent" : isDevelopment ? "debug" : "info");
+const logLevel = process.env.LOG_LEVEL || (isTest ? 'silent' : isDevelopment ? 'debug' : 'info');
 const logFile = process.env.LOG_FILE;
 
 /**
@@ -24,12 +22,12 @@ const logFile = process.env.LOG_FILE;
  * Prevents authorization headers and cookies from being logged
  */
 const redactPaths = [
-  "req.headers.authorization",
-  "req.headers.cookie",
-  "headers.authorization",
-  "headers.cookie",
-  "authorization",
-  "cookie",
+  'req.headers.authorization',
+  'req.headers.cookie',
+  'headers.authorization',
+  'headers.cookie',
+  'authorization',
+  'cookie',
 ];
 
 /**
@@ -58,7 +56,7 @@ try {
             },
             timestamp: pino.stdTimeFunctions.isoTime,
             base: {
-              env: process.env.NODE_ENV || "production",
+              env: process.env.NODE_ENV || 'production',
             },
           },
           // File destination for production (rotation handled by logrotate/PM2/systemd)
@@ -66,7 +64,7 @@ try {
             dest: logFile,
             sync: false, // Async writes for better performance
             mkdir: true, // Create log directory if it doesn't exist
-          }),
+          })
         )
       : pino({
           level: logLevel,
@@ -75,11 +73,11 @@ try {
             ? {
                 // Pretty printing for development (console)
                 transport: {
-                  target: "pino-pretty",
+                  target: 'pino-pretty',
                   options: {
                     colorize: true,
-                    translateTime: "SYS:standard",
-                    ignore: "pid,hostname",
+                    translateTime: 'SYS:standard',
+                    ignore: 'pid,hostname',
                   },
                 },
               }
@@ -93,24 +91,21 @@ try {
                 timestamp: pino.stdTimeFunctions.isoTime,
               }),
           base: {
-            env: process.env.NODE_ENV || "development",
+            env: process.env.NODE_ENV || 'development',
           },
         });
 } catch (error) {
   // Fallback to console if logger initialization fails
-  console.error(
-    "Failed to initialize Pino logger, falling back to console:",
-    error,
-  );
+  console.error('Failed to initialize Pino logger, falling back to console:', error);
   loggerInstance = pino({
     level: logLevel,
     redact: redactPaths,
     transport: {
-      target: "pino-pretty",
+      target: 'pino-pretty',
       options: {
         colorize: true,
-        translateTime: "SYS:standard",
-        ignore: "pid,hostname",
+        translateTime: 'SYS:standard',
+        ignore: 'pid,hostname',
       },
     },
   });

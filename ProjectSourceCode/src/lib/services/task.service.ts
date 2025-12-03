@@ -1,12 +1,12 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { ResourceNotFoundError } from "../errors/app.errors.js";
-import { logger } from "../logger.js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ResourceNotFoundError } from '../errors/app.errors.js';
+import { logger } from '../logger.js';
 import type {
   AssignTaskInput,
   CreateTaskInput,
   MoveTaskInput,
   UpdateTaskInput,
-} from "../schemas/task.js";
+} from '../schemas/task.js';
 
 export type Task = {
   id: string;
@@ -26,64 +26,58 @@ export class TaskService {
 
   async getTask(id: string): Promise<Task | null> {
     try {
-      const { data, error } = await this.supabase
-        .from("tasks")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await this.supabase.from('tasks').select('*').eq('id', id).single();
 
       if (error) {
-        if (error.code === "PGRST116") return null;
+        if (error.code === 'PGRST116') return null;
         throw error;
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, id }, "Failed to get task by ID");
+      logger.error({ error, id }, 'Failed to get task by ID');
       throw error;
     }
   }
 
-  async getTasksByList(listId: string): Promise<Task[]> {
+  async getTasksByList(listId: string): Promise<Array<Task>> {
     try {
       const { data, error } = await this.supabase
-        .from("tasks")
-        .select("*")
-        .eq("list_id", listId)
-        .order("position", { ascending: true });
+        .from('tasks')
+        .select('*')
+        .eq('list_id', listId)
+        .order('position', { ascending: true });
 
       if (error) throw error;
 
       return data || [];
     } catch (error) {
-      logger.error({ error, listId }, "Failed to get tasks by list");
+      logger.error({ error, listId }, 'Failed to get tasks by list');
       throw error;
     }
   }
 
-  async getTasksByAssignee(userId: string): Promise<Task[]> {
+  async getTasksByAssignee(userId: string): Promise<Array<Task>> {
     try {
       const { data, error } = await this.supabase
-        .from("tasks")
-        .select("*")
-        .eq("assigned_to", userId)
-        .order("created_at", { ascending: false });
+        .from('tasks')
+        .select('*')
+        .eq('assigned_to', userId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       return data || [];
     } catch (error) {
-      logger.error({ error, userId }, "Failed to get tasks by assignee");
+      logger.error({ error, userId }, 'Failed to get tasks by assignee');
       throw error;
     }
   }
 
-  async createTask(
-    input: CreateTaskInput & { list_id: string },
-  ): Promise<Task> {
+  async createTask(input: CreateTaskInput & { list_id: string }): Promise<Task> {
     try {
       const { data, error } = await this.supabase
-        .from("tasks")
+        .from('tasks')
         .insert({
           list_id: input.list_id,
           title: input.title,
@@ -97,12 +91,12 @@ export class TaskService {
         .single();
 
       if (error || !data) {
-        throw error || new Error("Failed to create task: No data returned");
+        throw error || new Error('Failed to create task: No data returned');
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to create task");
+      logger.error({ error, input }, 'Failed to create task');
       throw error;
     }
   }
@@ -115,28 +109,22 @@ export class TaskService {
 
       if (updates.list_id !== undefined) updateData.list_id = updates.list_id;
       if (updates.title !== undefined) updateData.title = updates.title;
-      if (updates.description !== undefined)
-        updateData.description = updates.description;
-      if (updates.story_points !== undefined)
-        updateData.story_points = updates.story_points;
-      if (updates.assigned_to !== undefined)
-        updateData.assigned_to = updates.assigned_to;
-      if (updates.position !== undefined)
-        updateData.position = updates.position;
-      if (updates.due_date !== undefined)
-        updateData.due_date = updates.due_date;
-      if (updates.completed_at !== undefined)
-        updateData.completed_at = updates.completed_at;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.story_points !== undefined) updateData.story_points = updates.story_points;
+      if (updates.assigned_to !== undefined) updateData.assigned_to = updates.assigned_to;
+      if (updates.position !== undefined) updateData.position = updates.position;
+      if (updates.due_date !== undefined) updateData.due_date = updates.due_date;
+      if (updates.completed_at !== undefined) updateData.completed_at = updates.completed_at;
 
       const { data, error } = await this.supabase
-        .from("tasks")
+        .from('tasks')
         .update(updateData)
-        .eq("id", id)
+        .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Task not found: ${id}`);
         }
         throw error;
@@ -148,7 +136,7 @@ export class TaskService {
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to update task");
+      logger.error({ error, input }, 'Failed to update task');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -159,17 +147,17 @@ export class TaskService {
   async moveTask(input: MoveTaskInput & { id: string }): Promise<Task> {
     try {
       const { data, error } = await this.supabase
-        .from("tasks")
+        .from('tasks')
         .update({
           list_id: input.list_id,
           position: input.position,
         })
-        .eq("id", input.id)
+        .eq('id', input.id)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Task not found: ${input.id}`);
         }
         throw error;
@@ -181,7 +169,7 @@ export class TaskService {
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to move task");
+      logger.error({ error, input }, 'Failed to move task');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -194,23 +182,20 @@ export class TaskService {
     if (input.assigned_to) {
       try {
         const { data: user, error } = await this.supabase
-          .from("users")
-          .select("id")
-          .eq("id", input.assigned_to)
+          .from('users')
+          .select('id')
+          .eq('id', input.assigned_to)
           .single();
 
         if (error || !user) {
-          throw new ResourceNotFoundError("Assignee not found");
+          throw new ResourceNotFoundError('Assignee not found');
         }
       } catch (error) {
         if (error instanceof ResourceNotFoundError) {
           throw error;
         }
-        logger.error(
-          { error, assigned_to: input.assigned_to },
-          "Failed to validate assignee",
-        );
-        throw new Error("Database error while validating assignee");
+        logger.error({ error, assigned_to: input.assigned_to }, 'Failed to validate assignee');
+        throw new Error('Database error while validating assignee');
       }
     }
 
@@ -234,16 +219,16 @@ export class TaskService {
       }
 
       const { data, error } = await this.supabase
-        .from("tasks")
+        .from('tasks')
         .update({
           completed_at: new Date().toISOString(),
         })
-        .eq("id", id)
+        .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Task not found: ${id}`);
         }
         throw error;
@@ -255,7 +240,7 @@ export class TaskService {
 
       return data;
     } catch (error) {
-      logger.error({ error, id }, "Failed to complete task");
+      logger.error({ error, id }, 'Failed to complete task');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -265,21 +250,16 @@ export class TaskService {
 
   async deleteTask(id: string): Promise<void> {
     try {
-      const { error } = await this.supabase
-        .from("tasks")
-        .delete()
-        .eq("id", id)
-        .select()
-        .single();
+      const { error } = await this.supabase.from('tasks').delete().eq('id', id).select().single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Task not found: ${id}`);
         }
         throw error;
       }
     } catch (error) {
-      logger.error({ error, id }, "Failed to delete task");
+      logger.error({ error, id }, 'Failed to delete task');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }

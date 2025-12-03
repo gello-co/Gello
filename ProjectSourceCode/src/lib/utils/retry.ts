@@ -1,8 +1,4 @@
-import {
-  NonRetryableError,
-  ResourceNotFoundError,
-  RetryableError,
-} from "../errors/app.errors.js";
+import { NonRetryableError, ResourceNotFoundError, RetryableError } from '../errors/app.errors.js';
 
 /**
  * Configuration for retry behavior
@@ -20,13 +16,13 @@ const RETRY_CONFIG = {
  * Case-insensitive matching will be used
  */
 const RETRYABLE_ERROR_CODES = [
-  "ECONNRESET",
-  "ECONNREFUSED",
-  "ENOTFOUND",
-  "ETIMEDOUT",
-  "EAI_AGAIN",
-  "ENETUNREACH",
-  "EHOSTUNREACH",
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ENOTFOUND',
+  'ETIMEDOUT',
+  'EAI_AGAIN',
+  'ENETUNREACH',
+  'EHOSTUNREACH',
 ] as const;
 
 /**
@@ -34,11 +30,11 @@ const RETRYABLE_ERROR_CODES = [
  * Case-insensitive matching will be used
  */
 const NON_RETRYABLE_ERROR_CODES = [
-  "PGRST116", // Supabase: Resource not found
-  "23505", // Postgres: Unique violation
-  "23503", // Postgres: Foreign key violation
-  "23502", // Postgres: Not null violation
-  "P0001", // Postgres: Raise exception
+  'PGRST116', // Supabase: Resource not found
+  '23505', // Postgres: Unique violation
+  '23503', // Postgres: Foreign key violation
+  '23502', // Postgres: Not null violation
+  'P0001', // Postgres: Raise exception
 ] as const;
 
 /**
@@ -46,10 +42,10 @@ const NON_RETRYABLE_ERROR_CODES = [
  * Case-insensitive matching will be used
  */
 const RETRYABLE_ERROR_NAMES = [
-  "TimeoutError",
-  "NetworkError",
-  "ConnectionError",
-  "RetryableError",
+  'TimeoutError',
+  'NetworkError',
+  'ConnectionError',
+  'RetryableError',
 ] as const;
 
 /**
@@ -57,10 +53,10 @@ const RETRYABLE_ERROR_NAMES = [
  * Case-insensitive matching will be used
  */
 const NON_RETRYABLE_ERROR_NAMES = [
-  "ValidationError",
-  "ResourceNotFoundError",
-  "NonRetryableError",
-  "ZodError",
+  'ValidationError',
+  'ResourceNotFoundError',
+  'NonRetryableError',
+  'ZodError',
 ] as const;
 
 /**
@@ -69,9 +65,9 @@ const NON_RETRYABLE_ERROR_NAMES = [
 function hasRetryableFlag(error: unknown): error is { retryable: boolean } {
   return (
     error !== null &&
-    typeof error === "object" &&
-    "retryable" in error &&
-    typeof (error as { retryable: unknown }).retryable === "boolean"
+    typeof error === 'object' &&
+    'retryable' in error &&
+    typeof (error as { retryable: unknown }).retryable === 'boolean'
   );
 }
 
@@ -85,7 +81,7 @@ function equalsIgnoreCase(a: string, b: string): boolean {
 /**
  * Checks if a value matches any item in an array (case-insensitive)
  */
-function matchesAny(value: string, items: readonly string[]): boolean {
+function matchesAny(value: string, items: ReadonlyArray<string>): boolean {
   return items.some((item) => equalsIgnoreCase(value, item));
 }
 
@@ -112,68 +108,70 @@ export function isRetryableError(error: unknown): boolean {
     return false;
   }
 
-  // Priority 2: Check well-known error codes (case-insensitive)
-  const errorCode = (error as { code?: string }).code;
-  if (errorCode && typeof errorCode === "string") {
-    if (matchesAny(errorCode, NON_RETRYABLE_ERROR_CODES)) {
-      return false;
-    }
-    if (matchesAny(errorCode, RETRYABLE_ERROR_CODES)) {
-      return true;
-    }
-  }
+  // Priority 2: Check by error code
+  const codeResult = checkErrorCode(error);
+  if (codeResult !== null) return codeResult;
 
-  // Priority 2: Check well-known error names (case-insensitive)
-  const errorName = error.name;
-  if (errorName && typeof errorName === "string") {
-    if (matchesAny(errorName, NON_RETRYABLE_ERROR_NAMES)) {
-      return false;
-    }
-    if (matchesAny(errorName, RETRYABLE_ERROR_NAMES)) {
-      return true;
-    }
-  }
+  // Priority 2: Check by error name
+  const nameResult = checkErrorName(error);
+  if (nameResult !== null) return nameResult;
 
   // Priority 3: Check for typed flag or custom class property
-  if (hasRetryableFlag(error)) {
-    return error.retryable;
-  }
+  const flagResult = checkRetryableFlag(error);
+  if (flagResult !== null) return flagResult;
 
-  if (RetryableError.isRetryableError(error)) {
-    return true;
-  }
+  // Priority 4: Fall back to message-based checks
+  return checkErrorMessage(error);
+}
 
-  if (NonRetryableError.isNonRetryableError(error)) {
-    return false;
-  }
+function checkErrorCode(error: Error): boolean | null {
+  const errorCode = (error as { code?: string }).code;
+  if (!errorCode || typeof errorCode !== 'string') return null;
 
-  // Priority 4: Fall back to existing lower-cased message checks
+  if (matchesAny(errorCode, NON_RETRYABLE_ERROR_CODES)) return false;
+  if (matchesAny(errorCode, RETRYABLE_ERROR_CODES)) return true;
+  return null;
+}
+
+function checkErrorName(error: Error): boolean | null {
+  const errorName = error.name;
+  if (!errorName || typeof errorName !== 'string') return null;
+
+  if (matchesAny(errorName, NON_RETRYABLE_ERROR_NAMES)) return false;
+  if (matchesAny(errorName, RETRYABLE_ERROR_NAMES)) return true;
+  return null;
+}
+
+function checkRetryableFlag(error: Error): boolean | null {
+  if (hasRetryableFlag(error)) return error.retryable;
+  if (RetryableError.isRetryableError(error)) return true;
+  if (NonRetryableError.isNonRetryableError(error)) return false;
+  return null;
+}
+
+function checkErrorMessage(error: Error): boolean {
   const rawMessage = (error as { message?: unknown }).message;
-  if (typeof rawMessage !== "string") {
-    return false;
-  }
+  if (typeof rawMessage !== 'string') return false;
+
   const message = rawMessage.toLowerCase();
 
   // Don't retry on business logic errors
-  if (
-    message.includes("already completed") ||
-    message.includes("not found") ||
-    message.includes("invalid") ||
-    message.includes("validation")
-  ) {
+  const nonRetryablePatterns = ['already completed', 'not found', 'invalid', 'validation'];
+  if (nonRetryablePatterns.some((pattern) => message.includes(pattern))) {
     return false;
   }
 
   // Retry on transient errors (database connection, network issues)
-  return (
-    message.includes("connection") ||
-    message.includes("timeout") ||
-    message.includes("network") ||
-    message.includes("econnreset") ||
-    message.includes("fetch failed") ||
-    message.includes("failed to create") ||
-    message.includes("failed to update")
-  );
+  const retryablePatterns = [
+    'connection',
+    'timeout',
+    'network',
+    'econnreset',
+    'fetch failed',
+    'failed to create',
+    'failed to update',
+  ];
+  return retryablePatterns.some((pattern) => message.includes(pattern));
 }
 
 /**
@@ -203,7 +201,7 @@ export function isRetryableError(error: unknown): boolean {
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = RETRY_CONFIG.maxRetries,
-  initialDelay: number = RETRY_CONFIG.initialDelay,
+  initialDelay: number = RETRY_CONFIG.initialDelay
 ): Promise<T> {
   let lastError: Error | undefined;
 
@@ -234,5 +232,5 @@ export async function retryWithBackoff<T>(
     }
   }
 
-  throw lastError || new Error("Retry failed");
+  throw lastError || new Error('Retry failed');
 }

@@ -1,21 +1,21 @@
-import express from "express";
-import "../../../types/express.d.js";
-import { BoardService } from "../../../lib/services/board.service.js";
-import { ListService } from "../../../lib/services/list.service.js";
-import { TaskService } from "../../../lib/services/task.service.js";
-import { TeamService } from "../../../lib/services/team.service.js";
-import { requireAuth } from "../../../middleware/requireAuth.js";
+import express from 'express';
+import '../../../types/express.d.js';
+import { BoardService } from '../../../lib/services/board.service.js';
+import { ListService } from '../../../lib/services/list.service.js';
+import { TaskService } from '../../../lib/services/task.service.js';
+import { TeamService } from '../../../lib/services/team.service.js';
+import { requireAuth } from '../../../middleware/requireAuth.js';
 
 const router = express.Router();
 
 function getSupabase(req: express.Request) {
   if (!req.supabase) {
-    throw new Error("Supabase client is not available on the request context.");
+    throw new Error('Supabase client is not available on the request context.');
   }
   return req.supabase;
 }
 
-router.get("/", requireAuth, async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
     const teamId = req.query.team_id as string | undefined;
 
@@ -27,9 +27,9 @@ router.get("/", requireAuth, async (req, res, next) => {
       : // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
         await boardService.getBoardsForUser(req.user!.id);
 
-    res.render("boards/index", {
-      title: "Boards",
-      layout: "dashboard",
+    res.render('boards/index', {
+      title: 'Boards',
+      layout: 'dashboard',
       // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       boards,
@@ -39,13 +39,13 @@ router.get("/", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/:id", requireAuth, async (req, res, next) => {
+router.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const id = req.params.id;
     if (!id) {
-      return res.status(404).render("pages/404", {
-        title: "Board Not Found",
-        layout: "main",
+      return res.status(404).render('pages/404', {
+        title: 'Board Not Found',
+        layout: 'main',
       });
     }
 
@@ -57,9 +57,9 @@ router.get("/:id", requireAuth, async (req, res, next) => {
 
     const board = await boardService.getBoard(id);
     if (!board) {
-      return res.status(404).render("pages/404", {
-        title: "Board Not Found",
-        layout: "main",
+      return res.status(404).render('pages/404', {
+        title: 'Board Not Found',
+        layout: 'main',
       });
     }
 
@@ -68,7 +68,7 @@ router.get("/:id", requireAuth, async (req, res, next) => {
       lists.map(async (list) => {
         const tasks = await taskService.getTasksByList(list.id);
         return { ...list, tasks };
-      }),
+      })
     );
 
     let users: Array<{ id: string; display_name: string }> = [];
@@ -80,14 +80,14 @@ router.get("/:id", requireAuth, async (req, res, next) => {
       }));
     }
 
-    res.render("boards/detail", {
+    res.render('boards/detail', {
       title: board.name,
-      layout: "dashboard",
+      layout: 'dashboard',
       user: req.user,
       board,
       lists: listsWithTasks,
       users,
-      scripts: ["/js/board.js", "/js/task-modal.js", "/js/task-card.js"],
+      scripts: ['/js/board.js', '/js/task-modal.js', '/js/task-card.js'],
     });
   } catch (error) {
     next(error);

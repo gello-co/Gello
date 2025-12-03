@@ -1,4 +1,4 @@
-import type { Mock } from "vitest";
+import type { Mock } from 'vitest';
 
 /**
  * Type-safe cast for mocked functions.
@@ -9,5 +9,5 @@ import type { Mock } from "vitest";
  * mockFn(myModule.myFunction).mockResolvedValue(result);
  */
 // biome-ignore lint/suspicious/noExplicitAny: Generic mock function utility needs flexible typing
-export const mockFn = <Fn extends (...args: any[]) => any>(fn: Fn): Mock<Fn> =>
+export const mockFn = <Fn extends (...args: Array<any>) => any>(fn: Fn): Mock<Fn> =>
   fn as unknown as Mock<Fn>;

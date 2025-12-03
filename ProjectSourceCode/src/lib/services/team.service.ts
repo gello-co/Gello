@@ -1,7 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { ResourceNotFoundError } from "../errors/app.errors.js";
-import { logger } from "../logger.js";
-import type { CreateTeamInput, UpdateTeamInput } from "../schemas/team.js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ResourceNotFoundError } from '../errors/app.errors.js';
+import { logger } from '../logger.js';
+import type { CreateTeamInput, UpdateTeamInput } from '../schemas/team.js';
 
 export type Team = {
   id: string;
@@ -24,36 +24,32 @@ export class TeamService {
 
   async getTeam(id: string): Promise<Team | null> {
     try {
-      const { data, error } = await this.supabase
-        .from("teams")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await this.supabase.from('teams').select('*').eq('id', id).single();
 
       if (error) {
-        if (error.code === "PGRST116") return null;
+        if (error.code === 'PGRST116') return null;
         throw error;
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, id }, "Failed to get team by ID");
+      logger.error({ error, id }, 'Failed to get team by ID');
       throw error;
     }
   }
 
-  async getAllTeams(): Promise<Team[]> {
+  async getAllTeams(): Promise<Array<Team>> {
     try {
       const { data, error } = await this.supabase
-        .from("teams")
-        .select("*")
-        .order("name", { ascending: true });
+        .from('teams')
+        .select('*')
+        .order('name', { ascending: true });
 
       if (error) throw error;
 
       return data || [];
     } catch (error) {
-      logger.error({ error }, "Failed to get all teams");
+      logger.error({ error }, 'Failed to get all teams');
       throw error;
     }
   }
@@ -61,7 +57,7 @@ export class TeamService {
   async createTeam(input: CreateTeamInput): Promise<Team> {
     try {
       const { data, error } = await this.supabase
-        .from("teams")
+        .from('teams')
         .insert({
           name: input.name,
         })
@@ -69,24 +65,24 @@ export class TeamService {
         .single();
 
       if (error || !data) {
-        throw error || new Error("Failed to create team: No data returned");
+        throw error || new Error('Failed to create team: No data returned');
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to create team");
+      logger.error({ error, input }, 'Failed to create team');
       throw error;
     }
   }
 
   async createTeamWithManager(
     input: CreateTeamInput,
-    managerId: string,
+    managerId: string
   ): Promise<{ team: Team; user: User }> {
     try {
       // Create team first
       const { data: team, error: teamError } = await this.supabase
-        .from("teams")
+        .from('teams')
         .insert({
           name: input.name,
         })
@@ -94,42 +90,37 @@ export class TeamService {
         .single();
 
       if (teamError || !team) {
-        throw teamError || new Error("Failed to create team: No data returned");
+        throw teamError || new Error('Failed to create team: No data returned');
       }
 
       // Then assign manager to team
       const { data: user, error: userError } = await this.supabase
-        .from("users")
+        .from('users')
         .update({ team_id: team.id })
-        .eq("id", managerId)
+        .eq('id', managerId)
         .select()
         .single();
 
       if (userError || !user) {
         // If user update fails, rollback by deleting the team
         const { error: rollbackError } = await this.supabase
-          .from("teams")
+          .from('teams')
           .delete()
-          .eq("id", team.id);
+          .eq('id', team.id);
 
         if (rollbackError) {
           logger.error(
             { rollbackError, teamId: team.id, userError },
-            "Failed to rollback team creation after user update failure",
+            'Failed to rollback team creation after user update failure'
           );
         }
 
-        throw (
-          userError || new ResourceNotFoundError(`User not found: ${managerId}`)
-        );
+        throw userError || new ResourceNotFoundError(`User not found: ${managerId}`);
       }
 
       return { team, user };
     } catch (error) {
-      logger.error(
-        { error, input, managerId },
-        "Failed to create team with manager",
-      );
+      logger.error({ error, input, managerId }, 'Failed to create team with manager');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -145,14 +136,14 @@ export class TeamService {
       if (updates.name !== undefined) updateData.name = updates.name;
 
       const { data, error } = await this.supabase
-        .from("teams")
+        .from('teams')
         .update(updateData)
-        .eq("id", id)
+        .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Team not found: ${id}`);
         }
         throw error;
@@ -164,7 +155,7 @@ export class TeamService {
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to update team");
+      logger.error({ error, input }, 'Failed to update team');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -174,21 +165,16 @@ export class TeamService {
 
   async deleteTeam(id: string): Promise<void> {
     try {
-      const { error } = await this.supabase
-        .from("teams")
-        .delete()
-        .eq("id", id)
-        .select()
-        .single();
+      const { error } = await this.supabase.from('teams').delete().eq('id', id).select().single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Team not found: ${id}`);
         }
         throw error;
       }
     } catch (error) {
-      logger.error({ error, id }, "Failed to delete team");
+      logger.error({ error, id }, 'Failed to delete team');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -196,24 +182,21 @@ export class TeamService {
     }
   }
 
-  async getTeamMembers(teamId: string): Promise<User[]> {
+  async getTeamMembers(teamId: string): Promise<Array<User>> {
     try {
       // Verify team exists first
       const team = await this.getTeam(teamId);
       if (!team) {
-        throw new ResourceNotFoundError("Team not found");
+        throw new ResourceNotFoundError('Team not found');
       }
 
-      const { data, error } = await this.supabase
-        .from("users")
-        .select("*")
-        .eq("team_id", teamId);
+      const { data, error } = await this.supabase.from('users').select('*').eq('team_id', teamId);
 
       if (error) throw error;
 
       return data || [];
     } catch (error) {
-      logger.error({ error, teamId }, "Failed to get team members");
+      logger.error({ error, teamId }, 'Failed to get team members');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -226,30 +209,30 @@ export class TeamService {
       // Verify team exists first
       const team = await this.getTeam(teamId);
       if (!team) {
-        throw new ResourceNotFoundError("Team not found");
+        throw new ResourceNotFoundError('Team not found');
       }
 
       const { data, error } = await this.supabase
-        .from("users")
+        .from('users')
         .update({ team_id: teamId })
-        .eq("id", userId)
+        .eq('id', userId)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
-          throw new ResourceNotFoundError("User not found");
+        if (error.code === 'PGRST116') {
+          throw new ResourceNotFoundError('User not found');
         }
         throw error;
       }
 
       if (!data) {
-        throw new ResourceNotFoundError("User not found");
+        throw new ResourceNotFoundError('User not found');
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, userId, teamId }, "Failed to add member to team");
+      logger.error({ error, userId, teamId }, 'Failed to add member to team');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -260,26 +243,26 @@ export class TeamService {
   async removeMemberFromTeam(userId: string): Promise<User> {
     try {
       const { data, error } = await this.supabase
-        .from("users")
+        .from('users')
         .update({ team_id: null })
-        .eq("id", userId)
+        .eq('id', userId)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
-          throw new ResourceNotFoundError("User not found");
+        if (error.code === 'PGRST116') {
+          throw new ResourceNotFoundError('User not found');
         }
         throw error;
       }
 
       if (!data) {
-        throw new ResourceNotFoundError("User not found");
+        throw new ResourceNotFoundError('User not found');
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, userId }, "Failed to remove member from team");
+      logger.error({ error, userId }, 'Failed to remove member from team');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }

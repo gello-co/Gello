@@ -22,7 +22,7 @@
  * test frameworks like Vitest that load env vars after module initialization.
  */
 
-import { logger } from "../lib/logger.js";
+import { logger } from '../lib/logger.js';
 
 export type AppEnv = {
   NODE_ENV: string | undefined;
@@ -43,20 +43,17 @@ function pick(...candidates: Array<string | undefined>) {
   return undefined;
 }
 
-function parseNumber(
-  value: string | undefined,
-  name?: string,
-): number | undefined {
+function parseNumber(value: string | undefined, name?: string): number | undefined {
   if (!value) return undefined;
   const parsed = Number(value);
   if (Number.isFinite(parsed)) return parsed;
 
   logger.warn(
     {
-      envVar: name ?? "UNKNOWN_ENV_VAR",
+      envVar: name ?? 'UNKNOWN_ENV_VAR',
       value,
     },
-    "Invalid numeric environment variable value; falling back to default",
+    'Invalid numeric environment variable value; falling back to default'
   );
   return undefined;
 }
@@ -68,21 +65,21 @@ function parseNumber(
  */
 function validateServiceRoleKey(key: string): void {
   // Check if key starts with "sb_" (new format indicator)
-  if (key.startsWith("sb_")) {
+  if (key.startsWith('sb_')) {
     throw new Error(
       `Invalid service role key format: Key starts with "sb_" (new API key format). ` +
         `Service role operations require JWT format. ` +
-        `Set SUPABASE_SERVICE_ROLE_KEY or SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`,
+        `Set SUPABASE_SERVICE_ROLE_KEY or SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`
     );
   }
 
   // JWT structure: header.payload.signature (exactly 2 dots)
-  const parts = key.split(".");
+  const parts = key.split('.');
   if (parts.length !== 3) {
     throw new Error(
       `Invalid service role key format: Key does not appear to be a JWT (expected 3 parts separated by dots, found ${parts.length}). ` +
         `Service role operations require JWT format. ` +
-        `Set SUPABASE_SERVICE_ROLE_KEY or SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`,
+        `Set SUPABASE_SERVICE_ROLE_KEY or SERVICE_ROLE_KEY to a JWT key from 'bunx supabase status -o env'.`
     );
   }
 }
@@ -94,7 +91,7 @@ function validateServiceRoleKey(key: string): void {
  */
 function resolveEnv(): AppEnv {
   const nodeEnv = process.env.NODE_ENV;
-  const isDevelopment = (nodeEnv ?? "development") === "development";
+  const isDevelopment = (nodeEnv ?? 'development') === 'development';
 
   return {
     NODE_ENV: nodeEnv,
@@ -105,9 +102,7 @@ function resolveEnv(): AppEnv {
     // Falls back to localhost with configured PORT for local development only
     AUTH_SITE_URL: pick(
       process.env.AUTH_SITE_URL,
-      isDevelopment
-        ? `http://127.0.0.1:${process.env.PORT || "3000"}`
-        : undefined,
+      isDevelopment ? `http://127.0.0.1:${process.env.PORT || '3000'}` : undefined
     ),
     // DATABASE_URL: PostgreSQL connection string (legacy, kept for compatibility)
     // DB_URL is output by `bunx supabase status -o env`
@@ -115,7 +110,7 @@ function resolveEnv(): AppEnv {
       process.env.DATABASE_URL,
       process.env.DB_URL,
       process.env.SUPABASE_LOCAL_DB_URL,
-      process.env.POSTGRES_URL,
+      process.env.POSTGRES_URL
     ),
     // SUPABASE_URL: Supabase project URL
     // Supports both SUPABASE_URL and SB_URL (Doppler naming convention)
@@ -124,7 +119,7 @@ function resolveEnv(): AppEnv {
       process.env.SUPABASE_URL,
       process.env.SB_URL,
       process.env.API_URL,
-      process.env.SUPABASE_LOCAL_URL,
+      process.env.SUPABASE_LOCAL_URL
     ),
     // SUPABASE_PUBLISHABLE_KEY: Supabase publishable/anonymous key
     // Supports both new format (sb_publishable_...) and legacy JWT format
@@ -135,7 +130,7 @@ function resolveEnv(): AppEnv {
       process.env.SB_PUBLISHABLE_KEY,
       process.env.PUBLISHABLE_KEY,
       process.env.SUPABASE_LOCAL_ANON_KEY,
-      process.env.ANON_KEY,
+      process.env.ANON_KEY
     ),
     // SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (JWT format required)
     // Used for admin operations that bypass RLS
@@ -146,7 +141,7 @@ function resolveEnv(): AppEnv {
         process.env.SUPABASE_SERVICE_ROLE_KEY,
         process.env.SB_SERVICE_ROLE_KEY,
         process.env.SERVICE_ROLE_KEY,
-        process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY,
+        process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY
       );
 
       // Runtime validation: Fail fast if key is not in JWT format
@@ -159,15 +154,9 @@ function resolveEnv(): AppEnv {
       return key;
     })(),
     // Database connection pool tuning (postgres-js)
-    DB_POOL_MAX: parseNumber(process.env.DB_POOL_MAX, "DB_POOL_MAX"),
-    DB_IDLE_TIMEOUT: parseNumber(
-      process.env.DB_IDLE_TIMEOUT,
-      "DB_IDLE_TIMEOUT",
-    ),
-    DB_CONNECT_TIMEOUT: parseNumber(
-      process.env.DB_CONNECT_TIMEOUT,
-      "DB_CONNECT_TIMEOUT",
-    ),
+    DB_POOL_MAX: parseNumber(process.env.DB_POOL_MAX, 'DB_POOL_MAX'),
+    DB_IDLE_TIMEOUT: parseNumber(process.env.DB_IDLE_TIMEOUT, 'DB_IDLE_TIMEOUT'),
+    DB_CONNECT_TIMEOUT: parseNumber(process.env.DB_CONNECT_TIMEOUT, 'DB_CONNECT_TIMEOUT'),
   };
 }
 

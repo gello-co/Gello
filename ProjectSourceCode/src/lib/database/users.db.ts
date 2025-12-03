@@ -1,6 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type UserRole = "admin" | "manager" | "member";
+export type UserRole = 'admin' | 'manager' | 'member';
 
 export type User = {
   id: string;
@@ -34,18 +34,11 @@ export type UpdateUserInput = {
   avatar_url?: string | null;
 };
 
-export async function getUserById(
-  client: SupabaseClient,
-  id: string,
-): Promise<User | null> {
-  const { data, error } = await client
-    .from("users")
-    .select("*")
-    .eq("id", id)
-    .single();
+export async function getUserById(client: SupabaseClient, id: string): Promise<User | null> {
+  const { data, error } = await client.from('users').select('*').eq('id', id).single();
 
   if (error) {
-    if (error.code === "PGRST116") {
+    if (error.code === 'PGRST116') {
       return null;
     }
     throw new Error(`Failed to get user: ${error.message}`);
@@ -54,18 +47,11 @@ export async function getUserById(
   return data as User;
 }
 
-export async function getUserByEmail(
-  client: SupabaseClient,
-  email: string,
-): Promise<User | null> {
-  const { data, error } = await client
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .single();
+export async function getUserByEmail(client: SupabaseClient, email: string): Promise<User | null> {
+  const { data, error } = await client.from('users').select('*').eq('email', email).single();
 
   if (error) {
-    if (error.code === "PGRST116") {
+    if (error.code === 'PGRST116') {
       return null;
     }
     throw new Error(`Failed to get user by email: ${error.message}`);
@@ -74,47 +60,38 @@ export async function getUserByEmail(
   return data as User;
 }
 
-export async function getUsersByTeam(
-  client: SupabaseClient,
-  teamId: string,
-): Promise<User[]> {
+export async function getUsersByTeam(client: SupabaseClient, teamId: string): Promise<Array<User>> {
   const { data, error } = await client
-    .from("users")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("display_name");
+    .from('users')
+    .select('*')
+    .eq('team_id', teamId)
+    .order('display_name');
 
   if (error) {
     throw new Error(`Failed to get users by team: ${error.message}`);
   }
 
-  return (data ?? []) as User[];
+  return (data ?? []) as Array<User>;
 }
 
-export async function getAllUsers(client: SupabaseClient): Promise<User[]> {
-  const { data, error } = await client
-    .from("users")
-    .select("*")
-    .order("display_name");
+export async function getAllUsers(client: SupabaseClient): Promise<Array<User>> {
+  const { data, error } = await client.from('users').select('*').order('display_name');
 
   if (error) {
     throw new Error(`Failed to get all users: ${error.message}`);
   }
 
-  return (data ?? []) as User[];
+  return (data ?? []) as Array<User>;
 }
 
-export async function createUser(
-  client: SupabaseClient,
-  input: CreateUserInput,
-): Promise<User> {
+export async function createUser(client: SupabaseClient, input: CreateUserInput): Promise<User> {
   const { data, error } = await client
-    .from("users")
+    .from('users')
     .insert({
       email: input.email,
       password_hash: input.password_hash,
       display_name: input.display_name,
-      role: input.role ?? "member",
+      role: input.role ?? 'member',
       team_id: input.team_id ?? null,
       avatar_url: input.avatar_url ?? null,
     })
@@ -128,18 +105,10 @@ export async function createUser(
   return data as User;
 }
 
-export async function updateUser(
-  client: SupabaseClient,
-  input: UpdateUserInput,
-): Promise<User> {
+export async function updateUser(client: SupabaseClient, input: UpdateUserInput): Promise<User> {
   const { id, ...updates } = input;
 
-  const { data, error } = await client
-    .from("users")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await client.from('users').update(updates).eq('id', id).select().single();
 
   if (error) {
     throw new Error(`Failed to update user: ${error.message}`);
@@ -148,11 +117,8 @@ export async function updateUser(
   return data as User;
 }
 
-export async function deleteUser(
-  client: SupabaseClient,
-  id: string,
-): Promise<void> {
-  const { error } = await client.from("users").delete().eq("id", id);
+export async function deleteUser(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('users').delete().eq('id', id);
 
   if (error) {
     throw new Error(`Failed to delete user: ${error.message}`);

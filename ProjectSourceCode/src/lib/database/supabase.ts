@@ -18,16 +18,14 @@ export function validateSupabaseEnv(): void {
     if (!value) {
       throw new Error(
         `Missing required environment variable: ${name}. ` +
-          "Please check your .env file or environment configuration.",
+          'Please check your .env file or environment configuration.'
       );
     }
   }
 
   // Validate URL format
   const url = requiredVars.SUPABASE_URL as string;
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    throw new Error(
-      `Invalid SUPABASE_URL: must start with http:// or https://. Got: ${url}`,
-    );
+  if (!(url.startsWith('http://') || url.startsWith('https://'))) {
+    throw new Error(`Invalid SUPABASE_URL: must start with http:// or https://. Got: ${url}`);
   }
 }

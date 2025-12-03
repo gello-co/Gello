@@ -15,14 +15,10 @@
  * - PKCE flow for OAuth
  */
 
-import {
-  createServerClient,
-  parseCookieHeader,
-  serializeCookieHeader,
-} from "@supabase/ssr";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Request, Response } from "express";
-import { env } from "../config/env";
+import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Request, Response } from 'express';
+import { env } from '../config/env';
 
 let client: SupabaseClient | null = null;
 let serviceRoleClient: SupabaseClient | null = null;
@@ -40,10 +36,8 @@ let serviceRoleClient: SupabaseClient | null = null;
 export function getSupabaseClient(): SupabaseClient {
   if (client) return client;
 
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error(
-      "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
-    );
+  if (!(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY)) {
+    throw new Error('Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY');
   }
 
   client = createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
@@ -81,35 +75,27 @@ export function getSupabaseClient(): SupabaseClient {
  * });
  * ```
  */
-export function createAuthenticatedClient(
-  req: Request,
-  res: Response,
-): SupabaseClient {
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error(
-      "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
-    );
+export function createAuthenticatedClient(req: Request, res: Response): SupabaseClient {
+  if (!(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY)) {
+    throw new Error('Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY');
   }
 
   // Determine if we're in a secure context (HTTPS)
-  const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https";
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
 
   return createServerClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll() {
         // Parse cookies from request header
-        const parsed = parseCookieHeader(req.headers.cookie ?? "");
+        const parsed = parseCookieHeader(req.headers.cookie ?? '');
         const cookies = parsed
-          .filter(
-            (cookie): cookie is { name: string; value: string } =>
-              cookie.value !== undefined,
-          )
+          .filter((cookie): cookie is { name: string; value: string } => cookie.value !== undefined)
           .map(({ name, value }) => ({ name, value }));
 
         if (process.env.DEBUG_SUPABASE) {
           console.debug(
-            "[supabase] Reading cookies:",
-            cookies.map((c) => c.name).join(", ") || "(none)",
+            '[supabase] Reading cookies:',
+            cookies.map((c) => c.name).join(', ') || '(none)'
           );
         }
 
@@ -121,8 +107,8 @@ export function createAuthenticatedClient(
         if (res.headersSent) {
           if (process.env.DEBUG_SUPABASE) {
             console.debug(
-              "[supabase] Headers already sent, skipping cookie set:",
-              cookiesToSet.map((c) => c.name).join(", ") || "(none)",
+              '[supabase] Headers already sent, skipping cookie set:',
+              cookiesToSet.map((c) => c.name).join(', ') || '(none)'
             );
           }
           return;
@@ -130,31 +116,28 @@ export function createAuthenticatedClient(
 
         if (process.env.DEBUG_SUPABASE) {
           console.debug(
-            "[supabase] Setting cookies:",
-            cookiesToSet.map((c) => c.name).join(", ") || "(none)",
+            '[supabase] Setting cookies:',
+            cookiesToSet.map((c) => c.name).join(', ') || '(none)'
           );
         }
 
         // Set cookies on the response
         cookiesToSet.forEach(({ name, value, options }) => {
           const mergedOptions = {
-            path: "/",
-            sameSite: "lax" as const,
+            path: '/',
+            sameSite: 'lax' as const,
             secure: isSecure,
             httpOnly: true,
             ...options,
           };
 
-          res.appendHeader(
-            "Set-Cookie",
-            serializeCookieHeader(name, value, mergedOptions),
-          );
+          res.appendHeader('Set-Cookie', serializeCookieHeader(name, value, mergedOptions));
         });
       },
     },
     auth: {
       // PKCE flow for secure OAuth - stores code verifier in cookies
-      flowType: "pkce",
+      flowType: 'pkce',
     },
   });
 }
@@ -173,22 +156,18 @@ export function createAuthenticatedClient(
 export function getServiceRoleClient(): SupabaseClient {
   if (serviceRoleClient) return serviceRoleClient;
 
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY)) {
     throw new Error(
-      "Service role key required for admin operations: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY",
+      'Service role key required for admin operations: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY'
     );
   }
 
-  serviceRoleClient = createClient(
-    env.SUPABASE_URL,
-    env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
+  serviceRoleClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
     },
-  );
+  });
 
   return serviceRoleClient;
 }

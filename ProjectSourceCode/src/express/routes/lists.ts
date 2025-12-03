@@ -1,66 +1,49 @@
-import { Router } from "express";
-import { z } from "zod";
-import {
-  ResourceNotFoundError,
-  ValidationError,
-} from "@/lib/errors/app.errors.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { ResourceNotFoundError, ValidationError } from '@/lib/errors/app.errors.js';
 import {
   createListSchema,
   listIdSchema,
   reorderListsSchema,
   updateListSchema,
-} from "@/lib/schemas/list.js";
-import { requireAuth } from "@/middleware/requireAuth.js";
-import { requireManager } from "@/middleware/requireManager.js";
-import {
-  validateBody,
-  validateParams,
-  validateQuery,
-} from "@/middleware/validation.js";
+} from '@/lib/schemas/list.js';
+import { requireAuth } from '@/middleware/requireAuth.js';
+import { requireManager } from '@/middleware/requireManager.js';
+import { validateBody, validateParams, validateQuery } from '@/middleware/validation.js';
 
 const router = Router();
 
 const listQuerySchema = z.object({
-  board_id: z.string().uuid("Invalid board ID"),
+  board_id: z.string().uuid('Invalid board ID'),
 });
 
-router.get(
-  "/",
-  requireAuth,
-  validateQuery(listQuerySchema),
-  async (req, res, next) => {
-    try {
-      const service = res.locals.services.list;
-      const lists = await service.getListsByBoard(req.query.board_id as string);
-      res.json(lists);
-    } catch (error) {
-      next(error);
+router.get('/', requireAuth, validateQuery(listQuerySchema), async (req, res, next) => {
+  try {
+    const service = res.locals.services.list;
+    const lists = await service.getListsByBoard(req.query.board_id as string);
+    res.json(lists);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:id', requireAuth, validateParams(listIdSchema), async (req, res, next) => {
+  try {
+    const service = res.locals.services.list;
+    const list = await service.getList(req.params.id as string);
+
+    if (!list) {
+      throw new ResourceNotFoundError(`List not found: ${req.params.id}`);
     }
-  },
-);
 
-router.get(
-  "/:id",
-  requireAuth,
-  validateParams(listIdSchema),
-  async (req, res, next) => {
-    try {
-      const service = res.locals.services.list;
-      const list = await service.getList(req.params.id as string);
-
-      if (!list) {
-        throw new ResourceNotFoundError(`List not found: ${req.params.id}`);
-      }
-
-      res.json(list);
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+    res.json(list);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post(
-  "/",
+  '/',
   requireAuth,
   requireManager,
   validateBody(createListSchema),
@@ -72,11 +55,11 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.put(
-  "/:id",
+  '/:id',
   requireAuth,
   requireManager,
   validateParams(listIdSchema),
@@ -92,11 +75,11 @@ router.put(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.patch(
-  "/:id/reorder",
+  '/:id/reorder',
   requireAuth,
   requireManager,
   validateParams(listIdSchema),
@@ -112,18 +95,18 @@ router.patch(
     } catch (error) {
       if (error instanceof ValidationError) {
         res.status(400).json({
-          error: "Validation error",
+          error: 'Validation error',
           message: error.message,
         });
         return;
       }
       next(error);
     }
-  },
+  }
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   requireAuth,
   requireManager,
   validateParams(listIdSchema),
@@ -135,7 +118,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 export default router;

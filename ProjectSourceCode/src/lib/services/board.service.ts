@@ -1,7 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { ResourceNotFoundError } from "../errors/app.errors.js";
-import { logger } from "../logger.js";
-import type { CreateBoardInput, UpdateBoardInput } from "../schemas/board.js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ResourceNotFoundError } from '../errors/app.errors.js';
+import { logger } from '../logger.js';
+import type { CreateBoardInput, UpdateBoardInput } from '../schemas/board.js';
 
 export type Board = {
   id: string;
@@ -17,48 +17,44 @@ export class BoardService {
 
   async getBoard(id: string): Promise<Board | null> {
     try {
-      const { data, error } = await this.supabase
-        .from("boards")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await this.supabase.from('boards').select('*').eq('id', id).single();
 
       if (error) {
-        if (error.code === "PGRST116") return null; // Not found
+        if (error.code === 'PGRST116') return null; // Not found
         throw error;
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, id }, "Failed to get board by ID");
+      logger.error({ error, id }, 'Failed to get board by ID');
       throw error;
     }
   }
 
-  async getBoardsByTeam(teamId: string): Promise<Board[]> {
+  async getBoardsByTeam(teamId: string): Promise<Array<Board>> {
     try {
       const { data, error } = await this.supabase
-        .from("boards")
-        .select("*")
-        .eq("team_id", teamId)
-        .order("created_at", { ascending: false });
+        .from('boards')
+        .select('*')
+        .eq('team_id', teamId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       return data || [];
     } catch (error) {
-      logger.error({ error, teamId }, "Failed to get boards by team");
+      logger.error({ error, teamId }, 'Failed to get boards by team');
       throw error;
     }
   }
 
-  async getBoardsForUser(userId: string): Promise<Board[]> {
+  async getBoardsForUser(userId: string): Promise<Array<Board>> {
     try {
       // Get user's team_id
       const { data: user, error: userError } = await this.supabase
-        .from("users")
-        .select("team_id")
-        .eq("id", userId)
+        .from('users')
+        .select('team_id')
+        .eq('id', userId)
         .single();
 
       if (userError || !user || !user.team_id) {
@@ -68,7 +64,7 @@ export class BoardService {
       // Get boards for the user's team
       return this.getBoardsByTeam(user.team_id);
     } catch (error) {
-      logger.error({ error, userId }, "Failed to get boards for user");
+      logger.error({ error, userId }, 'Failed to get boards for user');
       throw error;
     }
   }
@@ -76,7 +72,7 @@ export class BoardService {
   async createBoard(input: CreateBoardInput): Promise<Board> {
     try {
       const { data, error } = await this.supabase
-        .from("boards")
+        .from('boards')
         .insert({
           name: input.name,
           description: input.description ?? null,
@@ -87,12 +83,12 @@ export class BoardService {
         .single();
 
       if (error || !data) {
-        throw error || new Error("Failed to create board: No data returned");
+        throw error || new Error('Failed to create board: No data returned');
       }
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to create board");
+      logger.error({ error, input }, 'Failed to create board');
       throw error;
     }
   }
@@ -103,19 +99,18 @@ export class BoardService {
 
       const updateData: Record<string, string | number | boolean | null> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
-      if (updates.description !== undefined)
-        updateData.description = updates.description;
+      if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.team_id !== undefined) updateData.team_id = updates.team_id;
 
       const { data, error } = await this.supabase
-        .from("boards")
+        .from('boards')
         .update(updateData)
-        .eq("id", id)
+        .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Board not found: ${id}`);
         }
         throw error;
@@ -127,7 +122,7 @@ export class BoardService {
 
       return data;
     } catch (error) {
-      logger.error({ error, input }, "Failed to update board");
+      logger.error({ error, input }, 'Failed to update board');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }
@@ -137,21 +132,16 @@ export class BoardService {
 
   async deleteBoard(id: string): Promise<void> {
     try {
-      const { error } = await this.supabase
-        .from("boards")
-        .delete()
-        .eq("id", id)
-        .select()
-        .single();
+      const { error } = await this.supabase.from('boards').delete().eq('id', id).select().single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new ResourceNotFoundError(`Board not found: ${id}`);
         }
         throw error;
       }
     } catch (error) {
-      logger.error({ error, id }, "Failed to delete board");
+      logger.error({ error, id }, 'Failed to delete board');
       if (error instanceof ResourceNotFoundError) {
         throw error;
       }

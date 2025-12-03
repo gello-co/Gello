@@ -1,10 +1,10 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it } from "vitest";
-import { injectServices } from "@/middleware/injectServices";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { NextFunction, Request, Response } from 'express';
+import { describe, expect, it } from 'vitest';
+import { injectServices } from '@/middleware/injectServices';
 
-describe("injectServices Middleware Unit Tests", () => {
-  it("should inject all 5 services when req.supabase is available", () => {
+describe('injectServices Middleware Unit Tests', () => {
+  it('should inject all 5 services when req.supabase is available', () => {
     // Arrange
     const mockSupabase = {} as SupabaseClient;
     const req = {
@@ -31,7 +31,7 @@ describe("injectServices Middleware Unit Tests", () => {
     expect(res.locals.services.leaderboard).toBeDefined();
   });
 
-  it("should call next() even when req.supabase is not available", () => {
+  it('should call next() even when req.supabase is not available', () => {
     // Arrange
     const req = {} as Request;
     const res = {
@@ -50,7 +50,7 @@ describe("injectServices Middleware Unit Tests", () => {
     expect(res.locals.services).toBeUndefined();
   });
 
-  it("should use the same Supabase client for all services", () => {
+  it('should use the same Supabase client for all services', () => {
     // Arrange
     const mockSupabase = {} as SupabaseClient;
     const req = {
@@ -59,7 +59,9 @@ describe("injectServices Middleware Unit Tests", () => {
     const res = {
       locals: {},
     } as Response;
-    const next = (() => {}) as NextFunction;
+    const next = (() => {
+      /* noop for test */
+    }) as NextFunction;
 
     // Act
     injectServices(req, res, next);

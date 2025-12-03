@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * List schemas using pure Zod
@@ -19,7 +19,7 @@ export const createListBodySchema = z.object({
 });
 
 export const createListSchema = z.object({
-  board_id: z.string().uuid("Invalid board ID"),
+  board_id: z.string().uuid('Invalid board ID'),
   name: z.string().min(1),
   position: z.number().int().min(0).optional(),
 });
@@ -30,7 +30,7 @@ export const updateListSchema = z.object({
 });
 
 export const listIdSchema = z.object({
-  id: z.string().uuid("Invalid list ID"),
+  id: z.string().uuid('Invalid list ID'),
 });
 
 export const reorderListsSchema = z.object({
@@ -39,7 +39,7 @@ export const reorderListsSchema = z.object({
     z.object({
       id: z.uuid(),
       position: z.number().int().min(0),
-    }),
+    })
   ),
 });
 

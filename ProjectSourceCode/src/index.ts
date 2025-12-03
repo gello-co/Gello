@@ -1,16 +1,16 @@
-import { app } from "./express/app.js";
-import { validateSupabaseEnv } from "./lib/database/supabase.js";
-import { logger } from "./lib/logger.js";
+import { app } from './express/app.js';
+import { validateSupabaseEnv } from './lib/database/supabase.js';
+import { logger } from './lib/logger.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Validate Supabase environment variables at startup
 try {
   validateSupabaseEnv();
-  logger.info("Supabase environment validation passed");
+  logger.info('Supabase environment validation passed');
 } catch (error) {
-  logger.error({ error }, "Supabase environment validation failed");
+  logger.error({ error }, 'Supabase environment validation failed');
   process.exit(1);
 }
 
@@ -21,21 +21,21 @@ const server = app.listen(PORT, () => {
     {
       port: PORT,
       baseUrl: `http://localhost:${PORT}`,
-      nodeEnv: process.env.NODE_ENV ?? "development",
-      csrfProtection: "Disabled (deferred to v0.2.0)",
+      nodeEnv: process.env.NODE_ENV ?? 'development',
+      csrfProtection: 'Disabled (deferred to v0.2.0)',
     },
-    "Server started",
+    'Server started'
   );
 
   if (isDevelopment) {
-    logger.debug("Development environment details logged above");
+    logger.debug('Development environment details logged above');
   }
 });
 
 const shutdown = async (signal: string) => {
-  logger.info({ signal }, "Received shutdown signal");
+  logger.info({ signal }, 'Received shutdown signal');
   const forceExit = setTimeout(() => {
-    logger.error({ signal }, "Shutdown timeout reached, forcing exit");
+    logger.error({ signal }, 'Shutdown timeout reached, forcing exit');
     process.exit(1);
   }, 10_000).unref();
 
@@ -49,19 +49,19 @@ const shutdown = async (signal: string) => {
     });
   } catch (error) {
     exitCode = 1;
-    logger.error({ error, signal }, "Error closing HTTP server");
+    logger.error({ error, signal }, 'Error closing HTTP server');
   }
 
   clearTimeout(forceExit);
   process.exit(exitCode);
 };
 
-process.on("SIGINT", () => {
-  void shutdown("SIGINT");
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
 });
 
-process.on("SIGTERM", () => {
-  void shutdown("SIGTERM");
+process.on('SIGTERM', () => {
+  void shutdown('SIGTERM');
 });
 
 // Export app for testing

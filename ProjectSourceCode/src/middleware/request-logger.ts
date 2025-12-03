@@ -4,9 +4,9 @@
  * Uses structured JSON logging with metadata for parseability and filtering
  */
 
-import crypto from "node:crypto";
-import type { NextFunction, Request, Response } from "express";
-import { logger } from "../lib/logger.js";
+import crypto from 'node:crypto';
+import type { NextFunction, Request, Response } from 'express';
+import { logger } from '../lib/logger.js';
 
 /**
  * Generate a unique request ID for tracking requests across logs
@@ -19,32 +19,24 @@ function generateRequestId(): string {
  * Sanitize headers by removing sensitive fields
  * Returns a copy of headers with authorization and cookie removed
  */
-function sanitizeHeaders(
-  headers: Record<string, unknown>,
-): Record<string, unknown> {
+function sanitizeHeaders(headers: Record<string, unknown>): Record<string, unknown> {
   const sanitized = { ...headers };
-  delete sanitized.authorization;
-  delete sanitized.cookie;
+  sanitized.authorization = undefined;
+  sanitized.cookie = undefined;
   return sanitized;
 }
 
-export function requestLogger(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const startTime = Date.now();
   const requestId = generateRequestId();
 
   // Log request when response finishes
-  res.on("finish", () => {
+  res.on('finish', () => {
     const duration = Date.now() - startTime;
     const method = req.method;
     const path = req.path;
     const statusCode = res.statusCode;
-    const sanitizedHeaders = sanitizeHeaders(
-      req.headers as Record<string, unknown>,
-    );
+    const sanitizedHeaders = sanitizeHeaders(req.headers as Record<string, unknown>);
 
     // Build metadata object for structured logging
     const metadata = {

@@ -4,13 +4,13 @@
  * Implements Double Submit Cookie Pattern for enhanced security
  */
 
-import crypto from "node:crypto";
-import { doubleCsrf } from "csrf-csrf";
-import type { NextFunction, Request, Response } from "express";
-import { logger } from "../lib/logger.js";
+import crypto from 'node:crypto';
+import { doubleCsrf } from 'csrf-csrf';
+import type { NextFunction, Request, Response } from 'express';
+import { logger } from '../lib/logger.js';
 
 // Initialize CSRF protection with Double Submit Cookie Pattern
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * Get CSRF secret for HMAC generation
@@ -37,30 +37,26 @@ function initializeCsrfSecret(): string {
 
   // Production - require secret
   if (isProduction) {
-    if (!secret || secret.trim() === "") {
+    if (!secret || secret.trim() === '') {
       throw new Error(
-        "CSRF_SECRET environment variable is required in production. " +
-          "Set a secure random 64+ character string in your environment variables.",
+        'CSRF_SECRET environment variable is required in production. ' +
+          'Set a secure random 64+ character string in your environment variables.'
       );
     }
     return secret;
   }
 
   // Development - use env var if available, otherwise generate
-  if (secret && secret.trim() !== "") {
+  if (secret && secret.trim() !== '') {
     return secret;
   }
 
-  const generated = crypto.randomBytes(32).toString("hex");
+  const generated = crypto.randomBytes(32).toString('hex');
   logger.warn(
-    "WARNING: CSRF_SECRET not set. Using generated temporary secret. This secret will change on each restart. Set CSRF_SECRET in your environment for persistent sessions.",
+    'WARNING: CSRF_SECRET not set. Using generated temporary secret. This secret will change on each restart. Set CSRF_SECRET in your environment for persistent sessions.'
   );
-  logger.warn(
-    "To fix: Ensure CSRF_SECRET is set in Doppler or containerEnv before server starts.",
-  );
-  logger.warn(
-    "Note: If using doppler run, ensure CSRF_SECRET is set in Doppler secrets.",
-  );
+  logger.warn('To fix: Ensure CSRF_SECRET is set in Doppler or containerEnv before server starts.');
+  logger.warn('Note: If using doppler run, ensure CSRF_SECRET is set in Doppler secrets.');
   return generated;
 }
 
@@ -79,9 +75,7 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     if (req.user?.id) {
       const identifier = req.user.id;
       if (!isProduction) {
-        console.debug(
-          `[CSRF] Session identifier: ${identifier} (authenticated user)`,
-        );
+        console.debug(`[CSRF] Session identifier: ${identifier} (authenticated user)`);
       }
       return identifier;
     }
@@ -89,62 +83,53 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     // The Double Submit Cookie Pattern relies on cookie + token matching,
     // not on session-based secrets, so a constant is safe for anonymous users
     if (!isProduction) {
-      console.debug("[CSRF] Session identifier: anonymous (unauthenticated)");
+      console.debug('[CSRF] Session identifier: anonymous (unauthenticated)');
     }
-    return "anonymous";
+    return 'anonymous';
   },
   // Use __Host- prefix only in production (requires secure: true)
-  cookieName: isProduction ? "__Host-csrf" : "csrf",
+  cookieName: isProduction ? '__Host-csrf' : 'csrf',
   cookieOptions: {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: 'lax',
     secure: isProduction,
-    path: "/",
+    path: '/',
   },
   size: 64,
-  ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+  ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
   getCsrfTokenFromRequest: (req) => {
     // Check X-CSRF-Token header first (for API calls)
     // Express normalizes headers to lowercase
-    const headerToken =
-      req.headers["x-csrf-token"] || req.headers["X-CSRF-Token"];
-    if (headerToken && typeof headerToken === "string") {
+    const headerToken = req.headers['x-csrf-token'] || req.headers['X-CSRF-Token'];
+    if (headerToken && typeof headerToken === 'string') {
       if (!isProduction) {
-        console.debug(
-          `[CSRF] Token found in header: ${headerToken.substring(0, 20)}...`,
-        );
+        console.debug(`[CSRF] Token found in header: ${headerToken.substring(0, 20)}...`);
       }
       return headerToken;
     }
     // Check _csrf body field (for form submissions)
     if (req.body?._csrf) {
       if (!isProduction) {
-        console.debug(
-          `[CSRF] Token found in body: ${req.body._csrf.substring(0, 20)}...`,
-        );
+        console.debug(`[CSRF] Token found in body: ${req.body._csrf.substring(0, 20)}...`);
       }
       return req.body._csrf as string;
     }
     if (!isProduction) {
-      console.debug("[CSRF] No token found in request (header or body)");
+      console.debug('[CSRF] No token found in request (header or body)');
     }
     return null;
   },
 });
 
 // Wrap CSRF protection with debug logging in development
-export const csrfProtection = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const csrfProtection = (req: Request, res: Response, next: NextFunction) => {
   if (!isProduction) {
     const method = req.method;
     const path = req.path;
-    const hasCookie = req.cookies?.csrf || req.cookies?.["__Host-csrf"];
+    const hasCookie = req.cookies?.csrf || req.cookies?.['__Host-csrf'];
 
     // Only log for state-changing methods
-    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
       console.debug(`[CSRF] Validating ${method} ${path}`);
       console.debug(`[CSRF] Cookie present: ${!!hasCookie}`);
     }
@@ -159,20 +144,14 @@ export { generateCsrfToken };
 /**
  * Middleware to make CSRF token available to all views via res.locals
  */
-export function csrfTokenToLocals(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
+export function csrfTokenToLocals(req: Request, res: Response, next: NextFunction): void {
   // Generate CSRF token and make it available to all views
   const token = generateCsrfToken(req, res);
   res.locals.csrfToken = token;
 
   if (!isProduction) {
-    console.debug(
-      `[CSRF] Generated token for view: ${token.substring(0, 20)}...`,
-    );
-    const sessionId = req.user?.id || "anonymous";
+    console.debug(`[CSRF] Generated token for view: ${token.substring(0, 20)}...`);
+    const sessionId = req.user?.id || 'anonymous';
     console.debug(`[CSRF] Session identifier: ${sessionId}`);
   }
 

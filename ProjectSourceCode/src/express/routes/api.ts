@@ -1,12 +1,12 @@
-import express from "express";
-import { checkHealth } from "@/lib/services/health.service.js";
-import authRoutes from "./auth-api.js";
-import boardsRoutes from "./boards/api.js";
-import listsRoutes from "./lists.js";
-import pointsRoutes from "./points.js";
-import sseRoutes from "./sse.js";
-import tasksRoutes from "./tasks/api.js";
-import teamsRoutes from "./teams.js";
+import express from 'express';
+import { checkHealth } from '@/lib/services/health.service.js';
+import authRoutes from './auth-api.js';
+import boardsRoutes from './boards/api.js';
+import listsRoutes from './lists.js';
+import pointsRoutes from './points.js';
+import sseRoutes from './sse.js';
+import tasksRoutes from './tasks/api.js';
+import teamsRoutes from './teams.js';
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ const router = express.Router();
 // Health and readiness endpoints
 // /health - Liveness check (is the app running?)
 // /ready - Readiness check (can it handle traffic? checks dependencies)
-router.get("/health", async (_req, res, next) => {
+router.get('/health', async (_req, res, next) => {
   try {
     const status = await checkHealth();
     const statusCode = status.ok ? 200 : 503;
@@ -27,7 +27,7 @@ router.get("/health", async (_req, res, next) => {
   }
 });
 
-router.get("/ready", async (_req, res, next) => {
+router.get('/ready', async (_req, res, next) => {
   try {
     const status = await checkHealth();
     const statusCode = status.ok ? 200 : 503;
@@ -42,13 +42,13 @@ router.get("/ready", async (_req, res, next) => {
   }
 });
 
-router.use("/auth", authRoutes);
-router.use("/teams", teamsRoutes);
-router.use("/boards", boardsRoutes);
-router.use("/lists", listsRoutes);
-router.use("/tasks", tasksRoutes);
-router.use("/points", pointsRoutes);
-router.use("/sse", sseRoutes);
+router.use('/auth', authRoutes);
+router.use('/teams', teamsRoutes);
+router.use('/boards', boardsRoutes);
+router.use('/lists', listsRoutes);
+router.use('/tasks', tasksRoutes);
+router.use('/points', pointsRoutes);
+router.use('/sse', sseRoutes);
 
 // Note: Error handler is registered at app level in app.ts
 

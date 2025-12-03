@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Board schemas using pure Zod
@@ -15,16 +15,16 @@ export const boardSchema = z.object({
 });
 
 export const createBoardSchema = z.object({
-  name: z.string().min(1, "Name required").max(100, "Name too long"),
-  description: z.string().max(500, "Description too long").optional(),
-  team_id: z.uuid("Invalid team ID"),
-  created_by: z.uuid("Invalid user ID").optional(),
+  name: z.string().min(1, 'Name required').max(100, 'Name too long'),
+  description: z.string().max(500, 'Description too long').optional(),
+  team_id: z.uuid('Invalid team ID'),
+  created_by: z.uuid('Invalid user ID').optional(),
 });
 
 export const updateBoardBodySchema = z.object({
-  name: z.string().min(1, "Name required").max(100, "Name too long").optional(),
-  description: z.string().max(500, "Description too long").optional(),
-  team_id: z.uuid("Invalid team ID").optional(),
+  name: z.string().min(1, 'Name required').max(100, 'Name too long').optional(),
+  description: z.string().max(500, 'Description too long').optional(),
+  team_id: z.uuid('Invalid team ID').optional(),
 });
 
 export const updateBoardSchema = updateBoardBodySchema.extend({
@@ -32,7 +32,7 @@ export const updateBoardSchema = updateBoardBodySchema.extend({
 });
 
 export const boardIdSchema = z.object({
-  id: z.uuid("Invalid board ID"),
+  id: z.uuid('Invalid board ID'),
 });
 
 export type Board = z.infer<typeof boardSchema>;

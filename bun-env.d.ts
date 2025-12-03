@@ -1,4 +1,4 @@
-declare module "*.svg" {
+declare module '*.svg' {
   /**
    * A path to the SVG file
    */
@@ -6,7 +6,7 @@ declare module "*.svg" {
   export = path;
 }
 
-declare module "*.module.css" {
+declare module '*.module.css' {
   /**
    * A record of class names to their corresponding CSS module classes
    */
@@ -26,7 +26,7 @@ declare namespace NodeJS {
   }
 }
 
-declare module "bun" {
+declare module 'bun' {
   interface Env {
     APP_SUPABASE_URL?: string;
     APP_SUPABASE_PUBLISHABLE_KEY?: string;

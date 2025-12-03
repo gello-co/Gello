@@ -1,8 +1,8 @@
-import express from "express";
-import { logger } from "../../lib/logger.js";
-import { LeaderboardService } from "../../lib/services/leaderboard.service.js";
-import { getSupabaseClient } from "../../lib/supabase.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
+import express from 'express';
+import { logger } from '../../lib/logger.js';
+import { LeaderboardService } from '../../lib/services/leaderboard.service.js';
+import { getSupabaseClient } from '../../lib/supabase.js';
+import { requireAuth } from '../../middleware/requireAuth.js';
 
 const router = express.Router();
 
@@ -12,11 +12,11 @@ function getLeaderboardService() {
 
 const clients = new Set<express.Response>();
 
-router.get("/leaderboard", requireAuth, (req, res) => {
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
+router.get('/leaderboard', requireAuth, (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
 
   clients.add(res);
 
@@ -31,7 +31,7 @@ router.get("/leaderboard", requireAuth, (req, res) => {
           clientIp: req.ip,
           path: req.path,
         },
-        "Error sending SSE update",
+        'Error sending SSE update'
       );
       clients.delete(res);
       res.end();
@@ -48,7 +48,7 @@ router.get("/leaderboard", requireAuth, (req, res) => {
     sendUpdate();
   }, 5000);
 
-  req.on("close", () => {
+  req.on('close', () => {
     clearInterval(interval);
     clients.delete(res);
   });
@@ -56,7 +56,7 @@ router.get("/leaderboard", requireAuth, (req, res) => {
 
 export function broadcastLeaderboardUpdate() {
   const message = JSON.stringify({
-    type: "leaderboard_update",
+    type: 'leaderboard_update',
     timestamp: Date.now(),
   });
   clients.forEach((client) => {

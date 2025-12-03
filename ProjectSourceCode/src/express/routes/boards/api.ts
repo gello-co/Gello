@@ -1,19 +1,15 @@
-import { Router } from "express";
-import {
-  boardIdSchema,
-  createBoardSchema,
-  updateBoardBodySchema,
-} from "@/lib/schemas/board.js";
-import { requireAuth } from "@/middleware/requireAuth.js";
-import { requireManager } from "@/middleware/requireManager.js";
-import { validateBody, validateParams } from "@/middleware/validation.js";
+import { Router } from 'express';
+import { boardIdSchema, createBoardSchema, updateBoardBodySchema } from '@/lib/schemas/board.js';
+import { requireAuth } from '@/middleware/requireAuth.js';
+import { requireManager } from '@/middleware/requireManager.js';
+import { validateBody, validateParams } from '@/middleware/validation.js';
 
 const router = Router();
 
-router.get("/", requireAuth, async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     const service = res.locals.services.board;
     const boards = await service.getBoardsForUser(req.user.id);
@@ -23,36 +19,31 @@ router.get("/", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get(
-  "/:id",
-  requireAuth,
-  validateParams(boardIdSchema),
-  async (req, res, next) => {
-    try {
-      if (!req.user?.id) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      const service = res.locals.services.board;
-      const board = await service.getBoard(req.params.id as string);
-      if (!board) {
-        return res.status(404).json({ error: "Board not found" });
-      }
-      res.json(board);
-    } catch (error) {
-      next(error);
+router.get('/:id', requireAuth, validateParams(boardIdSchema), async (req, res, next) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-  },
-);
+    const service = res.locals.services.board;
+    const board = await service.getBoard(req.params.id as string);
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    res.json(board);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post(
-  "/",
+  '/',
   requireAuth,
   requireManager,
   validateBody(createBoardSchema),
   async (req, res, next) => {
     try {
       if (!req.user?.id) {
-        return res.status(401).json({ error: "Unauthorized" });
+        return res.status(401).json({ error: 'Unauthorized' });
       }
       const service = res.locals.services.board;
       const board = await service.createBoard({
@@ -63,11 +54,11 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.put(
-  "/:id",
+  '/:id',
   requireAuth,
   requireManager,
   validateParams(boardIdSchema),
@@ -83,11 +74,11 @@ router.put(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   requireAuth,
   requireManager,
   validateParams(boardIdSchema),
@@ -99,7 +90,7 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 export default router;

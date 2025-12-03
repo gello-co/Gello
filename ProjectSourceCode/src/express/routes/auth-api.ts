@@ -5,19 +5,16 @@
  * Browser form submissions use /login and /register (PRG pattern in auth.ts).
  */
 
-import express from "express";
-import { logger } from "../../lib/logger.js";
-import { createUserSchema, loginSchema } from "../../lib/schemas/user.js";
-import {
-  createAuthenticatedClient,
-  getServiceRoleClient,
-} from "../../lib/supabase.js";
-import { requireAuth } from "../../middleware/requireAuth.js";
-import { validate } from "../../middleware/validation.js";
+import express from 'express';
+import { logger } from '../../lib/logger.js';
+import { createUserSchema, loginSchema } from '../../lib/schemas/user.js';
+import { createAuthenticatedClient, getServiceRoleClient } from '../../lib/supabase.js';
+import { requireAuth } from '../../middleware/requireAuth.js';
+import { validate } from '../../middleware/validation.js';
 
 const router = express.Router();
 
-router.post("/register", validate(createUserSchema), async (req, res, next) => {
+router.post('/register', validate(createUserSchema), async (req, res, next) => {
   try {
     const { email, password, display_name } = req.body;
 
@@ -37,17 +34,17 @@ router.post("/register", validate(createUserSchema), async (req, res, next) => {
     }
 
     if (!data.user) {
-      return res.status(400).json({ error: "Registration failed" });
+      return res.status(400).json({ error: 'Registration failed' });
     }
 
     // Create user profile in public.users table
     const adminClient = getServiceRoleClient();
-    const { error: profileError } = await adminClient.from("users").insert({
+    const { error: profileError } = await adminClient.from('users').insert({
       id: data.user.id,
       email,
-      password_hash: "",
+      password_hash: '',
       display_name,
-      role: "member",
+      role: 'member',
       team_id: null,
       avatar_url: null,
       total_points: 0,
@@ -56,20 +53,18 @@ router.post("/register", validate(createUserSchema), async (req, res, next) => {
     if (profileError) {
       logger.error(
         { error: profileError, userId: data.user.id },
-        "Failed to create user profile after auth signup",
+        'Failed to create user profile after auth signup'
       );
       // Clean up: delete the auth user since profile creation failed
-      const { error: deleteError } = await adminClient.auth.admin.deleteUser(
-        data.user.id,
-      );
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(data.user.id);
       if (deleteError) {
         logger.error(
           { error: deleteError, userId: data.user.id },
-          "Failed to clean up auth user after profile creation failure",
+          'Failed to clean up auth user after profile creation failure'
         );
       }
       return res.status(500).json({
-        error: "Failed to complete registration. Please try again.",
+        error: 'Failed to complete registration. Please try again.',
       });
     }
 
@@ -85,7 +80,7 @@ router.post("/register", validate(createUserSchema), async (req, res, next) => {
   }
 });
 
-router.post("/login", validate(loginSchema), async (req, res, next) => {
+router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -113,17 +108,17 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
   }
 });
 
-router.get("/session", requireAuth, async (req, res) => {
+router.get('/session', requireAuth, async (req, res) => {
   res.json({ user: req.user });
 });
 
-router.post("/logout", requireAuth, async (req, res, next) => {
+router.post('/logout', requireAuth, async (req, res, next) => {
   try {
     const supabase = createAuthenticatedClient(req, res);
     await supabase.auth.signOut();
     // signOut() clears the session cookies via setAll()
 
-    res.json({ message: "Logged out successfully" });
+    res.json({ message: 'Logged out successfully' });
   } catch (error) {
     next(error);
   }
