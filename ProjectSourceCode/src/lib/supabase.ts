@@ -116,6 +116,18 @@ export function createAuthenticatedClient(
         return cookies;
       },
       setAll(cookiesToSet) {
+        // Guard against setting cookies after headers are sent
+        // This can happen with Supabase SSR auth state change callbacks
+        if (res.headersSent) {
+          if (process.env.DEBUG_SUPABASE) {
+            console.debug(
+              "[supabase] Headers already sent, skipping cookie set:",
+              cookiesToSet.map((c) => c.name).join(", ") || "(none)",
+            );
+          }
+          return;
+        }
+
         if (process.env.DEBUG_SUPABASE) {
           console.debug(
             "[supabase] Setting cookies:",

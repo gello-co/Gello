@@ -1,8 +1,18 @@
 import { app } from "./express/app.js";
+import { validateSupabaseEnv } from "./lib/database/supabase.js";
 import { logger } from "./lib/logger.js";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const isDevelopment = process.env.NODE_ENV !== "production";
+
+// Validate Supabase environment variables at startup
+try {
+  validateSupabaseEnv();
+  logger.info("Supabase environment validation passed");
+} catch (error) {
+  logger.error({ error }, "Supabase environment validation failed");
+  process.exit(1);
+}
 
 // CSRF protection deferred to v0.2.0
 
