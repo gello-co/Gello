@@ -9,48 +9,65 @@
                     <p class="page-subtitle">Congrats to our weekly top 3!!</p>
                 </div>
 
-                <div class="top-three-section fade-in">
-                    <div class="row g-4">
-                        {{#each topThree}}
-                        <div class="col-md-4">
-                            <div class="winner-card">
-                                <img src="{{#if avatar_url}}{{avatar_url}}{{else}}https://images.unsplash.com/photo-1518843875459-f738682238a6?w=400&h=300&fit=crop{{/if}}" alt="{{display_name}}" class="winner-image">
-                                <div class="winner-name">{{display_name}}</div>
-                                <div class="winner-note">{{total_points}} pts</div>
+                {{#if (or (length topThree) (length others))}}
+                    {{#if (length topThree)}}
+                    <div class="top-three-section fade-in">
+                        <div class="row g-4">
+                            {{#each topThree}}
+                            <div class="col-md-4">
+                                <div class="winner-card">
+                                    <img src="{{#if avatar_url}}{{avatar_url}}{{else}}https://images.unsplash.com/photo-1518843875459-f738682238a6?w=400&h=300&fit=crop{{/if}}" alt="{{display_name}}" class="winner-image">
+                                    <div class="winner-name">{{display_name}}</div>
+                                    <div class="winner-note">{{total_points}} {{pluralize total_points "point" "points"}}</div>
+                                </div>
                             </div>
+                            {{/each}}
                         </div>
-                        {{/each}}
                     </div>
-                </div>
+                    {{/if}}
 
-                <div class="leaderboard-card fade-in">
-                    <div class="leaderboard-header">
-                        <h3>Leaderboard</h3>
-                        {{#if user.team_id}}
-                        <div class="team-id">Team ID: {{user.team_id}}</div>
-                        {{/if}}
-                    </div>
-                    <div id="membersList">
-                        {{#each others}}
-                        <div class="member-row" data-member-id="{{user_id}}">
-                            <div class="member-avatar">
-                                {{#if avatar_url}}
-                                <img src="{{avatar_url}}" alt="{{display_name}}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
-                                {{/if}}
-                            </div>
-                            <div class="member-info">
-                                <div class="member-name">{{display_name}}</div>
-                                <div class="member-description">{{total_points}} pts</div>
-                            </div>
-                            {{#if ../isManager}}
-                            <div class="member-actions admin-only">
-                                <button class="btn-encourage" data-bs-toggle="modal" data-bs-target="#encouragementModal" onclick="setCurrentMember('{{display_name}}', '{{user_id}}')">Send Encouragement</button>
-                            </div>
+                    <div class="leaderboard-card fade-in">
+                        <div class="leaderboard-header">
+                            <h3>Leaderboard</h3>
+                            {{#if user.team_id}}
+                            <div class="team-id">Team ID: {{user.team_id}}</div>
                             {{/if}}
                         </div>
-                        {{/each}}
+                        <div id="membersList">
+                            {{#each others}}
+                            <div class="member-row" data-member-id="{{user_id}}">
+                                <div class="member-avatar">
+                                    {{#if avatar_url}}
+                                    <img src="{{avatar_url}}" alt="{{display_name}}" class="avatar-img">
+                                    {{/if}}
+                                </div>
+                                <div class="member-info">
+                                    <div class="member-name">{{display_name}}</div>
+                                    <div class="member-description">{{total_points}} pts</div>
+                                </div>
+                                {{#if ../isManager}}
+                                <div class="member-actions admin-only">
+                                    <button class="btn-encourage" data-bs-toggle="modal" data-bs-target="#encouragementModal" onclick="setCurrentMember('{{display_name}}', '{{user_id}}')">Send Encouragement</button>
+                                </div>
+                                {{/if}}
+                            </div>
+                            {{/each}}
+                        </div>
                     </div>
-                </div>
+                {{else}}
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            {{> empty-state 
+                                icon="trophy" 
+                                title="No points yet" 
+                                message="Complete tasks to earn points and see your name on the leaderboard!"
+                                actionUrl="/boards"
+                                actionText="View Boards"
+                                actionIcon="columns"
+                            }}
+                        </div>
+                    </div>
+                {{/if}}
             </div> 
         </div> 
     </div>
