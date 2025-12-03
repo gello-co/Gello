@@ -1,4 +1,6 @@
-# Following source doesn't work in most setups
+# Hadolint configuration for Dockerfile linting
+# See: https://github.com/hadolint/hadolint#configure
 ignored:
-  - SC1090
-  - SC1091
+  - DL3008  # Pin versions in apt get install
+  - DL3013  # Pin versions in pip install
+  - DL3018  # Pin versions in apk add
