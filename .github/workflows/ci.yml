@@ -228,7 +228,7 @@ jobs:
           done
 
       - name: Run unit and integration tests
-        run: bun test --bail tests/unit tests/integration tests/health.test.ts
+        run: bun run test:ci -- --coverage
 
       - name: Stop Supabase
         if: always()
@@ -238,5 +238,5 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: coverage-report
-          path: ProjectSourceCode/coverage/
+          path: coverage/
           if-no-files-found: ignore

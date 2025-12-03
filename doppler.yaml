@@ -1,0 +1,7 @@
+# Doppler Configuration
+# Run `doppler setup` to configure interactively, or this file will be used as defaults.
+
+setup:
+  project: gello
+  # Default config (environment) for local development
+  config: dev
