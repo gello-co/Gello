@@ -13,6 +13,14 @@ function getSupabase(req: express.Request) {
   return req.supabase;
 }
 
+// Redirect /tasks to role-appropriate page
+router.get('/tasks', requireAuth, (req, res) => {
+  if (req.user?.role === 'admin') {
+    return res.redirect('/tasks-admin');
+  }
+  return res.redirect('/tasks-team');
+});
+
 router.get('/tasks-admin', requireAuth, requireAdmin, async (req, res, next) => {
   try {
     if (!req.user) throw new Error('User not authenticated');
