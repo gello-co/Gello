@@ -259,40 +259,5 @@
 </div>
 {{/if}}
 
-<!-- Scroll Animation Script -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Intersection Observer for scroll animations
-  var observerOptions = {
-    root: null,
-    rootMargin: '0px',
-    threshold: 0.1
-  };
-
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        // Also trigger feature card animations
-        if (entry.target.classList.contains('features-grid') ||
-            entry.target.closest('.features-grid')) {
-          var cards = document.querySelectorAll('.feature-card');
-          cards.forEach(function(card) {
-            card.classList.add('visible');
-          });
-        }
-      }
-    });
-  }, observerOptions);
-
-  // Observe all animate-on-scroll elements
-  document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
-    observer.observe(el);
-  });
-
-  // Observe feature cards individually
-  document.querySelectorAll('.feature-card').forEach(function(el) {
-    observer.observe(el);
-  });
-});
-</script>
+<!-- Scroll Animation Script (external for CSP compliance) -->
+<script src="/js/landing.js"></script>
