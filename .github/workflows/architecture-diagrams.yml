@@ -23,11 +23,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate C4 diagrams
-        uses: sebastienfi/structurizr-gen-images@main
-        with:
-          structurizr_workspace_filename: docs/architecture/workspace.dsl
-          output_folder: docs/architecture/diagrams
-          formats: svg,png
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/docs/architecture:/workspace" \
+            structurizr/cli \
+            export -workspace /workspace/workspace.dsl -format png -output /workspace/diagrams
+          docker run --rm \
+            -v "${{ github.workspace }}/docs/architecture:/workspace" \
+            structurizr/cli \
+            export -workspace /workspace/workspace.dsl -format svg -output /workspace/diagrams
 
       - name: Commit generated diagrams
         if: github.event_name == 'push'
