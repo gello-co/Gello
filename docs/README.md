@@ -89,6 +89,31 @@ bun run start:prd  # Start with production config
 - [TDD Guide](docs/tdd-guide.md)
 - [Environment Variables](.env.example)
 
+## Code Tours (Presentations)
+
+Interactive reveal.js presentations for onboarding and architecture documentation.
+
+```bash
+# Start presentation server
+bun run slides:serve
+
+# Open http://localhost:8080
+```
+
+**Available Tours:**
+- **Project Overview** - Tech stack, directory structure, entry points
+- **Architecture** - Layered architecture, request flow, service injection
+- **Services** - Auth, boards, tasks, points, leaderboard services
+- **Database** - Supabase setup, RLS policies, type generation
+- **Testing** - Unit, integration, E2E testing strategies
+
+**Keyboard Shortcuts:**
+- `→` / `←` - Navigate slides
+- `s` - Speaker notes
+- `o` - Overview mode
+- `f` - Fullscreen
+- `?` - All shortcuts
+
 ## Project Structure
 
 ```

@@ -220,5 +220,26 @@ test.describe('Authentication Flow', () => {
       await page.goto('/boards');
       await expect(page).toHaveURL(/.*login.*/);
     });
+
+    test('navbar logout link should use GET-enabled /logout route', async ({ page }) => {
+      const testEmail = generateTestEmail();
+
+      // Register to get authenticated and see navbar
+      await page.goto('/register');
+      await page.locator('input[name="display_name"]').fill('E2E Navbar Logout');
+      await page.locator('input[name="email"]').fill(testEmail);
+      await page.locator('input[name="password"]').fill('password123');
+      await page.locator('input[name="password_confirm"]').fill('password123');
+      await page.locator('button[type="submit"]').click();
+      await page.waitForURL('**/boards**', { timeout: 10000 });
+
+      // Open the user dropdown to reveal the logout link
+      await page.locator('nav .dropdown .dropbtn').click();
+
+      // Verify the navbar logout link uses /logout (GET-enabled) not /api/auth/logout (POST-only)
+      const logoutLink = page.locator('nav a[href="/logout"]');
+      await expect(logoutLink).toBeVisible();
+      await expect(logoutLink).toHaveText('Logout');
+    });
   });
 });

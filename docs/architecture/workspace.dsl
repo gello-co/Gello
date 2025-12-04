@@ -136,7 +136,7 @@ workspace "Gello" "Gamified task management application with points and leaderbo
         # Component View - Web Application
         component webApp "Components" {
             include *
-            autoLayout
+            autoLayout lr 200 150
             description "Component diagram showing the internal structure of the web application"
         }
 
@@ -153,45 +153,144 @@ workspace "Gello" "Gamified task management application with points and leaderbo
             description "Production environment deployment diagram"
         }
 
-        # Styling
+        # Modern Styling
         styles {
+            # People - Friendly gradient blues
             element "Person" {
                 shape Person
-                background #08427B
+                background #4F46E5
                 color #ffffff
+                stroke #3730A3
+                strokeWidth 2
             }
             element "User" {
-                background #08427B
+                background #6366F1
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/user.svg
             }
             element "Admin" {
-                background #1168BD
+                background #8B5CF6
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/shield-check.svg
             }
+
+            # Main Software System - Vibrant teal
             element "Software System" {
-                background #1168BD
+                shape RoundedBox
+                background #0D9488
                 color #ffffff
+                stroke #0F766E
+                strokeWidth 2
+                fontSize 24
             }
+
+            # External Systems - Warm gray
             element "External" {
-                background #999999
+                shape RoundedBox
+                background #6B7280
                 color #ffffff
+                stroke #4B5563
+                strokeWidth 2
+                fontSize 20
             }
+
+            # Containers - Ocean blues
             element "Container" {
-                background #438DD5
+                shape RoundedBox
+                background #0EA5E9
                 color #ffffff
+                stroke #0284C7
+                strokeWidth 2
+                fontSize 18
             }
             element "WebApp" {
                 shape WebBrowser
+                background #3B82F6
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/browser.svg
             }
             element "StaticAssets" {
                 shape Folder
+                background #06B6D4
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/folder-open.svg
             }
+            element "Database" {
+                shape Cylinder
+                background #10B981
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/database.svg
+            }
+
+            # Components - Soft purples and blues by layer
             element "Component" {
-                background #85BBF0
-                color #000000
+                shape RoundedBox
+                background #A78BFA
+                color #1F2937
+                stroke #7C3AED
+                strokeWidth 1
+                fontSize 14
             }
+            
+            # Route layer - Blue
+            element "Express Router" {
+                background #60A5FA
+                color #1E3A5F
+            }
+            
+            # Service layer - Purple  
+            element "TypeScript Service" {
+                background #C4B5FD
+                color #3B0764
+            }
+            
+            # Database layer - Green
+            element "Supabase Client" {
+                background #6EE7B7
+                color #064E3B
+            }
+            
+            # Middleware - Orange
+            element "Express Middleware" {
+                background #FDBA74
+                color #7C2D12
+            }
+
+            # Deployment Nodes - Clean whites and grays
             element "Deployment Node" {
-                background #ffffff
-                color #000000
+                shape RoundedBox
+                background #F8FAFC
+                color #1E293B
+                stroke #CBD5E1
+                strokeWidth 2
+                fontSize 16
+            }
+            element "Infrastructure Node" {
+                shape RoundedBox
+                background #E2E8F0
+                color #334155
+                stroke #94A3B8
+            }
+
+            # Relationships - Clean dark lines
+            relationship "Relationship" {
+                color #475569
+                thickness 2
+                style solid
+                routing Orthogonal
+                fontSize 14
+            }
+            relationship "Sync" {
+                style dashed
+                color #0EA5E9
+            }
+            relationship "Async" {
+                style dotted
+                color #8B5CF6
             }
         }
+
+        # Optional: Custom branding
+        branding {
+            font "Inter"
+        }
+
+        # Use default theme as base
+        theme default
     }
 }
