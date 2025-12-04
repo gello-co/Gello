@@ -3,7 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gello Code Tour - Project Overview</title>
+  <title>Gello - Project Overview</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
@@ -12,13 +16,13 @@
 </head>
 <body>
   <!-- Back to Index Button -->
-  <a href="../index.html" class="nav-home" title="Back to Tours" aria-label="Back to tour index">
+  <a href="../index.html" class="nav-home" title="Back to Presentations" aria-label="Back to presentations index">
     <i class="bi bi-house-fill"></i>
   </a>
 
   <!-- Breadcrumb Navigation -->
   <nav class="slide-breadcrumb" aria-label="Breadcrumb">
-    <a href="../index.html">Tours</a>
+    <a href="../index.html">Presentations</a>
     <span class="separator">→</span>
     <span class="current">Project Overview</span>
   </nav>
@@ -33,9 +37,8 @@
     <div class="slides">
       <section class="title-slide">
         <h1>Project Overview</h1>
-        <p class="subtitle">Gello Codebase Tour - Part 1</p>
-        <p class="muted">Press <kbd>→</kbd> to navigate · <kbd>s</kbd> for speaker notes</p>
-        <aside class="notes">Welcome to Gello. This tour covers project structure, tech stack, and getting started.</aside>
+        <p class="subtitle">Gello Codebase - Part 1</p>
+        <aside class="notes">Welcome to Gello. This presentation covers project structure, tech stack, and getting started.</aside>
       </section>
 
       <section>
@@ -153,7 +156,7 @@ import { Board }
           <li class="fragment"><span class="accent">Start:</span> <code>bun run start</code></li>
         </ul>
         <p class="fragment" style="margin-top: 2rem;">
-          <a href="02-architecture.html">Next: Architecture Tour →</a> · <a href="../index.html">Index</a>
+          <a href="02-architecture.html">Next: Architecture →</a> · <a href="../index.html">Index</a>
         </p>
         <aside class="notes">Key takeaway: layered architecture with Supabase RLS for security.</aside>
       </section>
@@ -162,8 +165,8 @@ import { Board }
 
   <!-- Completion Overlay (hidden by default) -->
   <div class="completion-overlay" id="completion-overlay" style="display: none;" x-data="{ show: false }">
-    <h3><i class="bi bi-check-circle-fill me-2"></i>Tour Complete</h3>
-    <p>You've finished the Project Overview tour</p>
+    <h3><i class="bi bi-check-circle-fill me-2"></i>Section Complete</h3>
+    <p>You've finished the Project Overview</p>
     <div class="actions">
       <a href="02-architecture.html" class="btn btn-primary">Next: Architecture →</a>
       <a href="../index.html" class="btn btn-secondary">Back to Index</a>
@@ -179,14 +182,14 @@ import { Board }
   <script src="https://cdn.jsdelivr.net/npm/motion@11.18.0/dist/motion.min.js"></script>
   <!-- canvas-confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <!-- Gello Tour Scripts -->
-  <script src="../assets/js/tour-progress.js"></script>
+  <!-- Gello Scripts -->
+  <script src="../assets/js/progress.js"></script>
   <script src="../assets/js/confetti-setup.js"></script>
   <script src="../assets/js/motion-setup.js"></script>
   <script>
-    // Tour configuration
-    const TOUR_ID = '01-project-overview';
-    const NEXT_TOUR = { id: '02-architecture', name: 'Architecture Tour', url: '02-architecture.html' };
+    // Section configuration
+    const SECTION_ID = '01-project-overview';
+    const NEXT_SECTION = { id: '02-architecture', name: 'Architecture', url: '02-architecture.html' };
 
     // Initialize Reveal.js
     Reveal.initialize({
@@ -223,23 +226,23 @@ import { Board }
       }
 
       // Check for completion on last slide
-      if (Reveal.isLastSlide() && !sessionStorage.getItem(`tour-completed-${TOUR_ID}`)) {
-        sessionStorage.setItem(`tour-completed-${TOUR_ID}`, 'true');
-        handleTourCompletion();
+      if (Reveal.isLastSlide() && !sessionStorage.getItem(`section-completed-${SECTION_ID}`)) {
+        sessionStorage.setItem(`section-completed-${SECTION_ID}`, 'true');
+        handleSectionCompletion();
       }
     });
 
-    // Handle tour completion
-    function handleTourCompletion() {
+    // Handle section completion
+    function handleSectionCompletion() {
       // Get progress from localStorage
-      const storageKey = 'gello-tour-progress';
+      const storageKey = 'gello-slide-progress';
       let data = JSON.parse(localStorage.getItem(storageKey) || '{}');
       
       // Initialize if needed
-      if (!data.tours) {
+      if (!data.sections) {
         data = {
           version: 1,
-          tours: {
+          sections: {
             '01-project-overview': { completed: false, lastVisit: null },
             '02-architecture': { completed: false, lastVisit: null },
             '03-services': { completed: false, lastVisit: null },
@@ -250,21 +253,21 @@ import { Board }
         };
       }
 
-      const wasAlreadyComplete = data.tours[TOUR_ID]?.completed;
+      const wasAlreadyComplete = data.sections[SECTION_ID]?.completed;
       
       if (!wasAlreadyComplete) {
         // Mark complete
-        data.tours[TOUR_ID] = {
+        data.sections[SECTION_ID] = {
           completed: true,
           lastVisit: new Date().toISOString()
         };
-        data.allComplete = Object.values(data.tours).every(t => t.completed);
+        data.allComplete = Object.values(data.sections).every(t => t.completed);
         data.lastUpdated = new Date().toISOString();
         localStorage.setItem(storageKey, JSON.stringify(data));
 
         // Trigger celebration
         if (window.GelloConfetti) {
-          window.GelloConfetti.tourComplete();
+          window.GelloConfetti.sectionComplete();
         }
 
         // Show completion overlay after a delay
@@ -278,10 +281,10 @@ import { Board }
           }
         }, 1500);
 
-        // Check if all tours complete
+        // Check if all sections complete
         if (data.allComplete && window.GelloConfetti) {
           setTimeout(() => {
-            window.GelloConfetti.allToursComplete();
+            window.GelloConfetti.allSectionsComplete();
           }, 2500);
         }
       }

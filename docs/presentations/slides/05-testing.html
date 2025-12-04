@@ -3,7 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gello Code Tour - Testing</title>
+  <title>Gello - Testing</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
@@ -12,13 +16,13 @@
 </head>
 <body>
   <!-- Back to Index Button -->
-  <a href="../index.html" class="nav-home" title="Back to Tours" aria-label="Back to tour index">
+  <a href="../index.html" class="nav-home" title="Back to Presentations" aria-label="Back to presentations index">
     <i class="bi bi-house-fill"></i>
   </a>
 
   <!-- Breadcrumb Navigation -->
   <nav class="slide-breadcrumb" aria-label="Breadcrumb">
-    <a href="../index.html">Tours</a>
+    <a href="../index.html">Presentations</a>
     <span class="separator">→</span>
     <span class="current">Testing</span>
   </nav>
@@ -32,10 +36,9 @@
   <div class="reveal">
     <div class="slides">
       <section class="title-slide">
-        <h1>Testing Tour</h1>
-        <p class="subtitle">Gello Codebase Tour - Part 5</p>
-        <p class="muted">Unit, integration, and E2E testing strategies</p>
-        <aside class="notes">This module covers testing patterns and conventions.</aside>
+        <h1>Testing</h1>
+        <p class="subtitle">Gello Codebase - Part 5</p>
+        <aside class="notes">Testing strategies, integration tests, and E2E testing.</aside>
       </section>
 
       <section>
@@ -193,7 +196,7 @@ bun run test:ci</code></pre>
           <li class="fragment"><span class="accent">Isolation:</span> Unique users per test via helpers</li>
           <li class="fragment"><span class="accent">Quick run:</span> <code>bun test</code></li>
         </ul>
-        <p class="fragment accent" style="margin-top: 2rem;">All Tours Complete</p>
+        <p class="fragment accent" style="margin-top: 2rem;">All Sections Complete</p>
         <p class="fragment">
           <a href="04-database.html">← Previous</a> · <a href="../index.html">Back to Index</a>
         </p>
@@ -202,10 +205,10 @@ bun run test:ci</code></pre>
     </div>
   </div>
 
-  <!-- Completion Overlay (final tour) -->
+  <!-- Completion Overlay (final section) -->
   <div class="completion-overlay" id="completion-overlay" style="display: none;">
-    <h3><i class="bi bi-trophy-fill me-2"></i>All Tours Complete</h3>
-    <p>You've finished all the Gello code tours</p>
+    <h3><i class="bi bi-trophy-fill me-2"></i>All Sections Complete</h3>
+    <p>You've finished all the Gello presentations</p>
     <div class="actions">
       <a href="../index.html" class="btn btn-primary">Back to Index</a>
     </div>
@@ -217,12 +220,12 @@ bun run test:ci</code></pre>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/motion@11.18.0/dist/motion.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <script src="../assets/js/tour-progress.js"></script>
+  <script src="../assets/js/progress.js"></script>
   <script src="../assets/js/confetti-setup.js"></script>
   <script src="../assets/js/motion-setup.js"></script>
   <script>
-    const TOUR_ID = '05-testing';
-    const NEXT_TOUR = null; // Final tour
+    const SECTION_ID = '05-testing';
+    const NEXT_SECTION = null; // Final section
 
     Reveal.initialize({
       hash: true,
@@ -246,25 +249,25 @@ bun run test:ci</code></pre>
         }
       }
       if (progressText) progressText.textContent = `${current} / ${total}`;
-      if (Reveal.isLastSlide() && !sessionStorage.getItem(`tour-completed-${TOUR_ID}`)) {
-        sessionStorage.setItem(`tour-completed-${TOUR_ID}`, 'true');
-        handleTourCompletion();
+      if (Reveal.isLastSlide() && !sessionStorage.getItem(`section-completed-${SECTION_ID}`)) {
+        sessionStorage.setItem(`section-completed-${SECTION_ID}`, 'true');
+        handleSectionCompletion();
       }
     });
 
-    function handleTourCompletion() {
-      const storageKey = 'gello-tour-progress';
+    function handleSectionCompletion() {
+      const storageKey = 'gello-slide-progress';
       let data = JSON.parse(localStorage.getItem(storageKey) || '{}');
-      if (!data.tours) {
-        data = { version: 1, tours: { '01-project-overview': { completed: false, lastVisit: null }, '02-architecture': { completed: false, lastVisit: null }, '03-services': { completed: false, lastVisit: null }, '04-database': { completed: false, lastVisit: null }, '05-testing': { completed: false, lastVisit: null } }, allComplete: false };
+      if (!data.sections) {
+        data = { version: 1, sections: { '01-project-overview': { completed: false, lastVisit: null }, '02-architecture': { completed: false, lastVisit: null }, '03-services': { completed: false, lastVisit: null }, '04-database': { completed: false, lastVisit: null }, '05-testing': { completed: false, lastVisit: null } }, allComplete: false };
       }
-      const wasAlreadyComplete = data.tours[TOUR_ID]?.completed;
+      const wasAlreadyComplete = data.sections[SECTION_ID]?.completed;
       if (!wasAlreadyComplete) {
-        data.tours[TOUR_ID] = { completed: true, lastVisit: new Date().toISOString() };
-        data.allComplete = Object.values(data.tours).every(t => t.completed);
+        data.sections[SECTION_ID] = { completed: true, lastVisit: new Date().toISOString() };
+        data.allComplete = Object.values(data.sections).every(t => t.completed);
         data.lastUpdated = new Date().toISOString();
         localStorage.setItem(storageKey, JSON.stringify(data));
-        if (window.GelloConfetti) window.GelloConfetti.tourComplete();
+        if (window.GelloConfetti) window.GelloConfetti.sectionComplete();
         setTimeout(() => {
           const overlay = document.getElementById('completion-overlay');
           if (overlay) {
@@ -274,9 +277,9 @@ bun run test:ci</code></pre>
             }
           }
         }, 1500);
-        // If all tours complete, trigger big fireworks
+        // If all sections complete, trigger big fireworks
         if (data.allComplete && window.GelloConfetti) {
-          setTimeout(() => window.GelloConfetti.allToursComplete(), 2000);
+          setTimeout(() => window.GelloConfetti.allSectionsComplete(), 2000);
         }
       }
     }

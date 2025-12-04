@@ -23,7 +23,8 @@ const GelloMotion = {
     // Motion One is exposed as window.Motion from CDN
     const { animate, stagger, spring } = window.Motion;
 
-    // Staggered entrance animation for tour cards
+    // Staggered entrance animation for cards
+    // spring() takes positional args: stiffness, damping
     animate(
       '.tour-card',
       {
@@ -34,7 +35,7 @@ const GelloMotion = {
       {
         delay: stagger(0.12),
         duration: 0.5,
-        easing: spring({ stiffness: 200, damping: 20 }),
+        easing: spring(200, 20),
       },
     );
 
@@ -56,7 +57,7 @@ const GelloMotion = {
       { scale: [0, 1.3, 1], opacity: [0, 1] },
       {
         duration: 0.4,
-        easing: spring({ stiffness: 400, damping: 12 }),
+        easing: spring(400, 12),
       },
     );
   },
@@ -80,26 +81,26 @@ const GelloMotion = {
   },
 
   /**
-   * Celebration timeline for tour completion
-   * @param {string} tourId - The completed tour ID
+   * Celebration timeline for section completion
+   * @param {string} sectionId - The completed section ID
    */
-  celebrateTourCompletion(tourId) {
+  celebrateSectionCompletion(sectionId) {
     if (this.prefersReducedMotion || !window.Motion) {
       // Just trigger confetti without animations
       if (window.GelloConfetti) {
-        window.GelloConfetti.tourComplete();
+        window.GelloConfetti.sectionComplete();
       }
       return;
     }
 
     const { timeline, spring } = window.Motion;
-    const card = document.querySelector(`.tour-card[data-tour="${tourId}"]`);
+    const card = document.querySelector(`.tour-card[data-tour="${sectionId}"]`);
     const badge = card?.querySelector('.completion-badge');
 
     if (!card) {
       // Fallback: just trigger confetti
       if (window.GelloConfetti) {
-        window.GelloConfetti.tourComplete();
+        window.GelloConfetti.sectionComplete();
       }
       return;
     }
@@ -109,23 +110,23 @@ const GelloMotion = {
       // Pulse the card
       [card, { scale: [1, 1.02, 1] }, { duration: 0.3 }],
       // Pop in the badge (if present)
-      ...(badge ? [[badge, { scale: [0, 1.4, 1], opacity: [0, 1] }, { at: 0.1, easing: spring({ stiffness: 500, damping: 15 }) }]] : []),
+      ...(badge ? [[badge, { scale: [0, 1.4, 1], opacity: [0, 1] }, { at: 0.1, easing: spring(500, 15) }]] : []),
     ]);
 
     // Fire confetti after animation
     sequence.finished.then(() => {
       if (window.GelloConfetti) {
-        window.GelloConfetti.tourComplete();
+        window.GelloConfetti.sectionComplete();
       }
     });
   },
 
   /**
-   * Celebration for all tours complete
+   * Celebration for all sections complete
    */
   celebrateAllComplete() {
     if (!window.Motion || !window.GelloConfetti) {
-      window.GelloConfetti?.allToursComplete();
+      window.GelloConfetti?.allSectionsComplete();
       return;
     }
 
@@ -138,7 +139,7 @@ const GelloMotion = {
 
     // Trigger fireworks
     setTimeout(() => {
-      window.GelloConfetti.allToursComplete();
+      window.GelloConfetti.allSectionsComplete();
     }, 400);
   },
 };

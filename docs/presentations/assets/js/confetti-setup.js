@@ -12,9 +12,9 @@ const GelloConfetti = {
   goldColors: ['#f3d18d', '#c9a05c'],
 
   /**
-   * Tour completion celebration - single burst
+   * Section completion celebration - single burst
    */
-  tourComplete() {
+  sectionComplete() {
     if (this.prefersReducedMotion || typeof confetti !== 'function') return;
 
     confetti({
@@ -29,9 +29,9 @@ const GelloConfetti = {
   },
 
   /**
-   * All tours complete - fireworks from both sides
+   * All sections complete - fireworks from both sides
    */
-  allToursComplete() {
+  allSectionsComplete() {
     if (this.prefersReducedMotion || typeof confetti !== 'function') return;
 
     const duration = 3000;

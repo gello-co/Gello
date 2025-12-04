@@ -3,7 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gello Code Tours</title>
+    <title>Gello Presentations</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
@@ -30,6 +37,7 @@
         );
         color: var(--gello-cream);
         min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       .hero {
         padding: 4rem 0;
@@ -175,9 +183,13 @@
         color: var(--gello-gold);
       }
       .gello-logo {
-        width: 80px;
+        width: 160px;
         height: auto;
         margin-bottom: 1rem;
+        transition: transform 0.2s ease;
+      }
+      .gello-logo:hover {
+        transform: scale(1.05);
       }
       .progress-counter {
         color: #b8a99a;
@@ -235,68 +247,70 @@
     </style>
   </head>
   <body>
-    <div class="container" x-data x-init="$store.tourProgress.init()">
+    <div class="container" x-data x-init="$store.slideProgress.init()">
       <!-- ARIA live region for announcements -->
       <div
         aria-live="polite"
         aria-atomic="true"
         class="sr-only"
-        id="tour-announcements"
+        id="slide-announcements"
       ></div>
 
       <div class="hero">
-        <img
-          src="../../ProjectSourceCode/src/public/images/gelloicon1.png"
-          alt="Gello"
-          class="gello-logo"
-        />
-        <h1>Gello Code Tours</h1>
+        <a href="/" title="Back to Home">
+          <img
+            src="/public/images/gelloicon1.png"
+            alt="Gello"
+            class="gello-logo"
+          />
+        </a>
+        <h1>Gello Presentations</h1>
         <p
           class="progress-counter"
-          x-show="$store.tourProgress.getCompletedCount() > 0"
+          x-show="$store.slideProgress.getCompletedCount() > 0"
         >
           <span
             class="completed-count"
-            x-text="$store.tourProgress.getCompletedCount()"
+            x-text="$store.slideProgress.getCompletedCount()"
           ></span>
-          / <span x-text="$store.tourProgress.getTotalCount()"></span> tours
+          / <span x-text="$store.slideProgress.getTotalCount()"></span> sections
           completed
         </p>
       </div>
 
-      <!-- All Tours Complete Celebration -->
+      <!-- All Sections Complete Celebration -->
       <div
         class="celebration-banner"
-        x-show="$store.tourProgress.allComplete"
+        x-show="$store.slideProgress.allComplete"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 transform scale-95"
         x-transition:enter-end="opacity-100 transform scale-100"
-        x-init="$watch('$store.tourProgress.allComplete', value => { if (value && window.GelloConfetti) window.GelloConfetti.allToursComplete(); })"
+        x-init="$watch('$store.slideProgress.allComplete', value => { if (value && window.GelloConfetti) window.GelloConfetti.allSectionsComplete(); })"
       >
-        <h2><i class="bi bi-trophy-fill me-2"></i>All Tours Complete</h2>
+        <h2><i class="bi bi-trophy-fill me-2"></i>All Sections Complete</h2>
         <p>You've mastered the Gello codebase</p>
         <button
           class="reset-progress-btn mt-3"
-          @click="$store.tourProgress.reset()"
+          @click="$store.slideProgress.reset()"
         >
           <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Progress
         </button>
       </div>
 
       <div class="row g-4">
-        <!-- Tour 1: Project Overview -->
+        <!-- Section 1: Project Overview -->
         <div class="col-md-6 col-lg-4">
           <a
             href="slides/01-project-overview.html"
             class="tour-card"
             data-tour="01-project-overview"
-            :class="{ 'completed': $store.tourProgress.isComplete('01-project-overview') }"
+            :class="{ 'completed': $store.slideProgress.isComplete('01-project-overview') }"
             role="link"
-            aria-label="Project Overview tour, approximately 4 minutes"
+            aria-label="Project Overview, approximately 4 minutes"
           >
             <div
               class="completion-badge"
-              x-show="$store.tourProgress.isComplete('01-project-overview')"
+              x-show="$store.slideProgress.isComplete('01-project-overview')"
               x-transition:enter="transition ease-out duration-300"
               x-transition:enter-start="opacity-0 scale-0"
               x-transition:enter-end="opacity-100 scale-100"
@@ -319,19 +333,19 @@
           </a>
         </div>
 
-        <!-- Tour 2: Architecture -->
+        <!-- Section 2: Architecture -->
         <div class="col-md-6 col-lg-4">
           <a
             href="slides/02-architecture.html"
             class="tour-card"
             data-tour="02-architecture"
-            :class="{ 'completed': $store.tourProgress.isComplete('02-architecture') }"
+            :class="{ 'completed': $store.slideProgress.isComplete('02-architecture') }"
             role="link"
-            aria-label="Architecture Tour, approximately 6 minutes"
+            aria-label="Architecture, approximately 6 minutes"
           >
             <div
               class="completion-badge"
-              x-show="$store.tourProgress.isComplete('02-architecture')"
+              x-show="$store.slideProgress.isComplete('02-architecture')"
               x-transition:enter="transition ease-out duration-300"
               x-transition:enter-start="opacity-0 scale-0"
               x-transition:enter-end="opacity-100 scale-100"
@@ -340,7 +354,7 @@
               <i class="bi bi-check-lg"></i>
             </div>
             <div class="icon"><i class="bi bi-diagram-3-fill"></i></div>
-            <h3>Architecture Tour</h3>
+            <h3>Architecture</h3>
             <p>
               Layered architecture, request flow, service injection, and RLS
               security.
@@ -354,19 +368,19 @@
           </a>
         </div>
 
-        <!-- Tour 3: Services -->
+        <!-- Section 3: Services -->
         <div class="col-md-6 col-lg-4">
           <a
             href="slides/03-services.html"
             class="tour-card"
             data-tour="03-services"
-            :class="{ 'completed': $store.tourProgress.isComplete('03-services') }"
+            :class="{ 'completed': $store.slideProgress.isComplete('03-services') }"
             role="link"
-            aria-label="Services Tour, approximately 5 minutes"
+            aria-label="Services, approximately 5 minutes"
           >
             <div
               class="completion-badge"
-              x-show="$store.tourProgress.isComplete('03-services')"
+              x-show="$store.slideProgress.isComplete('03-services')"
               x-transition:enter="transition ease-out duration-300"
               x-transition:enter-start="opacity-0 scale-0"
               x-transition:enter-end="opacity-100 scale-100"
@@ -375,7 +389,7 @@
               <i class="bi bi-check-lg"></i>
             </div>
             <div class="icon"><i class="bi bi-gear-fill"></i></div>
-            <h3>Services Tour</h3>
+            <h3>Services</h3>
             <p>
               Auth, boards, tasks, points, and leaderboard services explained.
             </p>
@@ -388,19 +402,19 @@
           </a>
         </div>
 
-        <!-- Tour 4: Database -->
+        <!-- Section 4: Database -->
         <div class="col-md-6 col-lg-4">
           <a
             href="slides/04-database.html"
             class="tour-card"
             data-tour="04-database"
-            :class="{ 'completed': $store.tourProgress.isComplete('04-database') }"
+            :class="{ 'completed': $store.slideProgress.isComplete('04-database') }"
             role="link"
-            aria-label="Database Layer tour, approximately 5 minutes"
+            aria-label="Database Layer, approximately 5 minutes"
           >
             <div
               class="completion-badge"
-              x-show="$store.tourProgress.isComplete('04-database')"
+              x-show="$store.slideProgress.isComplete('04-database')"
               x-transition:enter="transition ease-out duration-300"
               x-transition:enter-start="opacity-0 scale-0"
               x-transition:enter-end="opacity-100 scale-100"
@@ -423,19 +437,19 @@
           </a>
         </div>
 
-        <!-- Tour 5: Testing -->
+        <!-- Section 5: Testing -->
         <div class="col-md-6 col-lg-4">
           <a
             href="slides/05-testing.html"
             class="tour-card"
             data-tour="05-testing"
-            :class="{ 'completed': $store.tourProgress.isComplete('05-testing') }"
+            :class="{ 'completed': $store.slideProgress.isComplete('05-testing') }"
             role="link"
-            aria-label="Testing Tour, approximately 5 minutes"
+            aria-label="Testing, approximately 5 minutes"
           >
             <div
               class="completion-badge"
-              x-show="$store.tourProgress.isComplete('05-testing')"
+              x-show="$store.slideProgress.isComplete('05-testing')"
               x-transition:enter="transition ease-out duration-300"
               x-transition:enter-start="opacity-0 scale-0"
               x-transition:enter-end="opacity-100 scale-100"
@@ -444,7 +458,7 @@
               <i class="bi bi-check-lg"></i>
             </div>
             <div class="icon"><i class="bi bi-check2-circle"></i></div>
-            <h3>Testing Tour</h3>
+            <h3>Testing</h3>
             <p>
               Unit, integration, and E2E tests. Test helpers and conventions.
             </p>
@@ -486,8 +500,8 @@
       <footer>
         <button
           class="reset-progress-btn"
-          @click="$store.tourProgress.reset()"
-          x-show="$store.tourProgress.getCompletedCount() > 0"
+          @click="$store.slideProgress.reset()"
+          x-show="$store.slideProgress.getCompletedCount() > 0"
         >
           <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Progress
         </button>
@@ -503,8 +517,8 @@
     <script src="https://cdn.jsdelivr.net/npm/motion@11.18.0/dist/motion.min.js"></script>
     <!-- canvas-confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <!-- Gello Tour Scripts -->
-    <script src="assets/js/tour-progress.js"></script>
+    <!-- Gello Scripts -->
+    <script src="assets/js/progress.js"></script>
     <script src="assets/js/confetti-setup.js"></script>
     <script src="assets/js/motion-setup.js"></script>
   </body>
