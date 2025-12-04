@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Format staged files with Biome
+bunx git-format-staged --formatter 'biome format --stdin-file-path="{}"' .
+
+# # Run lint check on staged files (fail on errors)
+# bunx biome lint --staged
+
+# # Run typecheck (on entire codebase since TypeScript doesn't support staged-only)
+# bunx tsc --noEmit

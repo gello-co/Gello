@@ -1,136 +1,170 @@
-import crypto from "node:crypto";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
-import { resetSharedClient } from "./db.js";
+import crypto from 'node:crypto';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '../../../ProjectSourceCode/src/lib/logger.js';
+import { resetSharedClient } from './db.js';
 
-export async function cleanupTestData(client: SupabaseClient): Promise<void> {
-  const requestId = crypto.randomUUID();
-  const startTime = Date.now();
+interface CleanupError {
+  code?: string;
+  message: string;
+  details?: string;
+}
 
-  logger.debug({ requestId }, "[db-cleanup] Starting fast TRUNCATE cleanup");
+interface CleanupContext {
+  requestId: string;
+  startTime: number;
+  maxRetries: number;
+}
 
-  // Retry logic for connection issues
-  const maxRetries = 3;
-  let lastError: Error | null = null;
-  let currentClient = client;
+function isConnectionError(error: CleanupError | Error): boolean {
+  const message = error.message;
+  const code = 'code' in error ? error.code : undefined;
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      if (attempt > 0) {
-        logger.debug(
-          { requestId, attempt: attempt + 1 },
-          "[db-cleanup] Retry attempt",
-        );
-        // Reset client to get fresh connection
-        resetSharedClient();
-        // Small delay before retry to allow connection to reset
-        await new Promise((resolve) => setTimeout(resolve, attempt * 300));
-        // Get fresh client for retry
-        const { getTestSupabaseClient } = await import("./db.js");
-        currentClient = getTestSupabaseClient();
-      }
+  return (
+    code === 'ECONNRESET' ||
+    code === 'UNKNOWN_CERTIFICATE_VERIFICATION_ERROR' ||
+    message.includes('socket') ||
+    message.includes('connection') ||
+    message.includes('closed unexpectedly') ||
+    message.includes('certificate')
+  );
+}
 
-      // TRUNCATE all tables + delete auth users (via RPC function)
-      // This is much faster than individual DELETE operations
-      logger.debug(
-        { requestId, attempt: attempt + 1 },
-        "[db-cleanup] Calling truncate_all_tables RPC",
-      );
+async function getFreshClient(): Promise<SupabaseClient> {
+  resetSharedClient();
+  const { getTestSupabaseClient } = await import('./db.js');
+  return getTestSupabaseClient();
+}
 
-      const { data, error } = await currentClient.rpc("truncate_all_tables");
+async function attemptCleanup(
+  client: SupabaseClient,
+  requestId: string,
+  attempt: number
+): Promise<{ success: boolean; error?: CleanupError }> {
+  logger.debug({ requestId, attempt: attempt + 1 }, '[db-cleanup] Calling truncate_all_tables RPC');
 
-      if (error) {
-        // Check if it's a connection error that might be retryable
-        const isConnectionError =
-          error.code === "ECONNRESET" ||
-          error.code === "UNKNOWN_CERTIFICATE_VERIFICATION_ERROR" ||
-          error.message.includes("socket") ||
-          error.message.includes("connection") ||
-          error.message.includes("closed unexpectedly");
+  const { data, error } = await client.rpc('truncate_all_tables');
 
-        logger.warn(
-          {
-            requestId,
-            attempt: attempt + 1,
-            error: error.message,
-            code: error.code,
-            isConnectionError,
-            willRetry: isConnectionError && attempt < maxRetries - 1,
-          },
-          "[db-cleanup] RPC call failed",
-        );
-
-        if (isConnectionError && attempt < maxRetries - 1) {
-          // Will retry with fresh client on next iteration
-          continue;
-        }
-
-        logger.error(
-          {
-            requestId,
-            attempt: attempt + 1,
-            error: error.message,
-            code: error.code,
-            details: error.details,
-          },
-          "[db-cleanup] RPC truncate_all_tables failed (non-retryable or max retries)",
-        );
-        throw new Error(`Failed to truncate: ${error.message}`);
-      }
-
-      logger.debug(
-        { requestId, rpcResult: data },
-        "[db-cleanup] TRUNCATE RPC completed",
-      );
-
-      const duration = Date.now() - startTime;
-      logger.info(
-        { requestId, duration, attempts: attempt + 1 },
-        "[db-cleanup] Cleanup completed",
-      );
-      return; // Success
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      // Check if it's a connection error that might be retryable
-      const isConnectionError =
-        lastError.message.includes("socket") ||
-        lastError.message.includes("connection") ||
-        lastError.message.includes("ECONNRESET") ||
-        lastError.message.includes("closed unexpectedly") ||
-        lastError.message.includes("certificate");
-
-      logger.warn(
-        {
-          requestId,
-          attempt: attempt + 1,
-          error: lastError.message,
-          isConnectionError,
-          willRetry: isConnectionError && attempt < maxRetries - 1,
-        },
-        "[db-cleanup] Exception caught",
-      );
-
-      if (isConnectionError && attempt < maxRetries - 1) {
-        // Will retry with fresh client on next iteration
-        continue;
-      }
-
-      // Not retryable or out of retries
-      logger.error(
-        {
-          requestId,
-          attempt: attempt + 1,
-          error: lastError.message,
-        },
-        "[db-cleanup] Cleanup failed (non-retryable or max retries)",
-      );
-      throw lastError;
-    }
+  if (error) {
+    logger.warn(
+      {
+        requestId,
+        attempt: attempt + 1,
+        error: error.message,
+        code: error.code,
+        isConnectionError: isConnectionError(error),
+      },
+      '[db-cleanup] RPC call failed'
+    );
+    return { success: false, error };
   }
 
-  // Should never reach here, but TypeScript needs it
-  throw lastError || new Error("Cleanup failed after retries");
+  logger.debug({ requestId, rpcResult: data }, '[db-cleanup] TRUNCATE RPC completed');
+  return { success: true };
+}
+
+function logCleanupSuccess(ctx: CleanupContext, attempt: number): void {
+  const duration = Date.now() - ctx.startTime;
+  logger.info(
+    { requestId: ctx.requestId, duration, attempts: attempt + 1 },
+    '[db-cleanup] Cleanup completed'
+  );
+}
+
+function handleCleanupException(
+  error: unknown,
+  ctx: CleanupContext,
+  attempt: number,
+  canRetry: boolean
+): { lastError: Error; shouldContinue: boolean } {
+  const lastError = error instanceof Error ? error : new Error(String(error));
+  const shouldRetry = isConnectionError(lastError) && canRetry;
+
+  logger.warn(
+    {
+      requestId: ctx.requestId,
+      attempt: attempt + 1,
+      error: lastError.message,
+      willRetry: shouldRetry,
+    },
+    '[db-cleanup] Exception caught'
+  );
+
+  if (shouldRetry) {
+    return { lastError, shouldContinue: true };
+  }
+
+  logger.error(
+    { requestId: ctx.requestId, attempt: attempt + 1, error: lastError.message },
+    '[db-cleanup] Cleanup failed (non-retryable or max retries)'
+  );
+
+  return { lastError, shouldContinue: false };
+}
+
+export async function cleanupTestData(client: SupabaseClient): Promise<void> {
+  const ctx: CleanupContext = {
+    requestId: crypto.randomUUID(),
+    startTime: Date.now(),
+    maxRetries: 3,
+  };
+
+  logger.debug({ requestId: ctx.requestId }, '[db-cleanup] Starting fast TRUNCATE cleanup');
+
+  let currentClient = client;
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < ctx.maxRetries; attempt++) {
+    const canRetry = attempt < ctx.maxRetries - 1;
+
+    // Refresh client on retry
+    if (attempt > 0) {
+      logger.debug(
+        { requestId: ctx.requestId, attempt: attempt + 1 },
+        '[db-cleanup] Retry attempt'
+      );
+      await new Promise((resolve) => setTimeout(resolve, attempt * 300));
+      currentClient = await getFreshClient();
+    }
+
+    const result = await attemptCleanupWithErrorHandling(currentClient, ctx, attempt, canRetry);
+
+    if (result.success) return;
+    if (result.error) lastError = result.error;
+    if (!result.shouldContinue) throw result.error || new Error('Cleanup failed');
+  }
+
+  throw lastError || new Error('Cleanup failed after retries');
+}
+
+async function attemptCleanupWithErrorHandling(
+  client: SupabaseClient,
+  ctx: CleanupContext,
+  attempt: number,
+  canRetry: boolean
+): Promise<{ success: boolean; shouldContinue: boolean; error?: Error }> {
+  try {
+    const result = await attemptCleanup(client, ctx.requestId, attempt);
+
+    if (result.success) {
+      logCleanupSuccess(ctx, attempt);
+      return { success: true, shouldContinue: false };
+    }
+
+    if (result.error) {
+      const shouldRetry = isConnectionError(result.error) && canRetry;
+      if (shouldRetry) return { success: false, shouldContinue: true };
+      return {
+        success: false,
+        shouldContinue: false,
+        error: new Error(`Failed to truncate: ${result.error.message}`),
+      };
+    }
+
+    return { success: false, shouldContinue: false };
+  } catch (error) {
+    const handled = handleCleanupException(error, ctx, attempt, canRetry);
+    return { success: false, shouldContinue: handled.shouldContinue, error: handled.lastError };
+  }
 }
 
 // One-time seeding for integration tests (run once across all test processes)
@@ -141,9 +175,6 @@ export async function ensureSeededOnce(): Promise<void> {
   // This function is no longer needed with TRUNCATE-only approach
   // Database is seeded once when Supabase starts, tests just TRUNCATE and re-seed
   // Keeping function for compatibility but making it a no-op
-  logger.debug(
-    {},
-    "[db-cleanup] Using TRUNCATE-only cleanup, no full reset needed",
-  );
+  logger.debug({}, '[db-cleanup] Using TRUNCATE-only cleanup, no full reset needed');
   return Promise.resolve();
 }

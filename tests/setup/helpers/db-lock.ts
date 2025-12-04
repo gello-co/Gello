@@ -1,10 +1,10 @@
-import { unlinkSync } from "node:fs";
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { logger } from "../../../ProjectSourceCode/src/server/lib/logger.js";
+import { unlinkSync } from 'node:fs';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { logger } from '../../../ProjectSourceCode/src/lib/logger.js';
 
-const LOCK_DIR = join(process.cwd(), ".test-locks");
-const LOCK_FILE = join(LOCK_DIR, "db-reset.lock");
+const LOCK_DIR = join(process.cwd(), 'ProjectSourceCode/.test-locks');
+const LOCK_FILE = join(LOCK_DIR, 'db-reset.lock');
 
 interface LockInfo {
   pid: number;
@@ -14,11 +14,13 @@ interface LockInfo {
 
 export async function acquireDbLock(
   requestId: string,
-  timeoutMs = 10000, // 10 seconds for local operations
+  timeoutMs = 10000 // 10 seconds for local operations
 ): Promise<() => Promise<void>> {
   const startTime = Date.now();
 
-  await mkdir(LOCK_DIR, { recursive: true }).catch(() => {});
+  await mkdir(LOCK_DIR, { recursive: true }).catch(() => {
+    /* ignore - directory may already exist */
+  });
 
   while (Date.now() - startTime < timeoutMs) {
     try {
@@ -28,34 +30,31 @@ export async function acquireDbLock(
         requestId,
       };
 
-      await writeFile(LOCK_FILE, JSON.stringify(lockInfo), { flag: "wx" });
+      await writeFile(LOCK_FILE, JSON.stringify(lockInfo), { flag: 'wx' });
 
-      logger.info({ requestId, pid: process.pid }, "[db-lock] Acquired lock");
+      logger.info({ requestId, pid: process.pid }, '[db-lock] Acquired lock');
 
       return async () => {
         try {
           await unlink(LOCK_FILE);
-          logger.debug({ requestId }, "[db-lock] Released lock");
+          logger.debug({ requestId }, '[db-lock] Released lock');
         } catch (error) {
           logger.warn(
             {
               requestId,
               error: error instanceof Error ? error.message : String(error),
             },
-            "[db-lock] Failed to release lock",
+            '[db-lock] Failed to release lock'
           );
         }
       };
     } catch (_error) {
       try {
-        const lockContent = await readFile(LOCK_FILE, "utf-8");
+        const lockContent = await readFile(LOCK_FILE, 'utf-8');
         const lockInfo: LockInfo = JSON.parse(lockContent);
 
         if (!isProcessAlive(lockInfo.pid)) {
-          logger.warn(
-            { requestId, stalePid: lockInfo.pid },
-            "[db-lock] Removing stale lock",
-          );
+          logger.warn({ requestId, stalePid: lockInfo.pid }, '[db-lock] Removing stale lock');
           await unlink(LOCK_FILE);
           continue;
         }
@@ -82,7 +81,7 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
-process.on("exit", () => {
+process.on('exit', () => {
   try {
     unlinkSync(LOCK_FILE);
   } catch {

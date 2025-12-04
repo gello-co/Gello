@@ -1,289 +1,173 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Request } from "express";
-import { env } from "../config/env";
+/**
+ * Supabase Client Factory
+ *
+ * This module provides three types of Supabase clients:
+ *
+ * 1. getSupabaseClient() - Global singleton for anonymous server operations
+ * 2. createAuthenticatedClient(req, res) - Per-request client with cookie-based auth (PRIMARY)
+ * 3. getServiceRoleClient() - Admin operations that bypass RLS
+ *
+ * IMPORTANT: For authenticated user operations, ALWAYS use createAuthenticatedClient().
+ * This uses @supabase/ssr which handles:
+ * - Cookie parsing (reads session from request)
+ * - Cookie setting (writes refreshed tokens to response)
+ * - Automatic token refresh
+ * - PKCE flow for OAuth
+ */
+
+import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Request, Response } from 'express';
+import { env } from '../config/env';
 
 let client: SupabaseClient | null = null;
+let serviceRoleClient: SupabaseClient | null = null;
 
 /**
- * Get global singleton Supabase client for server-side operations
- * Note: This client does NOT handle session persistence (see getSupabaseClientForRequest for per-request clients with session support)
+ * Get global singleton Supabase client for anonymous server-side operations.
+ *
+ * Use this ONLY for operations that don't require user context:
+ * - Health checks
+ * - Public data queries
+ * - Operations where RLS isn't needed
+ *
+ * For authenticated operations, use createAuthenticatedClient() instead.
  */
-export function getSupabaseClient() {
+export function getSupabaseClient(): SupabaseClient {
   if (client) return client;
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error(
-      "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
-    );
+
+  if (!(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY)) {
+    throw new Error('Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY');
   }
-  // Global singleton client for server-side operations
-  // Note: This client does NOT persist sessions because:
-  // 1. It's a singleton shared across all requests (no per-request state)
-  // 2. Session persistence is handled by per-request clients via getSupabaseClientForRequest()
-  // 3. Per-request clients restore sessions from httpOnly cookies in middleware
-  // Storage methods are no-op placeholders (not used when persistSession: false)
+
   client = createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
   });
+
   return client;
 }
 
 /**
- * Get Supabase client for a specific request with cookie-based session
- * Accepts Express Request object or a minimal object with cookies/headers
+ * Create an authenticated Supabase client for a specific request.
+ *
+ * This is the PRIMARY client for authenticated operations. It:
+ * - Reads session tokens from request cookies
+ * - Automatically refreshes expired tokens
+ * - Sets updated tokens on the response
+ * - Uses PKCE flow for OAuth
+ *
+ * The @supabase/ssr library manages all cookie handling automatically,
+ * including the chunked cookie format for large tokens.
+ *
+ * @param req Express request object
+ * @param res Express response object
+ * @returns Supabase client with user's session context
+ *
+ * @example
+ * ```typescript
+ * router.get('/api/data', async (req, res) => {
+ *   const supabase = createAuthenticatedClient(req, res);
+ *   const { data: { user } } = await supabase.auth.getUser();
+ *   // ... use client with user's RLS permissions
+ * });
+ * ```
  */
-export async function getSupabaseClientForRequest(
-  req:
-    | Request
-    | { cookies?: Record<string, string>; headers?: Record<string, unknown> },
-): Promise<SupabaseClient> {
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+export function createAuthenticatedClient(req: Request, res: Response): SupabaseClient {
+  if (!(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY)) {
+    throw new Error('Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY');
+  }
+
+  // Determine if we're in a secure context (HTTPS)
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
+  return createServerClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
+    cookies: {
+      getAll() {
+        // Parse cookies from request header
+        const parsed = parseCookieHeader(req.headers.cookie ?? '');
+        const cookies = parsed
+          .filter((cookie): cookie is { name: string; value: string } => cookie.value !== undefined)
+          .map(({ name, value }) => ({ name, value }));
+
+        if (process.env.DEBUG_SUPABASE) {
+          console.debug(
+            '[supabase] Reading cookies:',
+            cookies.map((c) => c.name).join(', ') || '(none)'
+          );
+        }
+
+        return cookies;
+      },
+      setAll(cookiesToSet) {
+        // Guard against setting cookies after headers are sent
+        // This can happen with Supabase SSR auth state change callbacks
+        if (res.headersSent) {
+          if (process.env.DEBUG_SUPABASE) {
+            console.debug(
+              '[supabase] Headers already sent, skipping cookie set:',
+              cookiesToSet.map((c) => c.name).join(', ') || '(none)'
+            );
+          }
+          return;
+        }
+
+        if (process.env.DEBUG_SUPABASE) {
+          console.debug(
+            '[supabase] Setting cookies:',
+            cookiesToSet.map((c) => c.name).join(', ') || '(none)'
+          );
+        }
+
+        // Set cookies on the response
+        cookiesToSet.forEach(({ name, value, options }) => {
+          const mergedOptions = {
+            path: '/',
+            sameSite: 'lax' as const,
+            secure: isSecure,
+            httpOnly: true,
+            ...options,
+          };
+
+          res.appendHeader('Set-Cookie', serializeCookieHeader(name, value, mergedOptions));
+        });
+      },
+    },
+    auth: {
+      // PKCE flow for secure OAuth - stores code verifier in cookies
+      flowType: 'pkce',
+    },
+  });
+}
+
+/**
+ * Get service role Supabase client for admin operations.
+ *
+ * WARNING: This client bypasses ALL Row Level Security policies.
+ * Use only for:
+ * - Creating user profiles after OAuth signup
+ * - Admin operations that require elevated privileges
+ * - Background jobs that need full database access
+ *
+ * Never expose this client to user-facing code paths.
+ */
+export function getServiceRoleClient(): SupabaseClient {
+  if (serviceRoleClient) return serviceRoleClient;
+
+  if (!(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY)) {
     throw new Error(
-      "Supabase env not configured: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY",
+      'Service role key required for admin operations: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY'
     );
   }
 
-  // Extract access token early to set it on the client for RLS
-  let accessTokenForClient: string | undefined;
-
-  // Try to get access token from cookies first
-  if ("cookies" in req && req.cookies) {
-    accessTokenForClient = req.cookies["sb-access-token"];
-  }
-
-  // Fallback: Parse from Cookie header if cookie-parser didn't work (common in tests)
-  if (!accessTokenForClient) {
-    let cookieHeader: string | undefined;
-    if ("get" in req && typeof req.get === "function") {
-      cookieHeader = req.get("Cookie") || req.get("cookie");
-    } else if ("headers" in req) {
-      const headers = req.headers as Record<string, unknown>;
-      cookieHeader = (headers.cookie as string) || (headers.cookie as string);
-    }
-
-    if (cookieHeader) {
-      const match = cookieHeader?.match(
-        /(?:^|;\s*)sb-access-token\s*=\s*([^;]*)(?:;|$)/,
-      );
-      if (match?.[1]) {
-        accessTokenForClient = match[1].trim();
-        try {
-          accessTokenForClient = accessTokenForClient.includes("%")
-            ? decodeURIComponent(accessTokenForClient)
-            : accessTokenForClient;
-        } catch {
-          // Use as-is if decoding fails
-        }
-      }
-    }
-  }
-
-  const client = createClient(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY, {
+  serviceRoleClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
-    global: {
-      headers: accessTokenForClient
-        ? { Authorization: `Bearer ${accessTokenForClient}` }
-        : {},
-    },
   });
 
-  // Helper to decode JWT without verification (just to inspect claims)
-  const decodeJWT = (
-    token: string,
-  ): { sub?: string; [key: string]: unknown } | null => {
-    try {
-      const parts = token.split(".");
-      if (parts.length !== 3) {
-        return null; // Not a valid JWT format
-      }
-      // Decode the payload (second part)
-      const payload = parts[1];
-      if (!payload) {
-        return null;
-      }
-      // Add padding if needed for base64 decoding
-      const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-      const decoded = Buffer.from(padded, "base64url").toString("utf-8");
-      return JSON.parse(decoded) as { sub?: string; [key: string]: unknown };
-    } catch {
-      return null;
-    }
-  };
-
-  // Reuse the access token we already extracted for session restoration
-  // Also extract refresh token for session restoration
-  let accessToken = accessTokenForClient;
-  let refreshToken: string | undefined;
-
-  // Try to get refresh token from cookies first
-  if ("cookies" in req && req.cookies) {
-    refreshToken = req.cookies["sb-refresh-token"];
-  }
-
-  // Fallback: Parse from Cookie header if cookie-parser didn't work
-  if (!refreshToken) {
-    let cookieHeader: string | undefined;
-    if ("get" in req && typeof req.get === "function") {
-      cookieHeader = req.get("Cookie") || req.get("cookie");
-    } else if ("headers" in req) {
-      const headers = req.headers as Record<string, unknown>;
-      cookieHeader =
-        (headers.cookie as string) ||
-        (headers.cookie as string) ||
-        (headers.Cookie as string);
-    }
-
-    if (cookieHeader) {
-      const parseCookie = (name: string): string | undefined => {
-        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const regex = new RegExp(
-          `(?:^|;\\s*)${escapedName}\\s*=\\s*([^;]*)(?:;|$)`,
-        );
-        const match = cookieHeader?.match(regex);
-        if (match?.[1]) {
-          const value = match[1].trim();
-          try {
-            return value.includes("%") ? decodeURIComponent(value) : value;
-          } catch {
-            return value;
-          }
-        }
-        return undefined;
-      };
-      if (!accessToken) accessToken = parseCookie("sb-access-token");
-      if (!refreshToken) refreshToken = parseCookie("sb-refresh-token");
-
-      if (process.env.NODE_ENV === "test") {
-        console.debug(
-          "[supabase] Manual parse result:",
-          `accessToken: ${!!accessToken} (${accessToken?.length || 0} chars)${accessToken ? ` [${accessToken.substring(0, 50)}...]` : ""}, refreshToken: ${!!refreshToken} (${refreshToken?.length || 0} chars)${refreshToken ? ` [${refreshToken.substring(0, 50)}...]` : ""}`,
-        );
-      }
-    } else if (process.env.NODE_ENV === "test") {
-      console.debug("[supabase] No Cookie header found in request");
-    }
-  }
-
-  let decodedToken: { sub?: string } | null = null;
-
-  // Verify access token is a valid JWT with sub claim before attempting session restoration
-  if (accessToken) {
-    decodedToken = decodeJWT(accessToken);
-    if (process.env.NODE_ENV === "test") {
-      if (!decodedToken) {
-        console.debug("[supabase] Access token is not a valid JWT format");
-      } else if (!decodedToken.sub) {
-        console.debug(
-          "[supabase] Access token missing 'sub' claim - might be an API key, not a user JWT",
-          "Decoded payload:",
-          JSON.stringify(decodedToken, null, 2),
-        );
-        // Don't attempt session restoration with invalid token
-        return client;
-      } else {
-        console.debug(
-          "[supabase] Access token is valid JWT with sub claim:",
-          decodedToken.sub,
-        );
-      }
-    }
-
-    // If token is missing sub claim, it's likely an API key, not a user JWT
-    // Return client without session to avoid invalid session errors
-    if (!decodedToken || !decodedToken.sub) {
-      if (process.env.NODE_ENV === "test") {
-        console.debug(
-          "[supabase] Skipping session restoration - invalid or missing sub claim",
-        );
-      }
-      return client;
-    }
-  }
-
-  // Option A: Force setSession() to work even if it reports errors
-  // Supabase local sometimes reports "missing sub claim" errors even when the JWT is valid
-  // We verify the session was actually established by checking getSession() afterwards
-  if (accessToken && refreshToken) {
-    try {
-      // Attempt to set the session
-      const { data, error } = await client.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      // Verify session was actually established (ignore error if session exists)
-      const {
-        data: { session: verifiedSession },
-      } = await client.auth.getSession();
-
-      if (verifiedSession) {
-        // Session is established - success!
-        if (process.env.NODE_ENV === "test") {
-          console.debug(
-            "[supabase] Session established successfully (User ID:",
-            verifiedSession.user.id,
-            ")",
-          );
-        }
-        return client;
-      }
-
-      // If setSession() reported an error but we don't have a session, log it
-      if (error && process.env.NODE_ENV === "test") {
-        console.debug(
-          "[supabase] setSession() reported error but session not established:",
-          error.message,
-        );
-      }
-
-      // If we have a valid JWT with sub claim, try to force the session
-      // by directly setting it in the client's internal state
-      if (accessToken && decodedToken && decodedToken.sub) {
-        if (process.env.NODE_ENV === "test") {
-          console.debug(
-            "[supabase] Attempting to force session with valid JWT (sub:",
-            decodedToken.sub,
-            ")",
-          );
-        }
-
-        // Try getUser() to verify token is valid
-        const { data: userData, error: userError } =
-          await client.auth.getUser(accessToken);
-
-        if (!userError && userData.user) {
-          // Token is valid - the Authorization header should work for RPC calls
-          // Even if setSession() failed, the header is set and auth.uid() should work
-          if (process.env.NODE_ENV === "test") {
-            console.debug(
-              "[supabase] Token validated via getUser(), relying on Authorization header for RPC",
-            );
-          }
-          return client;
-        }
-
-        if (process.env.NODE_ENV === "test") {
-          console.debug(
-            "[supabase] Token validation failed:",
-            userError?.message || "Unknown error",
-          );
-        }
-      }
-    } catch (err) {
-      if (process.env.NODE_ENV === "test") {
-        console.debug(
-          "[supabase] setSession() exception:",
-          err instanceof Error ? err.message : String(err),
-        );
-      }
-    }
-  }
-
-  // Return client with Authorization header set (may work for RPC even without session)
-  return client;
+  return serviceRoleClient;
 }

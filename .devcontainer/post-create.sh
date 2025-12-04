@@ -49,7 +49,7 @@ display_metrics_summary() {
         total_time=$phase_duration
       fi
     fi
-  done < "$METRICS_FILE"
+  done <"$METRICS_FILE"
 
   if [ "$has_metrics" = true ] || [ "$total_time" -gt 0 ]; then
     if [ "$total_time" -gt 0 ]; then
@@ -82,9 +82,9 @@ record_time() {
 
     # Append to metrics file (create array if first entry)
     if [ ! -f "$METRICS_FILE" ]; then
-      echo "[$json_entry" > "$METRICS_FILE"
+      echo "[$json_entry" >"$METRICS_FILE"
     else
-      echo ",$json_entry" >> "$METRICS_FILE"
+      echo ",$json_entry" >>"$METRICS_FILE"
     fi
   fi
 
@@ -101,20 +101,20 @@ mkdir -p .bun-cache .cache logs
 echo "✅ Cache directories created"
 
 # Verify Homebrew is in PATH (for mkcert)
-if ! command -v brew &> /dev/null; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" 2>/dev/null || true
+if ! command -v brew &>/dev/null; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" 2>/dev/null || true
 fi
 
 # Verify tools are installed (should be in Dockerfile)
-if ! command -v bun &> /dev/null; then
+if ! command -v bun &>/dev/null; then
   echo "❌ Bun not found - should be installed in Dockerfile"
   exit 1
 fi
 
 # Verify bunx is available (Supabase CLI runs via bunx or bun x)
-if command -v bunx &> /dev/null; then
+if command -v bunx &>/dev/null; then
   BUNX_CMD="bunx"
-elif bun x --version &> /dev/null; then
+elif bun x --version &>/dev/null; then
   BUNX_CMD="bun x"
   echo "ℹ️  Using 'bun x' instead of 'bunx'"
 else
@@ -123,7 +123,7 @@ else
 fi
 
 # Test Supabase CLI availability (non-blocking)
-if ! $BUNX_CMD supabase --version &> /dev/null; then
+if ! $BUNX_CMD supabase --version &>/dev/null; then
   echo "⚠️  Supabase CLI not available via $BUNX_CMD (will be downloaded on first use)"
 else
   echo "✅ Supabase CLI available via $BUNX_CMD"
@@ -131,12 +131,12 @@ fi
 
 # Verify mkcert is available (for TLS certificate generation)
 # mkcert should be installed in Dockerfile via Homebrew
-if command -v mkcert &> /dev/null; then
+if command -v mkcert &>/dev/null; then
   echo "✅ mkcert is available (for local HTTPS certificates)"
 elif [ -f "/home/linuxbrew/.linuxbrew/bin/mkcert" ]; then
   # mkcert might be installed but not in PATH yet
   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" 2>/dev/null || true
-  if command -v mkcert &> /dev/null; then
+  if command -v mkcert &>/dev/null; then
     echo "✅ mkcert is available (via Homebrew)"
   else
     echo "⚠️  mkcert not found in PATH (should be installed in Dockerfile)"
@@ -164,7 +164,7 @@ else
 fi
 
 # Verify Docker is available
-if ! command -v docker &> /dev/null; then
+if ! command -v docker &>/dev/null; then
   echo "⚠️  Docker not found. Supabase local development requires Docker."
   echo "   Please ensure Docker is installed and running."
 else
@@ -202,7 +202,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
   echo "🚀 Starting Supabase local instance..."
   SUPABASE_START_TIME=$(date +%s)
 
-  if command -v docker &> /dev/null && docker info &> /dev/null; then
+  if command -v docker &>/dev/null && docker info &>/dev/null; then
     # supabase start is blocking and waits until all services are ready
     if $BUNX_CMD supabase start 2>&1 | tee /tmp/supabase-start.log; then
       echo "✅ Supabase start command completed"
@@ -224,19 +224,20 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
 
     while [ $VERIFY_COUNT -lt $MAX_VERIFY ]; do
       # Get credentials
-      if $BUNX_CMD supabase status -o env > /tmp/supabase-env.log 2>&1; then
+      if $BUNX_CMD supabase status -o env >/tmp/supabase-env.log 2>&1; then
         # Source the env vars
         set -a
+        # shellcheck disable=SC1091
         source /tmp/supabase-env.log 2>/dev/null || true
         set +a
 
         # Test API endpoint with actual credentials
         if [ -n "$PUBLISHABLE_KEY" ]; then
           if curl -s -f -H "apikey: $PUBLISHABLE_KEY" \
-             -H "Authorization: Bearer $PUBLISHABLE_KEY" \
-             "http://127.0.0.1:54321/rest/v1/" > /dev/null 2>&1; then
+            -H "Authorization: Bearer $PUBLISHABLE_KEY" \
+            "http://127.0.0.1:54321/rest/v1/" >/dev/null 2>&1; then
             # Test auth endpoint
-            if curl -s -f "http://127.0.0.1:54321/auth/v1/health" > /dev/null 2>&1; then
+            if curl -s -f "http://127.0.0.1:54321/auth/v1/health" >/dev/null 2>&1; then
               echo "✅ Supabase is running and fully ready"
               SUPABASE_READY=true
               break
@@ -269,7 +270,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
     echo "🌱 Seeding database with test data..."
     SEED_START_TIME=$(date +%s)
     # Use doppler for auth-related env vars injection
-    if doppler run -- bun run seed > /tmp/seed-output.log 2>&1; then
+    if doppler run -- bun run seed >/tmp/seed-output.log 2>&1; then
       echo "✅ Database seeded successfully"
       SEED_END_TIME=$(date +%s)
       SEED_DURATION=$((SEED_END_TIME - SEED_START_TIME))
@@ -278,7 +279,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       fi
     else
       echo "⚠️  Database seeding had issues (this is OK if data already exists)"
-      cat /tmp/seed-output.log | tail -10
+      tail -10 /tmp/seed-output.log
     fi
 
     # Run tests
@@ -292,7 +293,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
 
     # Run unit tests (excluding health tests - they're informational)
     UNIT_START_TIME=$(date +%s)
-    if timeout 180 bun run test:unit -- --run --exclude tests/health.test.ts > /tmp/test-output.log 2>&1; then
+    if timeout 180 bun run test:unit -- --run --exclude tests/health.test.ts >/tmp/test-output.log 2>&1; then
       UNIT_TEST_COUNT=$(grep -E "Test Files|Tests" /tmp/test-output.log | tail -2)
       echo "✅ Unit tests passed"
       echo "   $UNIT_TEST_COUNT"
@@ -303,7 +304,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       fi
     else
       echo "❌ Unit tests failed - see /tmp/test-output.log for details"
-      cat /tmp/test-output.log | tail -20
+      tail -20 /tmp/test-output.log
       echo ""
       echo "   To skip test verification on container creation, set FULL_SETUP_ON_CREATE=false"
       exit 1
@@ -313,7 +314,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
     echo ""
     echo "🔍 Running integration tests..."
     INTEGRATION_START_TIME=$(date +%s)
-    if timeout 180 bun run test:integration -- --run > /tmp/integration-test-output.log 2>&1; then
+    if timeout 180 bun run test:integration -- --run >/tmp/integration-test-output.log 2>&1; then
       INTEGRATION_TEST_COUNT=$(grep -E "Test Files|Tests" /tmp/integration-test-output.log | tail -2)
       echo "✅ Integration tests passed"
       echo "   $INTEGRATION_TEST_COUNT"
@@ -329,7 +330,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
       else
         echo "❌ Integration tests failed"
       fi
-      cat /tmp/integration-test-output.log | tail -30
+      tail -30 /tmp/integration-test-output.log
       echo ""
       echo "   Setup cannot complete - integration tests must pass"
       echo "   Check Supabase: bun run supabase:status"
@@ -343,7 +344,7 @@ if [ "$FULL_SETUP_ON_CREATE" = "true" ]; then
 
     if [ "$FULL_SETUP_METRICS" = "true" ]; then
       # Close JSON array and add total time
-      echo ",{\"phase\":\"total_full_setup\",\"phase_duration_seconds\":$FULL_SETUP_DURATION,\"cumulative_duration_seconds\":$FULL_SETUP_DURATION,\"timestamp\":\"$(date -Iseconds)\"}]" >> "$METRICS_FILE"
+      echo ",{\"phase\":\"total_full_setup\",\"phase_duration_seconds\":$FULL_SETUP_DURATION,\"cumulative_duration_seconds\":$FULL_SETUP_DURATION,\"timestamp\":\"$(date -Iseconds)\"}]" >>"$METRICS_FILE"
     fi
   else
     echo "⚠️  Docker not available - Supabase cannot start"
@@ -360,7 +361,7 @@ else
     # Check if JSON array is already closed
     if ! grep -q '^\]' "$METRICS_FILE" 2>/dev/null; then
       # Close the JSON array
-      echo "]" >> "$METRICS_FILE"
+      echo "]" >>"$METRICS_FILE"
     fi
   fi
 fi
@@ -374,7 +375,7 @@ if [ -f "$METRICS_FILE" ]; then
     # Check if it ends with ] at all (could be on same line as last entry)
     if ! tail -1 "$METRICS_FILE" 2>/dev/null | grep -q '\]$'; then
       # File exists but doesn't end with ], so close it
-      echo "]" >> "$METRICS_FILE"
+      echo "]" >>"$METRICS_FILE"
     fi
   fi
 fi

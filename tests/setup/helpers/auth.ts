@@ -1,9 +1,8 @@
-import { randomUUID } from "node:crypto";
-import type { User } from "../../../ProjectSourceCode/src/lib/database/users.db.js";
-import { DuplicateUserError } from "../../../ProjectSourceCode/src/lib/errors/app.errors.js";
-import { AuthService } from "../../../ProjectSourceCode/src/lib/services/auth.service.js";
-import { SEEDED_USER_PASSWORD } from "../../../scripts/seed-simple.js";
-import { setCsrfHeadersIfEnabled } from "./csrf.js";
+import { randomUUID } from 'node:crypto';
+import type { User } from '../../../ProjectSourceCode/src/lib/database/users.db.js';
+import { DuplicateUserError } from '../../../ProjectSourceCode/src/lib/errors/app.errors.js';
+import { AuthService } from '../../../ProjectSourceCode/src/lib/services/auth.service.js';
+import { setCsrfHeadersIfEnabled } from './csrf.js';
 import {
   createTimeoutPromise,
   getAnonSupabaseClient,
@@ -11,7 +10,10 @@ import {
   isRateLimitError,
   RETRY_CONFIG,
   retryWithBackoff,
-} from "./db.js";
+} from './db.js';
+
+// Test users password (hardcoded to avoid importing from Bun-specific scripts)
+export const SEEDED_USER_PASSWORD = 'password123';
 
 export type TestUser = {
   user: User;
@@ -25,23 +27,30 @@ export type SessionTokens = {
 };
 
 const ADMIN_CREDENTIALS = {
-  email: "admin@test.com",
+  email: 'admin@test.com',
   password: SEEDED_USER_PASSWORD,
-  displayName: "Test Admin",
+  displayName: 'Test Admin',
 } as const;
 
 // Note: SEEDED_USER_FIXTURES removed - tests now use fresh users via generateTestEmail()
 // Seeded users (admin@test.com, manager@test.com, member@test.com) are only for manual testing
 
+import { resetAnonSupabaseClient } from './db.js';
+
+let sharedAuthService: AuthService | null = null;
+
+function getSharedAuthService(): AuthService {
+  if (!sharedAuthService) {
+    sharedAuthService = new AuthService(getAnonSupabaseClient());
+  }
+  return sharedAuthService;
+}
+
 async function findExistingUser(
   client: ReturnType<typeof getTestSupabaseClient>,
-  email: string,
+  email: string
 ): Promise<User | null> {
-  const { data: userData } = await client
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .single();
+  const { data: userData } = await client.from('users').select('*').eq('email', email).single();
 
   return userData ? (userData as User) : null;
 }
@@ -51,8 +60,8 @@ async function registerUserWithRetry(
   email: string,
   password: string,
   displayName: string,
-  role: User["role"],
-): Promise<{ user: Omit<User, "password_hash"> } | null> {
+  role: User['role']
+): Promise<{ user: Omit<User, 'password_hash'> } | null> {
   let retries = RETRY_CONFIG.maxRetries;
   let lastError: Error | null = null;
 
@@ -68,13 +77,10 @@ async function registerUserWithRetry(
               role,
             }),
           3,
-          300,
+          300
         ),
-        createTimeoutPromise(
-          RETRY_CONFIG.registerTimeout,
-          "Register timeout after 3 seconds",
-        ),
-      ])) as { user: Omit<User, "password_hash"> } | null;
+        createTimeoutPromise(RETRY_CONFIG.registerTimeout, 'Register timeout after 3 seconds'),
+      ])) as { user: Omit<User, 'password_hash'> } | null;
 
       return result;
     } catch (error) {
@@ -101,49 +107,39 @@ async function registerUserWithRetry(
     throw lastError;
   }
 
-  throw new Error(
-    "Unexpected: registerUserWithRetry exited without result or error",
-  );
+  throw new Error('Unexpected: registerUserWithRetry exited without result or error');
 }
 
 async function retrieveUserWithRetry(
   client: ReturnType<typeof getTestSupabaseClient>,
-  email: string,
+  email: string
 ): Promise<User> {
   for (let i = 0; i < RETRY_CONFIG.userSyncRetries; i++) {
     try {
       const result = await retryWithBackoff(
         async () => {
-          const queryResult = await client
-            .from("users")
-            .select("*")
-            .eq("email", email)
-            .single();
+          const queryResult = await client.from('users').select('*').eq('email', email).single();
           return queryResult;
         },
         2,
-        200,
+        200
       );
 
       if (result.data) {
         return result.data as User;
       }
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, RETRY_CONFIG.userSyncDelay),
-      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_CONFIG.userSyncDelay));
     } catch (error) {
       if (i === RETRY_CONFIG.userSyncRetries - 1) {
         throw new Error(
           `Failed to retrieve created user ${email} after retries: ${
             error instanceof Error ? error.message : String(error)
-          }`,
+          }`
         );
       }
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, RETRY_CONFIG.userSyncDelay),
-      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_CONFIG.userSyncDelay));
     }
   }
 
@@ -156,131 +152,141 @@ async function ensureAdminUser(): Promise<void> {
   const existingAdmin = await findExistingUser(client, ADMIN_CREDENTIALS.email);
   if (!existingAdmin) {
     throw new Error(
-      `Seeded admin account (${ADMIN_CREDENTIALS.email}) is missing. Re-run 'bun run seed' before running tests.`,
+      `Seeded admin account (${ADMIN_CREDENTIALS.email}) is missing. Re-run 'bun run seed' before running tests.`
     );
   }
 }
 
-export async function createTestUser(
+/**
+ * Delete existing user from both auth and public.users to ensure fresh state.
+ */
+async function deleteExistingUser(
+  client: ReturnType<typeof getTestSupabaseClient>,
+  userId: string
+): Promise<void> {
+  try {
+    await client.auth.admin.deleteUser(userId);
+  } catch {
+    // ignore if already deleted or doesn't exist in auth
+  }
+  try {
+    await client.from('users').delete().eq('id', userId);
+  } catch {
+    // ignore if already deleted
+  }
+}
+
+/**
+ * Wait for auth sync after user creation.
+ */
+async function waitForAuthSync(): Promise<void> {
+  const syncDelay = parseInt(process.env.TEST_AUTH_SYNC_DELAY || '500', 10);
+  await new Promise((resolve) => setTimeout(resolve, syncDelay));
+}
+
+/**
+ * Create a fresh test user, returning the result.
+ */
+async function attemptUserCreation(
+  authService: AuthService,
   email: string,
   password: string,
-  role: User["role"] = "member",
-  displayName?: string,
-): Promise<TestUser> {
-  const client = getTestSupabaseClient();
-  const authClient = getAnonSupabaseClient();
-  const authService = new AuthService(authClient);
-
-  // Always create fresh users for tests - no reuse of existing users
-  // This ensures full test isolation and eliminates auth state conflicts
-  // Even if a user exists with matching credentials, we delete and recreate
-  // to ensure Supabase Auth state is fresh and synchronized
-  const existingUser = await findExistingUser(client, email);
-
-  // Always delete existing user to ensure fresh state
-  // This prevents auth state synchronization issues in parallel test execution
-  if (existingUser) {
-    try {
-      await client.auth.admin.deleteUser(existingUser.id);
-    } catch {
-      // ignore if already deleted or doesn't exist in auth
-    }
-    try {
-      await client.from("users").delete().eq("id", existingUser.id);
-    } catch {
-      // ignore if already deleted
-    }
-  }
-
-  // Create new user
-  const displayNameValue = displayName ?? email.split("@")[0] ?? "Test User";
+  displayName: string,
+  role: User['role']
+): Promise<TestUser | null> {
   const registerResult = await registerUserWithRetry(
     authService,
     email,
     password,
-    displayNameValue,
-    role,
+    displayName,
+    role
   );
 
-  if (registerResult?.user) {
-    // Fixed delay after user creation to allow Supabase Auth to sync
-    // Configurable via TEST_AUTH_SYNC_DELAY env var (default: 500ms)
-    const syncDelay = parseInt(process.env.TEST_AUTH_SYNC_DELAY || "500", 10);
-    await new Promise((resolve) => setTimeout(resolve, syncDelay));
-
-    return {
-      user: { ...registerResult.user, password_hash: "" } as User,
-      email,
-      password,
-    };
+  if (!registerResult?.user) {
+    return null;
   }
 
-  // Handle race condition: user might have been created by another test
-  // In this case, delete and retry once to ensure fresh creation
-  if (!registerResult) {
-    const duplicateUser = await findExistingUser(client, email);
-    if (duplicateUser) {
-      // Delete the duplicate and retry creation
-      try {
-        await client.auth.admin.deleteUser(duplicateUser.id);
-      } catch {
-        // ignore if already deleted
-      }
-      try {
-        await client.from("users").delete().eq("id", duplicateUser.id);
-      } catch {
-        // ignore if already deleted
-      }
-
-      // Wait for cleanup to complete
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // Retry registration
-      const retryResult = await registerUserWithRetry(
-        authService,
-        email,
-        password,
-        displayNameValue,
-        role,
-      );
-
-      if (retryResult?.user) {
-        const syncDelay = parseInt(
-          process.env.TEST_AUTH_SYNC_DELAY || "500",
-          10,
-        );
-        await new Promise((resolve) => setTimeout(resolve, syncDelay));
-
-        return {
-          user: { ...retryResult.user, password_hash: "" } as User,
-          email,
-          password,
-        };
-      }
-    }
-  }
-
-  // Retrieve the user that was created
-  const user = await retrieveUserWithRetry(client, email);
+  await waitForAuthSync();
 
   return {
-    user,
+    user: { ...registerResult.user, password_hash: '' } as User,
     email,
     password,
   };
 }
 
+/**
+ * Handle race condition where user was created by another test.
+ * Deletes the duplicate and retries creation.
+ */
+async function handleDuplicateAndRetry(
+  client: ReturnType<typeof getTestSupabaseClient>,
+  authService: AuthService,
+  email: string,
+  password: string,
+  displayName: string,
+  role: User['role']
+): Promise<TestUser | null> {
+  const duplicateUser = await findExistingUser(client, email);
+  if (!duplicateUser) {
+    return null;
+  }
+
+  await deleteExistingUser(client, duplicateUser.id);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  return attemptUserCreation(authService, email, password, displayName, role);
+}
+
+export async function createTestUser(
+  email: string,
+  password: string,
+  role: User['role'] = 'member',
+  displayName?: string
+): Promise<TestUser> {
+  const client = getTestSupabaseClient();
+  const authService = getSharedAuthService();
+  const displayNameValue = displayName ?? email.split('@')[0] ?? 'Test User';
+
+  // Always delete existing user to ensure fresh state
+  const existingUser = await findExistingUser(client, email);
+  if (existingUser) {
+    await deleteExistingUser(client, existingUser.id);
+  }
+
+  // Create new user
+  const result = await attemptUserCreation(authService, email, password, displayNameValue, role);
+  if (result) {
+    return result;
+  }
+
+  // Handle race condition: user might have been created by another test
+  const retryResult = await handleDuplicateAndRetry(
+    client,
+    authService,
+    email,
+    password,
+    displayNameValue,
+    role
+  );
+  if (retryResult) {
+    return retryResult;
+  }
+
+  // Retrieve the user that was created (fallback)
+  const user = await retrieveUserWithRetry(client, email);
+  return { user, email, password };
+}
+
 export async function loginAsAdmin(options?: { bypass?: boolean }): Promise<{
-  cookies: string[];
+  cookies: Array<string>;
   cookieHeader: string;
+  access_token?: string;
+  refresh_token?: string;
   bypassHeaders?: Record<string, string>;
 }> {
   await ensureAdminUser();
-  return loginAsUser(
-    ADMIN_CREDENTIALS.email,
-    ADMIN_CREDENTIALS.password,
-    options,
-  );
+  return loginAsUser(ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password, options);
 }
 
 /**
@@ -299,48 +305,52 @@ export async function loginAsAdmin(options?: { bypass?: boolean }): Promise<{
 export async function loginAsUser(
   email: string,
   password: string,
-  options?: { bypass?: boolean },
+  options?: { bypass?: boolean }
 ): Promise<{
-  cookies: string[];
+  cookies: Array<string>;
   cookieHeader: string;
+  access_token?: string;
+  refresh_token?: string;
   bypassHeaders?: Record<string, string>;
 }> {
   // MVP: Test bypass option for rapid local development
   // Only available in test environment
-  if (options?.bypass && process.env.NODE_ENV === "test") {
+  if (options?.bypass && process.env.NODE_ENV === 'test') {
     return {
       cookies: [],
-      cookieHeader: "",
+      cookieHeader: '',
       bypassHeaders: {
-        "X-Test-Bypass": "true",
-        "X-Test-User-Id": email, // Use email as user identifier for bypass
+        'X-Test-Bypass': 'true',
+        'X-Test-User-Id': email, // Use email as user identifier for bypass
       },
     };
   }
 
   // Import app and request dynamically to avoid circular dependencies
-  const { app } = await import("../../../ProjectSourceCode/src/server/app.js");
-  const request = (await import("supertest")).default;
+  const { app } = await import('../../../ProjectSourceCode/src/express/app.js');
+  const request = (await import('supertest')).default;
 
   // Get CSRF token if needed
   const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
 
   // Call the real login endpoint
-  let loginReq = request(app).post("/api/auth/login");
+  let loginReq = request(app).post('/api/auth/login');
   loginReq = setCsrfHeadersIfEnabled(loginReq, csrfToken, csrfCookie);
 
   const response = await loginReq.send({ email, password });
 
   if (!response.ok) {
     throw new Error(
-      `Login failed: ${response.status} - ${response.text || response.body?.error || "Unknown error"}`,
+      `Login failed: ${response.status} - ${
+        response.text || response.body?.error || 'Unknown error'
+      }`
     );
   }
 
   // Extract cookies from Set-Cookie headers
-  const setCookies = response.headers["set-cookie"];
-  if (!setCookies || !Array.isArray(setCookies) || setCookies.length === 0) {
-    throw new Error("No cookies returned from login endpoint");
+  const setCookies = response.headers['set-cookie'];
+  if (!(setCookies && Array.isArray(setCookies)) || setCookies.length === 0) {
+    throw new Error('No cookies returned from login endpoint');
   }
 
   // Extract cookie values (remove attributes like HttpOnly, Secure, etc.)
@@ -348,55 +358,85 @@ export async function loginAsUser(
   const cookieStrings = setCookies
     .map((cookie: string) => {
       // Extract just the name=value part (before first semicolon)
-      const nameValue = cookie.split(";")[0]?.trim();
+      const nameValue = cookie.split(';')[0]?.trim();
       return nameValue;
     })
-    .filter(
-      (c): c is string =>
-        typeof c === "string" && c.length > 0 && c.includes("="),
-    );
+    .filter((c): c is string => typeof c === 'string' && c.length > 0 && c.includes('='));
 
   if (cookieStrings.length === 0) {
     throw new Error(
-      `No valid cookies extracted from login response. Set-Cookie headers: ${JSON.stringify(setCookies)}`,
+      `No valid cookies extracted from login response. Set-Cookie headers: ${JSON.stringify(
+        setCookies
+      )}`
     );
   }
 
   // Join cookies with "; " (semicolon + space) as per HTTP Cookie header spec
-  const cookieHeader = cookieStrings.join("; ");
+  const cookieHeader = cookieStrings.join('; ');
+
+  // Extract access_token and refresh_token from cookies for E2E tests
+  // Parse cookie strings to extract token values
+  const parseCookieValue = (name: string): string | undefined => {
+    const cookie = cookieStrings.find((c) => c.startsWith(`${name}=`));
+    if (!cookie) return undefined;
+    const match = cookie.match(new RegExp(`${name}=([^;]+)`));
+    return match?.[1];
+  };
+
+  const access_token = parseCookieValue('sb-access-token');
+  const refresh_token = parseCookieValue('sb-refresh-token');
 
   // MVP: Fixed delay after login to allow Supabase Auth to sync session state
   // This is simpler and more reliable than complex polling for MVP
   // Configurable via TEST_AUTH_SYNC_DELAY env var (default: 500ms)
-  const syncDelay = parseInt(process.env.TEST_AUTH_SYNC_DELAY || "500", 10);
+  const syncDelay = parseInt(process.env.TEST_AUTH_SYNC_DELAY || '500', 10);
   await new Promise((resolve) => setTimeout(resolve, syncDelay));
 
   // Return both array (for backward compatibility) and joined string (preferred)
-  return { cookies: cookieStrings, cookieHeader };
+  // Also include tokens for E2E tests that need them
+  return {
+    cookies: cookieStrings,
+    cookieHeader,
+    access_token,
+    refresh_token,
+  };
+}
+
+export async function resetAuthTestState(): Promise<void> {
+  if (sharedAuthService) {
+    try {
+      await sharedAuthService.logout();
+    } catch {
+      // ignore logout errors during test cleanup
+    }
+  }
+
+  await resetAnonSupabaseClient();
+  sharedAuthService = null;
 }
 
 /**
  * Helper to get CSRF token safely (handles case where CSRF is disabled).
  */
 async function getCsrfTokenSafe(): Promise<{ token: string; cookie: string }> {
-  const { app } = await import("../../../ProjectSourceCode/src/server/app.js");
-  const request = (await import("supertest")).default;
+  const { app } = await import('../../../ProjectSourceCode/src/express/app.js');
+  const request = (await import('supertest')).default;
 
-  const csrfResponse = await request(app).get("/api/csrf-token");
+  const csrfResponse = await request(app).get('/api/csrf-token');
   if (csrfResponse.status === 404) {
-    return { token: "", cookie: "" };
+    return { token: '', cookie: '' };
   }
   return {
-    token: csrfResponse.body.csrfToken || "",
-    cookie: csrfResponse.headers["set-cookie"]?.[0]?.split(";")[0] || "",
+    token: csrfResponse.body.csrfToken || '',
+    cookie: csrfResponse.headers['set-cookie']?.[0]?.split(';')[0] || '',
   };
 }
 
 export function generateTestEmail(label: string): string {
   const normalized = label
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  return `${normalized || "user"}-${randomUUID()}@test.local`;
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `${normalized || 'user'}-${randomUUID()}@test.local`;
 }

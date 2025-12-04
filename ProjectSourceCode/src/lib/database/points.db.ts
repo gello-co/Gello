@@ -1,7 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { ResourceNotFoundError } from "../errors/app.errors.js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ResourceNotFoundError } from '../errors/app.errors.js';
 
-export type PointsReason = "task_complete" | "manual_award";
+export type PointsReason = 'task_complete' | 'manual_award';
 
 export type PointsHistory = {
   id: string;
@@ -34,10 +34,10 @@ export type LeaderboardEntry = {
 
 export async function createPointsHistory(
   client: SupabaseClient,
-  input: CreatePointsHistoryInput,
+  input: CreatePointsHistoryInput
 ): Promise<PointsHistory> {
   // Call a Postgres function that wraps these operations in a transaction
-  const { data, error } = await client.rpc("create_points_history_atomic", {
+  const { data, error } = await client.rpc('create_points_history_atomic', {
     p_user_id: input.user_id,
     p_points_earned: input.points_earned,
     p_reason: input.reason,
@@ -48,14 +48,14 @@ export async function createPointsHistory(
 
   if (error) {
     // Map Postgres exception messages to appropriate error types
-    if (error.message.includes("User not found")) {
+    if (error.message.includes('User not found')) {
       throw new ResourceNotFoundError(error.message);
     }
     throw new Error(`Failed to create points history: ${error.message}`);
   }
 
   if (!data) {
-    throw new Error("Failed to create points history: No data returned");
+    throw new Error('Failed to create points history: No data returned');
   }
 
   return data as PointsHistory;
@@ -63,29 +63,29 @@ export async function createPointsHistory(
 
 export async function getPointsHistoryByUser(
   client: SupabaseClient,
-  userId: string,
-): Promise<PointsHistory[]> {
+  userId: string
+): Promise<Array<PointsHistory>> {
   const { data, error } = await client
-    .from("points_history")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .from('points_history')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(`Failed to get points history by user: ${error.message}`);
   }
 
-  return (data ?? []) as PointsHistory[];
+  return (data ?? []) as Array<PointsHistory>;
 }
 
 export async function getLeaderboard(
   client: SupabaseClient,
-  limit: number = 100,
-): Promise<LeaderboardEntry[]> {
+  limit: number = 100
+): Promise<Array<LeaderboardEntry>> {
   const { data, error } = await client
-    .from("users")
-    .select("id, display_name, email, avatar_url, total_points")
-    .order("total_points", { ascending: false })
+    .from('users')
+    .select('id, display_name, email, avatar_url, total_points')
+    .order('total_points', { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -99,17 +99,14 @@ export async function getLeaderboard(
     avatar_url: user.avatar_url,
     total_points: user.total_points,
     rank: index + 1,
-  })) as LeaderboardEntry[];
+  })) as Array<LeaderboardEntry>;
 }
 
-export async function getUserPoints(
-  client: SupabaseClient,
-  userId: string,
-): Promise<number> {
+export async function getUserPoints(client: SupabaseClient, userId: string): Promise<number> {
   const { data, error } = await client
-    .from("users")
-    .select("total_points")
-    .eq("id", userId)
+    .from('users')
+    .select('total_points')
+    .eq('id', userId)
     .single();
 
   if (error) {

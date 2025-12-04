@@ -1,0 +1,94 @@
+<div class="leaderboard-page">
+    <div class="container-fluid px-4">
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <div class="text-center mb-5 fade-in">
+                    <h1 class="page-title">Leaderboard</h1>
+                    <p class="page-subtitle">Congrats to our weekly top 3!!</p>
+                </div>
+
+                <div class="top-three-section fade-in">
+                    <div class="row g-4">
+                        {{#each topThree}}
+                        <div class="col-md-4">
+                            <div class="winner-card">
+                                <img src="{{#if avatar_url}}{{avatar_url}}{{else}}https://images.unsplash.com/photo-1518843875459-f738682238a6?w=400&h=300&fit=crop{{/if}}" alt="{{display_name}}" class="winner-image">
+                                <div class="winner-name">{{display_name}}</div>
+                                <div class="winner-note">{{total_points}} pts</div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+
+                <div class="leaderboard-card fade-in">
+                    <div class="leaderboard-header">
+                        <h3>Leaderboard</h3>
+                        {{#if user.team_id}}
+                        <div class="team-id">Team ID: {{user.team_id}}</div>
+                        {{/if}}
+                    </div>
+                    <div id="membersList">
+                        {{#each others}}
+                        <div class="member-row" data-member-id="{{user_id}}">
+                            <div class="member-avatar">
+                                {{#if avatar_url}}
+                                <img src="{{avatar_url}}" alt="{{display_name}}" class="avatar-img">
+                                {{/if}}
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">{{display_name}}</div>
+                                <div class="member-description">{{total_points}} pts</div>
+                            </div>
+                            {{#if ../isManager}}
+                            <div class="member-actions admin-only">
+                                <button class="btn-encourage" data-bs-toggle="modal" data-bs-target="#encouragementModal" onclick="setCurrentMember('{{display_name}}', '{{user_id}}')">Send Encouragement</button>
+                            </div>
+                            {{/if}}
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+            </div> 
+        </div> 
+    </div>
+</div>
+
+{{#if isManager}}
+<div class="modal fade" id="encouragementModal" tabindex="-1" aria-labelledby="encouragementModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="encouragementForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="encouragementModalLabel">Send Encouragement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="memberName" class="form-label">Team Member</label>
+                        <input type="text" class="form-control login-input" id="memberName" readonly>
+                        <input type="hidden" id="memberId">
+                    </div>
+                    <div class="mb-3">
+                        <label for="encouragementMessage" class="form-label">Your Message</label>
+                        <textarea class="form-control login-input" id="encouragementMessage" rows="4" placeholder="Write a note of encouragement..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-login">Send Message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function setCurrentMember(name, id) {
+    document.getElementById('memberName').value = name;
+    document.getElementById('memberId').value = id;
+}
+</script>
+{{/if}}

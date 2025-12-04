@@ -1,0 +1,92 @@
+<div class="tasks-page">
+    <button class="btn btn-primary btn-new-task" data-bs-toggle="modal" data-bs-target="#newTaskModal">New
+        Task</button>
+    <div class="container-fluid px-4">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="tasks-card">
+                    <div class="login-card-body">
+                        <h3>Assigned Tasks</h3>
+                        <div class="tasks">
+                            {{#each assignedTasks}}
+                            <div>
+                                <input type="checkbox" id="task-{{id}}" name="task-{{id}}" {{#if completed_at}}checked{{/if}} />
+                                <label for="task-{{id}}">{{title}}</label>
+                            </div>
+                            {{else}}
+                            <div>
+                                <p>No tasks assigned yet.</p>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="tasks-card">
+                    <div class="login-card-body">
+                        <h3>User Stats</h3>
+                        <div class="mb-3">
+                            <select class="form-select" id="userSelect">
+                                <option value="">Select User</option>
+                                {{#each users}}
+                                <option value="{{id}}">{{display_name}}</option>
+                                {{/each}}
+                            </select>
+                        </div>
+
+                        <div id="userStats" class="mt-3">
+                            <p>Tasks Completed: —</p>
+                            <p>Current Points: —</p>
+                            <p>High Priority Tasks: —</p>
+                            <p>Medium Priority Tasks: —</p>
+                            <p>Low Priority Tasks: —</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="newTaskForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newTaskModalLabel">Add New Task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="taskName" class="form-label">Task Name</label>
+                            <input type="text" class="form-control" id="taskName" placeholder="Enter task name"
+                                required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="low" selected>Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="assignedUser" class="form-label">Assign To</label>
+                            <select class="form-select" id="assignedUser" required>
+                                <option value="">Select user...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">Add Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

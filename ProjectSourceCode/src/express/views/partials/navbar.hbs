@@ -1,0 +1,49 @@
+<nav class="navbar navbar-expand-lg sticky-top">
+	<div class="container-fluid px-4">
+		<a class="navbar-brand" href="/">GELLO</a>
+		<button
+			class="navbar-toggler"
+			type="button"
+			data-bs-toggle="collapse"
+			data-bs-target="#navbarNav"
+		>
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav mx-auto">
+				<li class="nav-item">
+					<a class="nav-link" href="/boards">Boards</a>
+				</li>
+				{{#if user}}
+					{{#if (eq user.role "admin")}}
+						<li class="nav-item">
+							<a class="nav-link" href="/teams">Teams</a>
+						</li>
+					{{/if}}
+					<li class="nav-item">
+						<a class="nav-link" href="/leaderboard">Leaderboard</a>
+					</li>
+				{{/if}}
+			</ul>
+			{{#if user}}
+				<div class="navbar-nav">
+					{{> points-badge points=user.total_points}}
+					<div class="dropdown">
+						<button class="dropbtn">
+							{{> user-avatar user=user}}
+							{{user.display_name}}
+						</button>
+						<div class="dropdown-content">
+							<a href="/profile">View profile</a>
+							<a href="/logout">Logout</a>
+						</div>
+					</div>
+				</div>
+			{{else}}
+				<a href="/login">
+					<button class="btn btn-login">Login</button>
+				</a>
+			{{/if}}
+		</div>
+	</div>
+</nav>

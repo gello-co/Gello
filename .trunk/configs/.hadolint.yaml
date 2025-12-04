@@ -1,0 +1,6 @@
+# Hadolint configuration for Dockerfile linting
+# See: https://github.com/hadolint/hadolint#configure
+ignored:
+  - DL3008  # Pin versions in apt get install
+  - DL3013  # Pin versions in pip install
+  - DL3018  # Pin versions in apk add

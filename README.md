@@ -7,3 +7,11 @@
 ![Zod](https://img.shields.io/badge/Zod-000?logo=zod&logoColor=fff&style=for-the-badge)
 ![Biome](https://img.shields.io/badge/Biome-000?logo=biome&logoColor=fff&style=for-the-badge)
 [![Render](https://img.shields.io/badge/Render-000?logo=render&logoColor=fff&style=for-the-badge)](https://render.com)
+
+Gamified task management application with points and leaderboard system.
+
+## Architecture
+
+![System Context](docs/architecture/diagrams/structurizr-SystemContext.svg)
+
+See [Architecture Documentation](docs/architecture/README.md)

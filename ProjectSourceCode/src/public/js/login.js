@@ -3,19 +3,19 @@
  * Intercepts form submission, sends AJAX request, and redirects on success
  */
 
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('loginForm');
   if (!loginForm) return;
 
-  const errorElement = document.getElementById("loginError");
-  const emailInput = document.getElementById("email");
-  const passwordInput = document.getElementById("password");
+  const errorElement = document.getElementById('loginError');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
 
   // Helper function to hide error message
   function hideError() {
     if (errorElement) {
-      errorElement.classList.add("d-none");
-      errorElement.textContent = "";
+      errorElement.classList.add('d-none');
+      errorElement.textContent = '';
     }
   }
 
@@ -23,19 +23,19 @@ document.addEventListener("DOMContentLoaded", () => {
   function showError(message) {
     if (errorElement) {
       errorElement.textContent = message;
-      errorElement.classList.remove("d-none");
+      errorElement.classList.remove('d-none');
     }
   }
 
   // Clear error when user starts typing
   if (emailInput) {
-    emailInput.addEventListener("input", hideError);
+    emailInput.addEventListener('input', hideError);
   }
   if (passwordInput) {
-    passwordInput.addEventListener("input", hideError);
+    passwordInput.addEventListener('input', hideError);
   }
 
-  loginForm.addEventListener("submit", async (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     // Hide any previous error
@@ -47,21 +47,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // Disable submit button and show loading state
     if (submitButton) {
       submitButton.disabled = true;
-      submitButton.textContent = "Logging in...";
+      submitButton.textContent = 'Logging in...';
     }
 
     // Get form data
     const formData = new FormData(loginForm);
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const email = formData.get('email');
+    const password = formData.get('password');
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include",
+        credentials: 'include',
         body: JSON.stringify({
           email,
           password,
@@ -71,15 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         // Log actual error for debugging
-        console.error(
-          "Login failed:",
-          errorData.error?.message || response.statusText,
-        );
+        console.error('Login failed:', errorData.error?.message || response.statusText);
         // Show user-friendly message
         const userMessage =
           response.status === 401
-            ? "Invalid email or password."
-            : "Login failed. Please try again later.";
+            ? 'Invalid email or password.'
+            : 'Login failed. Please try again later.';
         throw new Error(userMessage);
       }
 
@@ -87,15 +84,15 @@ document.addEventListener("DOMContentLoaded", () => {
       hideError();
 
       // Redirect to boards page on success (authenticated area)
-      window.location.href = "/boards";
+      window.location.href = '/boards';
     } catch (error) {
       // Show error message inline
-      showError(error.message || "Login failed. Please try again.");
+      showError(error.message || 'Login failed. Please try again.');
 
       // Re-enable submit button
       if (submitButton) {
         submitButton.disabled = false;
-        submitButton.textContent = originalText || "Login";
+        submitButton.textContent = originalText || 'Login';
       }
     }
   });

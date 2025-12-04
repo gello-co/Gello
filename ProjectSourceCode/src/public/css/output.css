@@ -1,57 +1,8 @@
-/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */
-.collapse {
-  visibility: collapse;
-}
-.visible {
-  visibility: visible;
-}
-.fixed {
-  position: fixed;
-}
-.relative {
-  position: relative;
-}
-.static {
-  position: static;
-}
-.col-12 {
-  grid-column: 12;
-}
-.container {
-  width: 100%;
-}
-.mx-auto {
-  margin-inline: auto;
-}
-.block {
-  display: block;
-}
-.contents {
-  display: contents;
-}
-.hidden {
-  display: none;
-}
-.inline {
-  display: inline;
-}
-.table {
-  display: table;
-}
-.truncate {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.text-center {
-  text-align: center;
-}
-.capitalize {
-  text-transform: capitalize;
-}
-.lowercase {
-  text-transform: lowercase;
-}
-.uppercase {
-  text-transform: uppercase;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles can go here */
+/* Bootstrap compatibile*/
+
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmNzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSIsImZpbGUiOiJvdXRwdXQuY3NzIiwic291cmNlc0NvbnRlbnQiOlsiQHRhaWx3aW5kIGJhc2U7XG5AdGFpbHdpbmQgY29tcG9uZW50cztcbkB0YWlsd2luZCB1dGlsaXRpZXM7XG5cbi8qIEN1c3RvbSBzdHlsZXMgY2FuIGdvIGhlcmUgKi9cbi8qIEJvb3RzdHJhcCBjb21wYXRpYmlsZSovXG4iXX0= */

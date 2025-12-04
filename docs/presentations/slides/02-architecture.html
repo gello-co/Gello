@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gello Code Tour - Architecture</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../assets/css/gello.css">
+</head>
+<body>
+  <!-- Back to Index Button -->
+  <a href="../index.html" class="nav-home" title="Back to Tours" aria-label="Back to tour index">
+    <i class="bi bi-house-fill"></i>
+  </a>
+
+  <!-- Breadcrumb Navigation -->
+  <nav class="slide-breadcrumb" aria-label="Breadcrumb">
+    <a href="../index.html">Tours</a>
+    <span class="separator">→</span>
+    <span class="current">Architecture</span>
+  </nav>
+
+  <!-- Progress Bar -->
+  <div class="slide-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="slide-progress-bar"></div>
+  </div>
+  <span class="slide-progress-text" aria-live="polite">1 / 8</span>
+
+  <div class="reveal">
+    <div class="slides">
+      <section class="title-slide">
+        <h1>Architecture Tour</h1>
+        <p class="subtitle">Gello Codebase Tour - Part 2</p>
+        <p class="muted">Layered architecture, request flow, and patterns</p>
+        <aside class="notes">This module covers how Gello is structured architecturally.</aside>
+      </section>
+
+      <section>
+        <h2>Layered Architecture</h2>
+        <div class="flow">
+          <div class="flow-box fragment">Routes</div>
+          <span class="flow-arrow fragment">→</span>
+          <div class="flow-box fragment">Services</div>
+          <span class="flow-arrow fragment">→</span>
+          <div class="flow-box fragment">Database</div>
+        </div>
+        <div class="columns" style="margin-top: 2rem; font-size: 0.8em;">
+          <div class="fragment">
+            <strong>Routes</strong><br>
+            HTTP endpoints, validation, response formatting
+          </div>
+          <div class="fragment">
+            <strong>Services</strong><br>
+            Business logic, orchestration, rules
+          </div>
+          <div class="fragment">
+            <strong>Database</strong><br>
+            Supabase queries, RLS-enforced access
+          </div>
+        </div>
+        <aside class="notes">Classic 3-tier: HTTP handling, business logic, data access. Each layer has single responsibility.</aside>
+      </section>
+
+      <section>
+        <h2>Route → Service → DB</h2>
+        <pre><code class="language-typescript">// routes/tasks/api.ts
+router.patch('/:id/complete', async (req, res) => {
+  const { id } = req.params;
+  const { taskService } = res.locals.services;
+  const task = await taskService.completeTask(id);
+  res.json({ success: true, task });
+});
+
+// lib/services/task.service.ts
+async completeTask(taskId: string) {
+  const task = await this.db.markComplete(taskId);
+  await this.pointsDb.awardPoints(task.userId, 10);  // Business logic
+  return task;
+}
+
+// lib/database/tasks.db.ts
+async markComplete(id: string) {
+  const { data } = await this.supabase
+    .from('tasks').update({ completed: true }).eq('id', id).select().single();
+  return data;
+}</code></pre>
+        <aside class="notes">Route delegates to service, service orchestrates DB calls and applies business rules.</aside>
+      </section>
+
+      <section>
+        <h2>Request Flow</h2>
+        <ol style="font-size: 0.85em;">
+          <li class="fragment">Request arrives → <span class="muted">Logging (Pino)</span></li>
+          <li class="fragment">Body/Cookie parsers</li>
+          <li class="fragment">Auth middleware → <span class="muted">Session check</span></li>
+          <li class="fragment">Service injection → <span class="muted">Creates services with user context</span></li>
+          <li class="fragment">Route handler → Service → Database (RLS)</li>
+          <li class="fragment">Response</li>
+        </ol>
+        <aside class="notes">Every request flows through this pipeline. Services are injected fresh per request.</aside>
+      </section>
+
+      <section>
+        <h2>Service Injection</h2>
+        <pre><code class="language-typescript">// middleware/injectServices.ts
+export const injectServices = (req, res, next) => {
+  const supabase = createClient(req, res);  // User-scoped client
+
+  res.locals.services = {
+    authService: new AuthService(supabase),
+    taskService: new TaskService(new TaskDb(supabase), new PointsDb(supabase)),
+    boardService: new BoardService(new BoardDb(supabase)),
+  };
+  next();
+};</code></pre>
+        <p class="fragment muted" style="margin-top: 1rem;">Services created fresh per request with user's Supabase client</p>
+        <aside class="notes">Each request gets its own service instances bound to the authenticated user.</aside>
+      </section>
+
+      <section>
+        <h2>RLS Security Model</h2>
+        <pre><code class="language-sql">-- Users can only see their own tasks
+CREATE POLICY "Users view own tasks" ON tasks FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Team members can view team boards
+CREATE POLICY "Team members view boards" ON boards FOR SELECT
+USING (
+  EXISTS (SELECT 1 FROM team_members
+          WHERE team_id = boards.team_id AND user_id = auth.uid())
+);
+
+-- Team managers can create boards
+CREATE POLICY "Managers create boards" ON boards FOR INSERT
+WITH CHECK (
+  EXISTS (SELECT 1 FROM team_members
+          WHERE team_id = boards.team_id AND user_id = auth.uid()
+          AND role IN ('manager', 'admin'))
+);</code></pre>
+        <aside class="notes">RLS policies run at database level. auth.uid() returns current user from JWT.</aside>
+      </section>
+
+      <section>
+        <h2>Why This Pattern</h2>
+        <div class="columns">
+          <div>
+            <ul>
+              <li class="fragment"><span class="accent">Testability</span><br><span class="muted">Services can be unit tested with mocks</span></li>
+              <li class="fragment"><span class="accent">Separation</span><br><span class="muted">Clear responsibilities per layer</span></li>
+            </ul>
+          </div>
+          <div>
+            <ul>
+              <li class="fragment"><span class="accent">Security</span><br><span class="muted">RLS enforced at database level</span></li>
+              <li class="fragment"><span class="accent">Maintainability</span><br><span class="muted">Changes isolated to layers</span></li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">This pattern keeps code organized and testable while RLS provides defense in depth.</aside>
+      </section>
+
+      <section>
+        <h2>Summary</h2>
+        <ul>
+          <li class="fragment"><span class="accent">3-tier:</span> Routes → Services → Database</li>
+          <li class="fragment"><span class="accent">Injection:</span> Services created per request via middleware</li>
+          <li class="fragment"><span class="accent">Security:</span> RLS policies enforce access at DB level</li>
+          <li class="fragment"><span class="accent">Benefit:</span> Testable, maintainable, secure</li>
+        </ul>
+        <p class="fragment" style="margin-top: 2rem;">
+          <a href="01-project-overview.html">← Previous</a> · <a href="../index.html">Index</a> · <a href="03-services.html">Next: Services →</a>
+        </p>
+        <aside class="notes">Key takeaway: layered architecture with RLS provides both structure and security.</aside>
+      </section>
+    </div>
+  </div>
+
+  <!-- Completion Overlay -->
+  <div class="completion-overlay" id="completion-overlay" style="display: none;">
+    <h3><i class="bi bi-check-circle-fill me-2"></i>Tour Complete</h3>
+    <p>You've finished the Architecture tour</p>
+    <div class="actions">
+      <a href="03-services.html" class="btn btn-primary">Next: Services →</a>
+      <a href="../index.html" class="btn btn-secondary">Back to Index</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/motion@11.18.0/dist/motion.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="../assets/js/tour-progress.js"></script>
+  <script src="../assets/js/confetti-setup.js"></script>
+  <script src="../assets/js/motion-setup.js"></script>
+  <script>
+    const TOUR_ID = '02-architecture';
+    const NEXT_TOUR = { id: '03-services', name: 'Services Tour', url: '03-services.html' };
+
+    Reveal.initialize({
+      hash: true,
+      slideNumber: false,
+      progress: false,
+      history: true,
+      plugins: [RevealHighlight, RevealNotes]
+    });
+
+    Reveal.on('slidechanged', () => {
+      const current = Reveal.getIndices().h + 1;
+      const total = Reveal.getTotalSlides();
+      const percent = (current / total) * 100;
+      const progressBar = document.querySelector('.slide-progress-bar');
+      const progressText = document.querySelector('.slide-progress-text');
+      if (progressBar) {
+        if (window.Motion && !window.GelloMotion?.prefersReducedMotion) {
+          window.Motion.animate(progressBar, { width: `${percent}%` }, { duration: 0.35, easing: [0.4, 0, 0.2, 1] });
+        } else {
+          progressBar.style.width = `${percent}%`;
+        }
+      }
+      if (progressText) progressText.textContent = `${current} / ${total}`;
+      if (Reveal.isLastSlide() && !sessionStorage.getItem(`tour-completed-${TOUR_ID}`)) {
+        sessionStorage.setItem(`tour-completed-${TOUR_ID}`, 'true');
+        handleTourCompletion();
+      }
+    });
+
+    function handleTourCompletion() {
+      const storageKey = 'gello-tour-progress';
+      let data = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      if (!data.tours) {
+        data = { version: 1, tours: { '01-project-overview': { completed: false, lastVisit: null }, '02-architecture': { completed: false, lastVisit: null }, '03-services': { completed: false, lastVisit: null }, '04-database': { completed: false, lastVisit: null }, '05-testing': { completed: false, lastVisit: null } }, allComplete: false };
+      }
+      const wasAlreadyComplete = data.tours[TOUR_ID]?.completed;
+      if (!wasAlreadyComplete) {
+        data.tours[TOUR_ID] = { completed: true, lastVisit: new Date().toISOString() };
+        data.allComplete = Object.values(data.tours).every(t => t.completed);
+        data.lastUpdated = new Date().toISOString();
+        localStorage.setItem(storageKey, JSON.stringify(data));
+        if (window.GelloConfetti) window.GelloConfetti.tourComplete();
+        setTimeout(() => {
+          const overlay = document.getElementById('completion-overlay');
+          if (overlay) {
+            overlay.style.display = 'block';
+            if (window.Motion && !window.GelloMotion?.prefersReducedMotion) {
+              window.Motion.animate(overlay, { opacity: [0, 1], y: [20, 0] }, { duration: 0.3 });
+            }
+          }
+        }, 1500);
+        if (data.allComplete && window.GelloConfetti) setTimeout(() => window.GelloConfetti.allToursComplete(), 2500);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('pre code').forEach(block => {
+        const wrapper = block.parentElement;
+        wrapper.style.position = 'relative';
+        const button = document.createElement('button');
+        button.className = 'copy-btn';
+        button.innerHTML = '<i class="bi bi-clipboard"></i>';
+        button.title = 'Copy to clipboard';
+        button.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(block.textContent);
+          button.innerHTML = '<i class="bi bi-check2"></i>';
+          button.classList.add('copied');
+          setTimeout(() => { button.innerHTML = '<i class="bi bi-clipboard"></i>'; button.classList.remove('copied'); }, 2000);
+        });
+        wrapper.appendChild(button);
+      });
+      const total = Reveal.getTotalSlides();
+      document.querySelector('.slide-progress-text').textContent = `1 / ${total}`;
+      document.querySelector('.slide-progress-bar').style.width = `${(1/total) * 100}%`;
+    });
+  </script>
+</body>
+</html>

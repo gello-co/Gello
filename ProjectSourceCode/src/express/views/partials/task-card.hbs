@@ -1,0 +1,46 @@
+<div class="task-card card mb-2" data-task-id="{{task.id}}" draggable="true">
+	<div class="card-body p-2">
+		<div class="d-flex justify-content-between align-items-start">
+			<h6 class="card-title mb-1">{{task.title}}</h6>
+			{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
+				<button class="btn btn-sm btn-link p-0 text-muted" data-action="edit" data-task-id="{{task.id}}">
+					<i class="bi bi-pencil"></i>
+				</button>
+			{{/if}}
+		</div>
+		{{#if task.description}}
+			<p class="card-text small text-muted mb-2">{{task.description}}</p>
+		{{/if}}
+		<div class="d-flex justify-content-between align-items-center">
+			<span class="badge bg-secondary">{{task.story_points}} pts</span>
+			{{#if task.assigned_to}}
+				{{> user-avatar user=task.assigned_user size="sm"}}
+			{{/if}}
+		</div>
+		{{#if task.due_date}}
+			<div class="small text-muted mt-1">
+				<i class="bi bi-calendar"></i> {{formatDate task.due_date}}
+			</div>
+		{{/if}}
+		{{#unless task.completed_at}}
+			{{#if (or (eq user.role "admin") (eq user.role "manager") (eq task.assigned_to user.id))}}
+				<button
+					class="btn btn-sm btn-success mt-2 w-100"
+					hx-patch="/api/tasks/{{task.id}}/complete"
+					hx-swap="outerHTML"
+					hx-target="closest .task-card"
+					hx-indicator="#loading-{{task.id}}">
+					<span id="loading-{{task.id}}" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+					<i class="bi bi-check-circle"></i> Complete
+				</button>
+			{{/if}}
+		{{else}}
+			<div class="mt-2 text-center">
+				<span class="badge bg-success">
+					<i class="bi bi-check-circle-fill"></i> Completed {{timeAgo task.completed_at}}
+				</span>
+			</div>
+		{{/unless}}
+	</div>
+</div>
+

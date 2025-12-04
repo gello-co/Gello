@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type Board = {
   id: string;
@@ -23,18 +23,11 @@ export type UpdateBoardInput = {
   team_id?: string;
 };
 
-export async function getBoardById(
-  client: SupabaseClient,
-  id: string,
-): Promise<Board | null> {
-  const { data, error } = await client
-    .from("boards")
-    .select("*")
-    .eq("id", id)
-    .single();
+export async function getBoardById(client: SupabaseClient, id: string): Promise<Board | null> {
+  const { data, error } = await client.from('boards').select('*').eq('id', id).single();
 
   if (error) {
-    if (error.code === "PGRST116") {
+    if (error.code === 'PGRST116') {
       return null;
     }
     throw new Error(`Failed to get board: ${error.message}`);
@@ -45,34 +38,34 @@ export async function getBoardById(
 
 export async function getBoardsByTeam(
   client: SupabaseClient,
-  teamId: string,
-): Promise<Board[]> {
+  teamId: string
+): Promise<Array<Board>> {
   const { data, error } = await client
-    .from("boards")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("created_at", { ascending: false });
+    .from('boards')
+    .select('*')
+    .eq('team_id', teamId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(`Failed to get boards by team: ${error.message}`);
   }
 
-  return (data ?? []) as Board[];
+  return (data ?? []) as Array<Board>;
 }
 
 export async function getBoardsByUser(
   client: SupabaseClient,
-  userId: string,
-): Promise<Board[]> {
+  userId: string
+): Promise<Array<Board>> {
   // First get the user's team_id
   const { data: user, error: userError } = await client
-    .from("users")
-    .select("team_id")
-    .eq("id", userId)
+    .from('users')
+    .select('team_id')
+    .eq('id', userId)
     .single();
 
   if (userError) {
-    if (userError.code === "PGRST116") {
+    if (userError.code === 'PGRST116') {
       return [];
     }
     throw new Error(`Failed to get user: ${userError.message}`);
@@ -87,12 +80,9 @@ export async function getBoardsByUser(
   return getBoardsByTeam(client, user.team_id);
 }
 
-export async function createBoard(
-  client: SupabaseClient,
-  input: CreateBoardInput,
-): Promise<Board> {
+export async function createBoard(client: SupabaseClient, input: CreateBoardInput): Promise<Board> {
   const { data, error } = await client
-    .from("boards")
+    .from('boards')
     .insert({
       name: input.name,
       description: input.description ?? null,
@@ -109,16 +99,13 @@ export async function createBoard(
   return data as Board;
 }
 
-export async function updateBoard(
-  client: SupabaseClient,
-  input: UpdateBoardInput,
-): Promise<Board> {
+export async function updateBoard(client: SupabaseClient, input: UpdateBoardInput): Promise<Board> {
   const { id, ...updates } = input;
 
   const { data, error } = await client
-    .from("boards")
+    .from('boards')
     .update(updates)
-    .eq("id", id)
+    .eq('id', id)
     .select()
     .single();
 
@@ -129,11 +116,8 @@ export async function updateBoard(
   return data as Board;
 }
 
-export async function deleteBoard(
-  client: SupabaseClient,
-  id: string,
-): Promise<void> {
-  const { error } = await client.from("boards").delete().eq("id", id);
+export async function deleteBoard(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('boards').delete().eq('id', id);
 
   if (error) {
     throw new Error(`Failed to delete board: ${error.message}`);

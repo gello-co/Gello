@@ -1,6 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const pointsReasonSchema = z.enum(["task_complete", "manual_award"]);
+/**
+ * Points schemas using pure Zod
+ * API uses snake_case field names
+ */
+
+export const pointsReasonSchema = z.enum(['task_complete', 'manual_award']);
 
 export const pointsHistorySchema = z.object({
   id: z.uuid(),
@@ -23,7 +28,6 @@ export const createPointsHistorySchema = z.object({
 });
 
 export const manualAwardSchema = z.object({
-  // user_id comes from URL parameter, not request body
   points_earned: z.number().int().min(1),
   notes: z.string().nullable().optional(),
 });
@@ -37,9 +41,9 @@ export const leaderboardEntrySchema = z.object({
   rank: z.number().int().min(1),
 });
 
+export type PointsReason = z.infer<typeof pointsReasonSchema>;
 export type PointsHistory = z.infer<typeof pointsHistorySchema>;
-export type CreatePointsHistoryInput = z.infer<
-  typeof createPointsHistorySchema
->;
-export type ManualAwardInput = z.infer<typeof manualAwardSchema>;
+export type CreatePointsHistoryInput = z.infer<typeof createPointsHistorySchema>;
+export type ManualAwardBody = z.infer<typeof manualAwardSchema>;
+export type ManualAwardInput = ManualAwardBody & { user_id: string };
 export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;

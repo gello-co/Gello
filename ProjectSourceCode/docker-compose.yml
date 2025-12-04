@@ -2,16 +2,16 @@ services:
   # Dev app container with live reload; code mounted from local host `docker compose up  web`
   web:
     image: oven/bun:1.3.1
-    user: "bun"
+    user: bun
     working_dir: /app
     environment:
       - NODE_ENV=development
       - PORT=3000
     ports:
-      - "3000:3000"
+      - 3000:3000
     volumes:
       - ../:/app
-    command: ["sh", "-lc", "bun install && bun run dev"]
+    command: [sh, -lc, bun install && bun run dev]
 
   # Production container built from Dockerfile `docker compose up --build web-prod`
   web-prod:
@@ -22,5 +22,5 @@ services:
       - NODE_ENV=production
       - PORT=3000
     ports:
-      - "3000:3000"
-    command: ["bun", "run", "start"]
+      - 3000:3000
+    command: [bun, run, start]

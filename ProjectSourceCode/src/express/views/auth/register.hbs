@@ -1,0 +1,49 @@
+{{!-- Bootstrap 5 styled registration form --}}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">Register</h2>
+
+          {{#if error}}
+            <div class="alert alert-danger" role="alert">
+              {{error}}
+            </div>
+          {{/if}}
+
+          <form action="/register" method="POST">
+            <div class="mb-3">
+              <label for="display_name" class="form-label">Display Name</label>
+              <input type="text" class="form-control" id="display_name" name="display_name" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" name="password" minlength="8" maxlength="72" required>
+              <div class="form-text">Password must be between 8 and 72 characters long.</div>
+            </div>
+            <div class="mb-3">
+              <label for="password_confirm" class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" id="password_confirm" name="password_confirm" minlength="8" maxlength="72" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Register</button>
+          </form>
+
+          <hr class="my-4">
+
+          <p class="text-center mb-0">
+            <a href="/login">Already have an account? Login</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

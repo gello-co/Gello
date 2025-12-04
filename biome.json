@@ -1,6 +1,13 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
-  "root": true,
+  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -10,30 +17,67 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "**",
-      "!!**/node_modules/",
-      "!!**/dist/",
-      "!!**/build/",
-      "!!**/.bun"
+      "ProjectSourceCode/**/*.{js,ts,json,css}",
+      "tests/**/*.{js,ts}",
+      "supabase/migrations/**/*.sql",
+      "supabase/seed/**/*.{ts,js}",
+      "*.{json,js,ts}",
+      "!!**/node_modules",
+      "!!**/.bun",
+      "!!**/.bun-cache",
+      "!!**/dist",
+      "!!**/build",
+      "!!**/coverage",
+      "!!**/.next",
+      "!!**/.cache",
+      "!!**/.venv",
+      "!!**/.serena",
+      "!!**/.snaplet",
+      "!!**/playwright-report",
+      "!!**/test-results",
+      "!!**/.test-locks",
+      "!!**/supabase/.branches",
+      "!!**/supabase/.temp",
+      "!!**/supabase/certs",
+      "!!**/.agents",
+      "!!**/.ops",
+      "!!**/.devOps",
+      "!!**/.DevOps",
+      "!!**/.release-preview",
+      "!!**/*.lock",
+      "!!**/*.tsbuildinfo",
+      "!!**/bun.lockb",
+      "!!**/bun.lock",
+      "!!**/output.css"
     ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
   },
   "javascript": {
     "formatter": {
       "arrowParentheses": "always",
       "bracketSameLine": false,
-      "semicolons": "always"
-    }
+      "bracketSpacing": true,
+      "semicolons": "always",
+      "quoteStyle": "single",
+      "trailingCommas": "es5"
+    },
+    "globals": [
+      "describe",
+      "it",
+      "expect",
+      "beforeAll",
+      "beforeEach",
+      "afterAll",
+      "afterEach",
+      "vi",
+      "test"
+    ]
   },
   "json": {
     "formatter": {
@@ -49,12 +93,92 @@
       "enabled": false
     }
   },
-  "assist": {
+  "linter": {
     "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "warn",
+        "noUselessStringConcat": "error",
+        "noUselessUndefinedInitialization": "error",
+        "useSimplifiedLogicExpression": "warn",
+        "noForEach": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "noUnusedFunctionParameters": "warn",
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "error"
+      },
+      "performance": {
+        "noAccumulatingSpread": "warn",
+        "noBarrelFile": "off",
+        "noDelete": "warn"
+      },
+      "style": {
+        "noParameterAssign": "off",
+        "useImportType": "error",
+        "useBlockStatements": "off",
+        "useCollapsedElseIf": "error",
+        "useConsistentArrayType": {
+          "level": "error",
+          "options": {
+            "syntax": "generic"
+          }
+        }
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn",
+        "noDuplicateTestHooks": "error",
+        "noExportsInTest": "error",
+        "noFocusedTests": "error",
+        "noConsole": "off",
+        "noEmptyBlockStatements": "warn"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "error"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useMediaCaption": "off"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["tests/**/*.test.ts", "tests/**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "correctness": {
+            "noUnusedFunctionParameters": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["ProjectSourceCode/src/express/routes/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off",
+            "noNonNullAssertion": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["*.config.ts", "*.config.js", "vitest.config.ts", "playwright.config.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    }
+  ]
 }

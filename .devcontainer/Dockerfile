@@ -6,6 +6,9 @@ LABEL maintainer="Gello Development Team"
 LABEL description="Gello development environment with Bun, Node.js, Supabase, and developer tools"
 LABEL version="3.0"
 
+# Set shell with pipefail for proper error handling in RUN commands
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install system dependencies in layers for better caching
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Core utilities
@@ -42,7 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Node.js LTS
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends nodejs \
     && node --version \
     && npm --version \
     && rm -rf /var/lib/apt/lists/*
@@ -53,6 +56,7 @@ RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash \
 
 # Install Homebrew as vscode user (required for mkcert and Supabase CLI)
 USER vscode
+# hadolint ignore=SC2016
 RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
     && echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc \
     && echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.zshrc
@@ -76,8 +80,8 @@ RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" \
     && doppler --version \
     && rm -rf /var/lib/apt/lists/*
 
-# Install global npm packages
-RUN npm install -g npm-check-updates vercel netlify-cli
+# Install global npm packages with pinned versions
+RUN npm install -g npm-check-updates@17 vercel@41 netlify-cli@19
 
 # Add convenient aliases
 RUN echo 'alias ll="ls -lah"' >> /etc/bash.bashrc \
@@ -105,3 +109,10 @@ RUN chsh -s /bin/zsh vscode || true
 
 # Add vscode user to docker group for socket access
 RUN groupadd -f docker && usermod -aG docker vscode || true
+
+# Switch to non-root user for security (CKV_DOCKER_8)
+USER vscode
+
+# Healthcheck to verify container is running properly
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1

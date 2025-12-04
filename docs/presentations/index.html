@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gello Code Tours</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/gello.css" />
+    <style>
+      :root {
+        --gello-brown: #742e10;
+        --gello-brown-dark: #5a2410;
+        --gello-brown-darker: #3d1a0b;
+        --gello-gold: #f3d18d;
+        --gello-gold-dark: #c9a05c;
+        --gello-cream: #f2e4de;
+      }
+      body {
+        background: linear-gradient(
+          135deg,
+          var(--gello-brown-darker) 0%,
+          var(--gello-brown-dark) 100%
+        );
+        color: var(--gello-cream);
+        min-height: 100vh;
+      }
+      .hero {
+        padding: 4rem 0;
+        text-align: center;
+      }
+      .hero h1 {
+        color: var(--gello-gold);
+        font-size: 3rem;
+        font-weight: 700;
+      }
+      .hero p {
+        color: #b8a99a;
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .tour-card {
+        background: rgba(90, 36, 16, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(243, 209, 141, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+        transition:
+          transform 0.2s,
+          border-color 0.2s,
+          box-shadow 0.2s,
+          background 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        position: relative;
+        /* Animation initial state */
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+      }
+      .tour-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--gello-gold);
+        background: rgba(90, 36, 16, 0.85);
+        box-shadow: 0 8px 32px rgba(243, 209, 141, 0.15);
+        color: inherit;
+      }
+      .tour-card.completed {
+        border-color: rgba(243, 209, 141, 0.4);
+      }
+      .tour-card .icon {
+        font-size: 2.5rem;
+        color: var(--gello-gold);
+        margin-bottom: 1rem;
+      }
+      .tour-card h3 {
+        color: var(--gello-cream);
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .tour-card p {
+        color: #b8a99a;
+        font-size: 0.9rem;
+        margin: 0;
+      }
+      .tour-card .badge {
+        font-size: 0.75rem;
+      }
+      .badge-gello {
+        background: var(--gello-brown);
+        border: 1px solid var(--gello-gold-dark);
+      }
+      .card-footer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+      }
+      .read-time {
+        color: #8a7a6a;
+        font-size: 0.8rem;
+      }
+      .completion-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 28px;
+        height: 28px;
+        background: var(--gello-gold);
+        color: var(--gello-brown-dark);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+      }
+      .shortcuts {
+        background: var(--gello-brown-dark);
+        border: 1px solid rgba(243, 209, 141, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 3rem;
+        /* Animation initial state */
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .shortcuts h4 {
+        color: var(--gello-gold);
+        margin-bottom: 1rem;
+      }
+      .shortcut-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+      .shortcut-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .shortcut-item kbd {
+        background: var(--gello-brown-darker);
+        border: 1px solid rgba(243, 209, 141, 0.2);
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+        min-width: 2rem;
+        text-align: center;
+        color: var(--gello-gold);
+      }
+      .shortcut-item span {
+        color: #b8a99a;
+        font-size: 0.9rem;
+      }
+      footer {
+        padding: 2rem 0;
+        text-align: center;
+        color: #8a7a6a;
+        font-size: 0.85rem;
+      }
+      footer a {
+        color: var(--gello-gold);
+      }
+      .gello-logo {
+        width: 80px;
+        height: auto;
+        margin-bottom: 1rem;
+      }
+      .progress-counter {
+        color: #b8a99a;
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 1rem;
+      }
+      .progress-counter .completed-count {
+        color: var(--gello-gold);
+        font-weight: 600;
+      }
+      .reset-progress-btn {
+        background: transparent;
+        border: 1px solid rgba(243, 209, 141, 0.3);
+        color: #8a7a6a;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .reset-progress-btn:hover {
+        border-color: var(--gello-gold);
+        color: var(--gello-gold);
+      }
+      .celebration-banner {
+        background: linear-gradient(
+          135deg,
+          var(--gello-brown-dark) 0%,
+          var(--gello-brown) 100%
+        );
+        border: 2px solid var(--gello-gold);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 2rem;
+        box-shadow: 0 4px 20px rgba(243, 209, 141, 0.2);
+      }
+      .celebration-banner h2 {
+        color: var(--gello-gold);
+        margin-bottom: 0.5rem;
+      }
+      .celebration-banner p {
+        color: var(--gello-cream);
+        margin: 0;
+      }
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .tour-card,
+        .shortcuts {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" x-data x-init="$store.tourProgress.init()">
+      <!-- ARIA live region for announcements -->
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        class="sr-only"
+        id="tour-announcements"
+      ></div>
+
+      <div class="hero">
+        <img
+          src="../../ProjectSourceCode/src/public/images/gelloicon1.png"
+          alt="Gello"
+          class="gello-logo"
+        />
+        <h1>Gello Code Tours</h1>
+        <p
+          class="progress-counter"
+          x-show="$store.tourProgress.getCompletedCount() > 0"
+        >
+          <span
+            class="completed-count"
+            x-text="$store.tourProgress.getCompletedCount()"
+          ></span>
+          / <span x-text="$store.tourProgress.getTotalCount()"></span> tours
+          completed
+        </p>
+      </div>
+
+      <!-- All Tours Complete Celebration -->
+      <div
+        class="celebration-banner"
+        x-show="$store.tourProgress.allComplete"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95"
+        x-transition:enter-end="opacity-100 transform scale-100"
+        x-init="$watch('$store.tourProgress.allComplete', value => { if (value && window.GelloConfetti) window.GelloConfetti.allToursComplete(); })"
+      >
+        <h2><i class="bi bi-trophy-fill me-2"></i>All Tours Complete</h2>
+        <p>You've mastered the Gello codebase</p>
+        <button
+          class="reset-progress-btn mt-3"
+          @click="$store.tourProgress.reset()"
+        >
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Progress
+        </button>
+      </div>
+
+      <div class="row g-4">
+        <!-- Tour 1: Project Overview -->
+        <div class="col-md-6 col-lg-4">
+          <a
+            href="slides/01-project-overview.html"
+            class="tour-card"
+            data-tour="01-project-overview"
+            :class="{ 'completed': $store.tourProgress.isComplete('01-project-overview') }"
+            role="link"
+            aria-label="Project Overview tour, approximately 4 minutes"
+          >
+            <div
+              class="completion-badge"
+              x-show="$store.tourProgress.isComplete('01-project-overview')"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-0"
+              x-transition:enter-end="opacity-100 scale-100"
+              aria-label="Completed"
+            >
+              <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="icon"><i class="bi bi-folder-fill"></i></div>
+            <h3>Project Overview</h3>
+            <p>
+              Tech stack, directory structure, entry points, and quick start
+              guide.
+            </p>
+            <div class="card-footer-row">
+              <span class="badge badge-gello">Start Here</span>
+              <span class="read-time"
+                ><i class="bi bi-clock me-1"></i>~4 min</span
+              >
+            </div>
+          </a>
+        </div>
+
+        <!-- Tour 2: Architecture -->
+        <div class="col-md-6 col-lg-4">
+          <a
+            href="slides/02-architecture.html"
+            class="tour-card"
+            data-tour="02-architecture"
+            :class="{ 'completed': $store.tourProgress.isComplete('02-architecture') }"
+            role="link"
+            aria-label="Architecture Tour, approximately 6 minutes"
+          >
+            <div
+              class="completion-badge"
+              x-show="$store.tourProgress.isComplete('02-architecture')"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-0"
+              x-transition:enter-end="opacity-100 scale-100"
+              aria-label="Completed"
+            >
+              <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="icon"><i class="bi bi-diagram-3-fill"></i></div>
+            <h3>Architecture Tour</h3>
+            <p>
+              Layered architecture, request flow, service injection, and RLS
+              security.
+            </p>
+            <div class="card-footer-row">
+              <span class="badge bg-secondary">Core Concepts</span>
+              <span class="read-time"
+                ><i class="bi bi-clock me-1"></i>~6 min</span
+              >
+            </div>
+          </a>
+        </div>
+
+        <!-- Tour 3: Services -->
+        <div class="col-md-6 col-lg-4">
+          <a
+            href="slides/03-services.html"
+            class="tour-card"
+            data-tour="03-services"
+            :class="{ 'completed': $store.tourProgress.isComplete('03-services') }"
+            role="link"
+            aria-label="Services Tour, approximately 5 minutes"
+          >
+            <div
+              class="completion-badge"
+              x-show="$store.tourProgress.isComplete('03-services')"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-0"
+              x-transition:enter-end="opacity-100 scale-100"
+              aria-label="Completed"
+            >
+              <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="icon"><i class="bi bi-gear-fill"></i></div>
+            <h3>Services Tour</h3>
+            <p>
+              Auth, boards, tasks, points, and leaderboard services explained.
+            </p>
+            <div class="card-footer-row">
+              <span class="badge bg-secondary">Business Logic</span>
+              <span class="read-time"
+                ><i class="bi bi-clock me-1"></i>~5 min</span
+              >
+            </div>
+          </a>
+        </div>
+
+        <!-- Tour 4: Database -->
+        <div class="col-md-6 col-lg-4">
+          <a
+            href="slides/04-database.html"
+            class="tour-card"
+            data-tour="04-database"
+            :class="{ 'completed': $store.tourProgress.isComplete('04-database') }"
+            role="link"
+            aria-label="Database Layer tour, approximately 5 minutes"
+          >
+            <div
+              class="completion-badge"
+              x-show="$store.tourProgress.isComplete('04-database')"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-0"
+              x-transition:enter-end="opacity-100 scale-100"
+              aria-label="Completed"
+            >
+              <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="icon"><i class="bi bi-database-fill"></i></div>
+            <h3>Database Layer</h3>
+            <p>
+              Supabase setup, RLS policies, database modules, and type
+              generation.
+            </p>
+            <div class="card-footer-row">
+              <span class="badge bg-secondary">Data Access</span>
+              <span class="read-time"
+                ><i class="bi bi-clock me-1"></i>~5 min</span
+              >
+            </div>
+          </a>
+        </div>
+
+        <!-- Tour 5: Testing -->
+        <div class="col-md-6 col-lg-4">
+          <a
+            href="slides/05-testing.html"
+            class="tour-card"
+            data-tour="05-testing"
+            :class="{ 'completed': $store.tourProgress.isComplete('05-testing') }"
+            role="link"
+            aria-label="Testing Tour, approximately 5 minutes"
+          >
+            <div
+              class="completion-badge"
+              x-show="$store.tourProgress.isComplete('05-testing')"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-0"
+              x-transition:enter-end="opacity-100 scale-100"
+              aria-label="Completed"
+            >
+              <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="icon"><i class="bi bi-check2-circle"></i></div>
+            <h3>Testing Tour</h3>
+            <p>
+              Unit, integration, and E2E tests. Test helpers and conventions.
+            </p>
+            <div class="card-footer-row">
+              <span class="badge bg-secondary">Quality</span>
+              <span class="read-time"
+                ><i class="bi bi-clock me-1"></i>~5 min</span
+              >
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="shortcuts">
+        <h4><i class="bi bi-keyboard me-2"></i>Keyboard Shortcuts</h4>
+        <div class="shortcut-list">
+          <div class="shortcut-item"><kbd>→</kbd><span>Next slide</span></div>
+          <div class="shortcut-item">
+            <kbd>←</kbd><span>Previous slide</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>s</kbd><span>Speaker notes</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>o</kbd><span>Overview mode</span>
+          </div>
+          <div class="shortcut-item"><kbd>f</kbd><span>Fullscreen</span></div>
+          <div class="shortcut-item">
+            <kbd>Esc</kbd><span>Exit overview/fullscreen</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>?</kbd><span>Show all shortcuts</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>Home</kbd><span>First slide</span>
+          </div>
+        </div>
+      </div>
+      <footer>
+        <button
+          class="reset-progress-btn"
+          @click="$store.tourProgress.reset()"
+          x-show="$store.tourProgress.getCompletedCount() > 0"
+        >
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Progress
+        </button>
+      </footer>
+    </div>
+
+    <!-- Alpine.js -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"
+    ></script>
+    <!-- Motion One -->
+    <script src="https://cdn.jsdelivr.net/npm/motion@11.18.0/dist/motion.min.js"></script>
+    <!-- canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- Gello Tour Scripts -->
+    <script src="assets/js/tour-progress.js"></script>
+    <script src="assets/js/confetti-setup.js"></script>
+    <script src="assets/js/motion-setup.js"></script>
+  </body>
+</html>

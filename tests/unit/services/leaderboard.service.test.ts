@@ -1,20 +1,27 @@
-import { beforeEach, describe, expect, it, vi } from "bun:test";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LeaderboardEntry } from "../../../ProjectSourceCode/src/lib/database/points.db.js";
-import * as pointsDb from "../../../ProjectSourceCode/src/lib/database/points.db.js";
-import { LeaderboardService } from "../../../ProjectSourceCode/src/lib/services/leaderboard.service.js";
-import { mockFn } from "../../setup/helpers/mock.js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { LeaderboardEntry } from '../../../ProjectSourceCode/src/lib/database/points.db.js';
+import * as pointsDb from '../../../ProjectSourceCode/src/lib/database/points.db.js';
+import { LeaderboardService } from '../../../ProjectSourceCode/src/lib/services/leaderboard.service.js';
+import { mockFn } from '../../setup/helpers/mock.js';
 
-vi.mock("../../../ProjectSourceCode/src/lib/database/points.db.js", () => ({
+vi.mock('../../../ProjectSourceCode/src/lib/database/points.db.js', () => ({
   getLeaderboard: vi.fn(),
 }));
 
-type MockLeaderboardEntry = Pick<
-  LeaderboardEntry,
-  "user_id" | "total_points" | "display_name"
->;
+const createMockLeaderboardEntry = (
+  overrides: Partial<LeaderboardEntry> = {}
+): LeaderboardEntry => ({
+  user_id: 'user-1',
+  display_name: 'User 1',
+  email: 'user1@example.com',
+  avatar_url: null,
+  total_points: 100,
+  rank: 1,
+  ...overrides,
+});
 
-describe("LeaderboardService (bun)", () => {
+describe('LeaderboardService', () => {
   let service: LeaderboardService;
   let mockClient: SupabaseClient;
 
@@ -24,16 +31,20 @@ describe("LeaderboardService (bun)", () => {
     service = new LeaderboardService(mockClient);
   });
 
-  describe("getLeaderboard", () => {
-    it("should get leaderboard with default limit", async () => {
-      const mockLeaderboard = [
-        { user_id: "user-1", total_points: 100, display_name: "User 1" },
-        { user_id: "user-2", total_points: 50, display_name: "User 2" },
-      ] satisfies MockLeaderboardEntry[];
+  describe('getLeaderboard', () => {
+    it('should get leaderboard with default limit', async () => {
+      const mockLeaderboard: Array<LeaderboardEntry> = [
+        createMockLeaderboardEntry({ rank: 1 }),
+        createMockLeaderboardEntry({
+          user_id: 'user-2',
+          display_name: 'User 2',
+          total_points: 50,
+          rank: 2,
+          email: 'user2@example.com',
+        }),
+      ];
 
-      mockFn(pointsDb.getLeaderboard).mockResolvedValue(
-        mockLeaderboard as LeaderboardEntry[],
-      );
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(mockLeaderboard as Array<LeaderboardEntry>);
 
       const result = await service.getLeaderboard();
 
@@ -41,14 +52,12 @@ describe("LeaderboardService (bun)", () => {
       expect(result).toEqual(mockLeaderboard);
     });
 
-    it("should get leaderboard with custom limit", async () => {
-      const mockLeaderboard = [
-        { user_id: "user-1", total_points: 100, display_name: "User 1" },
-      ] satisfies MockLeaderboardEntry[];
+    it('should get leaderboard with custom limit', async () => {
+      const mockLeaderboard: Array<LeaderboardEntry> = [
+        createMockLeaderboardEntry({ total_points: 100 }),
+      ];
 
-      mockFn(pointsDb.getLeaderboard).mockResolvedValue(
-        mockLeaderboard as LeaderboardEntry[],
-      );
+      mockFn(pointsDb.getLeaderboard).mockResolvedValue(mockLeaderboard as Array<LeaderboardEntry>);
 
       const result = await service.getLeaderboard(10);
 

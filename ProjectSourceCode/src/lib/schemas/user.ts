@@ -1,6 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const userRoleSchema = z.enum(["admin", "manager", "member"]);
+/**
+ * User schemas using pure Zod
+ * API uses snake_case field names
+ */
+
+export const userRoleSchema = z.enum(['admin', 'manager', 'member']);
 
 export const userSchema = z.object({
   id: z.uuid(),
@@ -26,12 +31,11 @@ export const createUserSchema = z
     total_points: z.number().int().min(0).optional(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
-    message: "Passwords do not match",
-    path: ["passwordConfirm"],
+    message: 'Passwords do not match',
+    path: ['passwordConfirm'],
   })
   .transform((data) => {
-    // Remove passwordConfirm before passing to service
-    const { passwordConfirm, ...rest } = data;
+    const { passwordConfirm: _passwordConfirm, ...rest } = data;
     return rest;
   });
 

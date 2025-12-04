@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { ResourceNotFoundError } from "../errors/app.errors.js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ResourceNotFoundError } from '../errors/app.errors.js';
 
 export type Task = {
   id: string;
@@ -36,18 +36,11 @@ export type UpdateTaskInput = {
   completed_at?: string | null;
 };
 
-export async function getTaskById(
-  client: SupabaseClient,
-  id: string,
-): Promise<Task | null> {
-  const { data, error } = await client
-    .from("tasks")
-    .select("*")
-    .eq("id", id)
-    .single();
+export async function getTaskById(client: SupabaseClient, id: string): Promise<Task | null> {
+  const { data, error } = await client.from('tasks').select('*').eq('id', id).single();
 
   if (error) {
-    if (error.code === "PGRST116") {
+    if (error.code === 'PGRST116') {
       return null;
     }
     throw new Error(`Failed to get task: ${error.message}`);
@@ -56,46 +49,40 @@ export async function getTaskById(
   return data as Task;
 }
 
-export async function getTasksByList(
-  client: SupabaseClient,
-  listId: string,
-): Promise<Task[]> {
+export async function getTasksByList(client: SupabaseClient, listId: string): Promise<Array<Task>> {
   const { data, error } = await client
-    .from("tasks")
-    .select("*")
-    .eq("list_id", listId)
-    .order("position", { ascending: true });
+    .from('tasks')
+    .select('*')
+    .eq('list_id', listId)
+    .order('position', { ascending: true });
 
   if (error) {
     throw new Error(`Failed to get tasks by list: ${error.message}`);
   }
 
-  return (data ?? []) as Task[];
+  return (data ?? []) as Array<Task>;
 }
 
 export async function getTasksByAssignee(
   client: SupabaseClient,
-  userId: string,
-): Promise<Task[]> {
+  userId: string
+): Promise<Array<Task>> {
   const { data, error } = await client
-    .from("tasks")
-    .select("*")
-    .eq("assigned_to", userId)
-    .order("created_at", { ascending: false });
+    .from('tasks')
+    .select('*')
+    .eq('assigned_to', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(`Failed to get tasks by assignee: ${error.message}`);
   }
 
-  return (data ?? []) as Task[];
+  return (data ?? []) as Array<Task>;
 }
 
-export async function createTask(
-  client: SupabaseClient,
-  input: CreateTaskInput,
-): Promise<Task> {
+export async function createTask(client: SupabaseClient, input: CreateTaskInput): Promise<Task> {
   const { data, error } = await client
-    .from("tasks")
+    .from('tasks')
     .insert({
       list_id: input.list_id,
       title: input.title,
@@ -115,18 +102,10 @@ export async function createTask(
   return data as Task;
 }
 
-export async function updateTask(
-  client: SupabaseClient,
-  input: UpdateTaskInput,
-): Promise<Task> {
+export async function updateTask(client: SupabaseClient, input: UpdateTaskInput): Promise<Task> {
   const { id, ...updates } = input;
 
-  const { data, error } = await client
-    .from("tasks")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await client.from('tasks').update(updates).eq('id', id).select().single();
 
   if (error) {
     throw new Error(`Failed to update task: ${error.message}`);
@@ -139,15 +118,15 @@ export async function moveTask(
   client: SupabaseClient,
   taskId: string,
   newListId: string,
-  newPosition: number,
+  newPosition: number
 ): Promise<Task> {
   const { data, error } = await client
-    .from("tasks")
+    .from('tasks')
     .update({
       list_id: newListId,
       position: newPosition,
     })
-    .eq("id", taskId)
+    .eq('id', taskId)
     .select()
     .single();
 
@@ -158,12 +137,9 @@ export async function moveTask(
   return data as Task;
 }
 
-export async function completeTask(
-  client: SupabaseClient,
-  taskId: string,
-): Promise<Task> {
+export async function completeTask(client: SupabaseClient, taskId: string): Promise<Task> {
   // Call a Postgres function that sets completed_at using database timestamp
-  const { data, error } = await client.rpc("complete_task_atomic", {
+  const { data, error } = await client.rpc('complete_task_atomic', {
     p_task_id: taskId,
   });
 
@@ -173,9 +149,9 @@ export async function completeTask(
     // P0001 is the default SQLSTATE for user-defined exceptions
     // We also check details field which may contain structured error information
     if (
-      error.code === "P0001" ||
-      error.details?.includes("task_not_found") ||
-      error.details?.includes("Task not found")
+      error.code === 'P0001' ||
+      error.details?.includes('task_not_found') ||
+      error.details?.includes('Task not found')
     ) {
       throw new ResourceNotFoundError(`Task not found: ${taskId}`);
     }
@@ -183,17 +159,14 @@ export async function completeTask(
   }
 
   if (!data) {
-    throw new Error("Failed to complete task: No data returned");
+    throw new Error('Failed to complete task: No data returned');
   }
 
   return data as Task;
 }
 
-export async function deleteTask(
-  client: SupabaseClient,
-  id: string,
-): Promise<void> {
-  const { error } = await client.from("tasks").delete().eq("id", id);
+export async function deleteTask(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('tasks').delete().eq('id', id);
 
   if (error) {
     throw new Error(`Failed to delete task: ${error.message}`);
