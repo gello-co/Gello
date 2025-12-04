@@ -23,6 +23,7 @@ router.get('/', (req, res) => {
   res.render('pages/home', {
     title: 'Gello',
     layout: 'main',
+    styles: ['/css/landing.css'],
   });
 });
 
@@ -115,17 +116,77 @@ router.get('/profile', requireAuth, async (req, res, next) => {
     const pointsHistory = await pointsService.getPointsHistory(userId);
     const assignedTasks = await taskService.getTasksByAssignee(userId);
 
+    // Calculate completed task count
+    const completedTaskCount = assignedTasks.filter((task) => task.completed_at !== null).length;
+
+    // Calculate current activity streak (consecutive days with points earned)
+    const currentStreak = calculateStreak(pointsHistory);
+
     res.render('pages/profile/index', {
       title: 'Profile',
       layout: 'dashboard',
+      scripts: ['https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js'],
+      styles: ['/css/profile.css'],
       // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       pointsHistory,
       assignedTasks,
+      completedTaskCount,
+      currentStreak,
     });
   } catch (error) {
     next(error);
   }
 });
+
+/**
+ * Calculate streak of consecutive days with activity
+ */
+function calculateStreak(pointsHistory: Array<{ created_at: string }>): number {
+  if (!pointsHistory || pointsHistory.length === 0) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Get unique dates with activity (sorted descending)
+  const activityDates = [
+    ...new Set(
+      pointsHistory.map((entry) => {
+        const date = new Date(entry.created_at);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime();
+      })
+    ),
+  ].sort((a, b) => b - a);
+
+  if (activityDates.length === 0) return 0;
+
+  // Check if most recent activity is today or yesterday
+  const mostRecent = activityDates[0];
+  if (mostRecent === undefined) return 0;
+
+  const daysDiff = Math.floor((today.getTime() - mostRecent) / (1000 * 60 * 60 * 24));
+
+  // If last activity was more than 1 day ago, streak is broken
+  if (daysDiff > 1) return 0;
+
+  // Count consecutive days
+  let streak = 1;
+  for (let i = 1; i < activityDates.length; i++) {
+    const prevDay = activityDates[i - 1];
+    const currDay = activityDates[i];
+    if (prevDay === undefined || currDay === undefined) break;
+
+    const diff = Math.floor((prevDay - currDay) / (1000 * 60 * 60 * 24));
+
+    if (diff === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
 
 export default router;

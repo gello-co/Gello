@@ -1,58 +1,321 @@
-<div class="container my-5">
-	<div class="row">
-		<div class="col-md-8 mx-auto">
-			<div class="card">
-				<div class="card-body">
-					<div class="text-center mb-4">
-						{{> user-avatar user=user}}
-						<h2>{{user.display_name}}</h2>
-						<p class="text-muted">{{user.email}}</p>
-						{{> points-badge points=user.total_points}}
+<!-- Profile Page - Modern Redesign -->
+<div class="profile-page" x-data="profilePage()">
+	<!-- Hero Header Section -->
+	<div class="profile-hero">
+		<div class="profile-hero-content">
+			<div class="profile-avatar-large">
+				{{#if user.avatar_url}}
+					<img src="{{user.avatar_url}}" alt="{{user.display_name}}" class="profile-avatar-img" />
+				{{else}}
+					<div class="profile-avatar-placeholder">
+						{{substring user.display_name 0 1}}
 					</div>
-					<div class="mb-4">
-						<h3>Points History</h3>
-						<ul class="list-group">
-							{{#if (length pointsHistory)}}
-								{{#each pointsHistory}}
-									<li class="list-group-item d-flex justify-content-between align-items-center">
-										<div>
-											<strong>+{{points_earned}} points</strong>
-											<br />
-											<small class="text-muted">{{reason}} - {{formatDate created_at}}</small>
-										</div>
-										{{#if notes}}
-											<span class="badge bg-secondary">{{notes}}</span>
-										{{/if}}
-									</li>
-								{{/each}}
-							{{else}}
-								<li class="list-group-item text-center text-muted">
-									<small>No points history yet</small>
-								</li>
-							{{/if}}
-						</ul>
+				{{/if}}
+			</div>
+			<h1 class="profile-name">{{user.display_name}}</h1>
+			<span class="profile-role-badge {{lowercase user.role}}">{{user.role}}</span>
+			<p class="profile-email">{{user.email}}</p>
+		</div>
+	</div>
+
+	<!-- Stats Dashboard Cards -->
+	<div class="profile-stats">
+		<div class="stat-card" data-stat="points">
+			<div class="stat-icon">
+				<i class="fas fa-star"></i>
+			</div>
+			<div class="stat-value" x-text="animatedPoints">{{user.total_points}}</div>
+			<div class="stat-label">Total Points</div>
+		</div>
+		<div class="stat-card" data-stat="tasks">
+			<div class="stat-icon">
+				<i class="fas fa-check-circle"></i>
+			</div>
+			<div class="stat-value" x-text="animatedTasks">{{completedTaskCount}}</div>
+			<div class="stat-label">Tasks Completed</div>
+		</div>
+		<div class="stat-card" data-stat="streak">
+			<div class="stat-icon">
+				<i class="fas fa-fire"></i>
+			</div>
+			<div class="stat-value" x-text="animatedStreak">{{currentStreak}}</div>
+			<div class="stat-label">Day Streak</div>
+		</div>
+	</div>
+
+	<!-- Tabbed Content Navigation -->
+	<div class="profile-tabs">
+		<button 
+			class="profile-tab" 
+			:class="{ 'active': activeTab === 'activity' }"
+			@click="activeTab = 'activity'"
+			role="tab"
+			:aria-selected="activeTab === 'activity'"
+		>
+			<i class="fas fa-history"></i> Activity
+		</button>
+		<button 
+			class="profile-tab" 
+			:class="{ 'active': activeTab === 'tasks' }"
+			@click="activeTab = 'tasks'"
+			role="tab"
+			:aria-selected="activeTab === 'tasks'"
+		>
+			<i class="fas fa-tasks"></i> Tasks
+		</button>
+		<button 
+			class="profile-tab" 
+			:class="{ 'active': activeTab === 'achievements' }"
+			@click="activeTab = 'achievements'"
+			role="tab"
+			:aria-selected="activeTab === 'achievements'"
+		>
+			<i class="fas fa-trophy"></i> Achievements
+		</button>
+	</div>
+
+	<!-- Tab Panels -->
+	<div class="profile-content">
+		<!-- Activity Tab - Points Timeline -->
+		<div 
+			class="tab-panel" 
+			x-show="activeTab === 'activity'"
+			x-transition:enter="tab-enter"
+			x-transition:enter-start="tab-enter-start"
+			x-transition:enter-end="tab-enter-end"
+			role="tabpanel"
+			aria-labelledby="activity-tab"
+		>
+			<div class="timeline">
+				{{#if (length pointsHistory)}}
+					{{#each pointsHistory}}
+						<div class="timeline-item">
+							<div class="timeline-marker"></div>
+							<div class="timeline-content">
+								<div class="timeline-header">
+									<span class="timeline-points">+{{points_earned}} points</span>
+									<span class="timeline-date">{{formatDate created_at}}</span>
+								</div>
+								<p class="timeline-reason">{{reason}}</p>
+								{{#if notes}}
+									<span class="timeline-note">{{notes}}</span>
+								{{/if}}
+							</div>
+						</div>
+					{{/each}}
+				{{else}}
+					<div class="empty-state">
+						<i class="fas fa-clock"></i>
+						<p>No activity yet</p>
+						<small>Complete tasks to start earning points</small>
 					</div>
-					<div>
-						<h3>Assigned Tasks</h3>
-						<ul class="list-group">
-							{{#if (length assignedTasks)}}
-								{{#each assignedTasks}}
-									<li class="list-group-item">
-										<h5>{{title}}</h5>
-										<p class="mb-0">{{description}}</p>
-										<small class="text-muted">{{story_points}} story points</small>
-									</li>
-								{{/each}}
-							{{else}}
-								<li class="list-group-item text-center text-muted">
-									<small>No assigned tasks</small>
-								</li>
-							{{/if}}
-						</ul>
+				{{/if}}
+			</div>
+		</div>
+
+		<!-- Tasks Tab -->
+		<div 
+			class="tab-panel" 
+			x-show="activeTab === 'tasks'"
+			x-transition:enter="tab-enter"
+			x-transition:enter-start="tab-enter-start"
+			x-transition:enter-end="tab-enter-end"
+			role="tabpanel"
+			aria-labelledby="tasks-tab"
+		>
+			<div class="tasks-list">
+				{{#if (length assignedTasks)}}
+					{{#each assignedTasks}}
+						<div class="task-item">
+							<div class="task-status {{#if completed_at}}completed{{/if}}">
+								<i class="fas {{#if completed_at}}fa-check-circle{{else}}fa-circle{{/if}}"></i>
+							</div>
+							<div class="task-details">
+								<h4 class="task-title">{{title}}</h4>
+								{{#if description}}
+									<p class="task-description">{{description}}</p>
+								{{/if}}
+								<div class="task-meta">
+									<span class="task-points">
+										<i class="fas fa-gem"></i> {{story_points}} pts
+									</span>
+								</div>
+							</div>
+						</div>
+					{{/each}}
+				{{else}}
+					<div class="empty-state">
+						<i class="fas fa-inbox"></i>
+						<p>No assigned tasks</p>
+						<small>Check your boards for available tasks</small>
 					</div>
+				{{/if}}
+			</div>
+		</div>
+
+		<!-- Achievements Tab -->
+		<div 
+			class="tab-panel" 
+			x-show="activeTab === 'achievements'"
+			x-transition:enter="tab-enter"
+			x-transition:enter-start="tab-enter-start"
+			x-transition:enter-end="tab-enter-end"
+			role="tabpanel"
+			aria-labelledby="achievements-tab"
+		>
+			<div class="achievements-grid">
+				<!-- First Task Badge -->
+				<div class="achievement-card {{#if (gte user.total_points 1)}}earned{{else}}locked{{/if}}">
+					<div class="achievement-icon">
+						<i class="fas fa-rocket"></i>
+						{{#unless (gte user.total_points 1)}}
+							<div class="lock-overlay"><i class="fas fa-lock"></i></div>
+						{{/unless}}
+					</div>
+					<h5 class="achievement-name">First Task</h5>
+					<p class="achievement-desc">Complete your first task</p>
+				</div>
+
+				<!-- 100 Points Badge -->
+				<div class="achievement-card {{#if (gte user.total_points 100)}}earned{{else}}locked{{/if}}">
+					<div class="achievement-icon">
+						<i class="fas fa-star"></i>
+						{{#unless (gte user.total_points 100)}}
+							<div class="lock-overlay"><i class="fas fa-lock"></i></div>
+						{{/unless}}
+					</div>
+					<h5 class="achievement-name">Century Club</h5>
+					<p class="achievement-desc">Earn 100 points</p>
+				</div>
+
+				<!-- Team Player Badge -->
+				<div class="achievement-card locked">
+					<div class="achievement-icon">
+						<i class="fas fa-users"></i>
+						<div class="lock-overlay"><i class="fas fa-lock"></i></div>
+					</div>
+					<h5 class="achievement-name">Team Player</h5>
+					<p class="achievement-desc">Collaborate on 5 tasks</p>
+				</div>
+
+				<!-- Streak Master Badge -->
+				<div class="achievement-card {{#if (gte currentStreak 7)}}earned{{else}}locked{{/if}}">
+					<div class="achievement-icon">
+						<i class="fas fa-fire-alt"></i>
+						{{#unless (gte currentStreak 7)}}
+							<div class="lock-overlay"><i class="fas fa-lock"></i></div>
+						{{/unless}}
+					</div>
+					<h5 class="achievement-name">Streak Master</h5>
+					<p class="achievement-desc">7-day activity streak</p>
+				</div>
+
+				<!-- Points Champion Badge -->
+				<div class="achievement-card {{#if (gte user.total_points 500)}}earned{{else}}locked{{/if}}">
+					<div class="achievement-icon">
+						<i class="fas fa-crown"></i>
+						{{#unless (gte user.total_points 500)}}
+							<div class="lock-overlay"><i class="fas fa-lock"></i></div>
+						{{/unless}}
+					</div>
+					<h5 class="achievement-name">Points Champion</h5>
+					<p class="achievement-desc">Earn 500 points</p>
+				</div>
+
+				<!-- Early Bird Badge -->
+				<div class="achievement-card locked">
+					<div class="achievement-icon">
+						<i class="fas fa-sun"></i>
+						<div class="lock-overlay"><i class="fas fa-lock"></i></div>
+					</div>
+					<h5 class="achievement-name">Early Bird</h5>
+					<p class="achievement-desc">Complete a task before 9 AM</p>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<!-- Quick Actions Panel -->
+	<div class="quick-actions">
+		<h3 class="quick-actions-title">Quick Actions</h3>
+		<div class="quick-actions-grid">
+			<a href="/boards" class="quick-action-btn">
+				<i class="fas fa-clipboard-list"></i>
+				<span>My Boards</span>
+			</a>
+			<a href="/leaderboard" class="quick-action-btn">
+				<i class="fas fa-medal"></i>
+				<span>Leaderboard</span>
+			</a>
+			<a href="/points-shop" class="quick-action-btn">
+				<i class="fas fa-store"></i>
+				<span>Points Shop</span>
+			</a>
+		</div>
+	</div>
 </div>
+
+<script>
+// Alpine.js component for profile page
+function profilePage() {
+	return {
+		activeTab: 'activity',
+		animatedPoints: 0,
+		animatedTasks: 0,
+		animatedStreak: 0,
+		
+		init() {
+			// Animate counters on load
+			const targetPoints = {{user.total_points}};
+			const targetTasks = {{completedTaskCount}};
+			const targetStreak = {{currentStreak}};
+			
+			this.animateCounter('animatedPoints', targetPoints);
+			this.animateCounter('animatedTasks', targetTasks);
+			this.animateCounter('animatedStreak', targetStreak);
+			
+			// Initialize Motion One entrance animations
+			this.initMotionAnimations();
+		},
+		
+		animateCounter(prop, target) {
+			const duration = 1000;
+			const startTime = performance.now();
+			const start = 0;
+			
+			const tick = (now) => {
+				const elapsed = now - startTime;
+				const progress = Math.min(elapsed / duration, 1);
+				// Ease out cubic
+				const eased = 1 - Math.pow(1 - progress, 3);
+				this[prop] = Math.round(start + (target - start) * eased);
+				
+				if (progress < 1) {
+					requestAnimationFrame(tick);
+				}
+			};
+			
+			requestAnimationFrame(tick);
+		},
+		
+		initMotionAnimations() {
+			// Check for reduced motion preference
+			if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				return;
+			}
+			
+			// Motion One CDN - animate stat cards entrance
+			if (window.Motion) {
+				const { animate, stagger } = window.Motion;
+				
+				animate(
+					'.stat-card',
+					{ opacity: [0, 1], scale: [0.9, 1], y: [20, 0] },
+					{ delay: stagger(0.1), duration: 0.5, easing: [0.4, 0, 0.2, 1] }
+				);
+			}
+		}
+	};
+}
+</script>
 

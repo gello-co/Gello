@@ -1,0 +1,759 @@
+/**
+ * Profile Page Styles - Modern Redesign
+ * Gello brand colors and glassmorphism effects
+ */
+
+/* CSS Variables for profile theming */
+:root {
+  --gello-brown: #742e10;
+  --gello-brown-dark: #5a2410;
+  --gello-gold: #f3d18d;
+  --gello-gold-dark: #c9a05c;
+  --gello-cream: #fae1b8;
+  --profile-glass-bg: rgba(255, 255, 255, 0.85);
+  --profile-glass-border: rgba(255, 255, 255, 0.3);
+}
+
+/* Profile Page Container */
+.profile-page {
+  padding: 0 0 40px 0;
+  min-height: calc(100vh - 76px);
+}
+
+/* Hero Header Section */
+.profile-hero {
+  background: linear-gradient(135deg, var(--gello-brown), var(--gello-gold-dark));
+  padding: 60px 20px;
+  text-align: center;
+  margin: -1rem -1rem 0 -1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+.profile-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Large Avatar */
+.profile-avatar-large {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--gello-gold), var(--gello-cream));
+  color: var(--gello-brown);
+  font-size: 48px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Profile Name */
+.profile-name {
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Role Badge */
+.profile-role-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  backdrop-filter: blur(4px);
+}
+
+.profile-role-badge.admin {
+  background: linear-gradient(135deg, #ffd700, #ffb300);
+  color: var(--gello-brown-dark);
+}
+
+.profile-role-badge.manager {
+  background: linear-gradient(135deg, #4fc3f7, #0288d1);
+  color: white;
+}
+
+.profile-role-badge.member {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+/* Profile Email */
+.profile-email {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Stats Dashboard Cards */
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  margin: -40px 20px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.stat-card {
+  background: var(--profile-glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+  border: 1px solid var(--profile-glass-border);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  opacity: 0;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stat-card[data-stat="points"] .stat-icon {
+  background: linear-gradient(135deg, #ffd700, #ffb300);
+  color: var(--gello-brown-dark);
+}
+
+.stat-card[data-stat="tasks"] .stat-icon {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+}
+
+.stat-card[data-stat="streak"] .stat-icon {
+  background: linear-gradient(135deg, #ff5722, #d84315);
+  color: white;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gello-brown);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--gello-brown-dark);
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+/* Tabbed Content Navigation */
+.profile-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 20px 0;
+  border-bottom: 1px solid rgba(116, 46, 16, 0.1);
+  margin: 0 20px;
+  overflow-x: auto;
+}
+
+.profile-tab {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  color: var(--gello-brown);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.profile-tab:hover {
+  color: var(--gello-brown-dark);
+  background: rgba(116, 46, 16, 0.05);
+}
+
+.profile-tab.active {
+  color: var(--gello-brown);
+  border-bottom-color: var(--gello-brown);
+  background: rgba(116, 46, 16, 0.08);
+}
+
+.profile-tab i {
+  margin-right: 8px;
+}
+
+/* Tab Panel Content */
+.profile-content {
+  padding: 24px 20px;
+  margin: 0 20px;
+}
+
+.tab-panel {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Tab transition classes */
+.tab-enter {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tab-enter-start {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.tab-enter-end {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Timeline Styles */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--gello-gold),
+    var(--gello-brown),
+    var(--gello-gold-dark)
+  );
+  border-radius: 2px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -28px;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  background: var(--gello-gold);
+  border: 3px solid var(--gello-brown);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.timeline-content {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(116, 46, 16, 0.1);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timeline-points {
+  font-weight: 700;
+  color: var(--gello-brown);
+  font-size: 1.1rem;
+}
+
+.timeline-date {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.timeline-reason {
+  margin: 0;
+  color: var(--gello-brown-dark);
+  font-size: 0.95rem;
+  text-transform: capitalize;
+}
+
+.timeline-note {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  background: rgba(116, 46, 16, 0.1);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: var(--gello-brown);
+}
+
+/* Tasks List Styles */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-item {
+  display: flex;
+  gap: 16px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(116, 46, 16, 0.1);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.task-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.task-status {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  color: #ccc;
+}
+
+.task-status.completed {
+  color: #4caf50;
+}
+
+.task-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gello-brown);
+}
+
+.task-description {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: #666;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.task-points {
+  color: var(--gello-gold-dark);
+  font-weight: 500;
+}
+
+.task-points i {
+  margin-right: 4px;
+}
+
+/* Achievements Grid */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.achievement-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(116, 46, 16, 0.1);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.achievement-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.achievement-card.locked {
+  opacity: 0.6;
+}
+
+.achievement-card.locked .achievement-icon {
+  filter: grayscale(100%);
+}
+
+.achievement-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  background: linear-gradient(135deg, var(--gello-gold), var(--gello-cream));
+  color: var(--gello-brown);
+}
+
+.achievement-card.earned .achievement-icon {
+  background: linear-gradient(135deg, #ffd700, #ffb300);
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.4);
+}
+
+.lock-overlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  background: var(--gello-brown);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: white;
+}
+
+.achievement-name {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gello-brown);
+}
+
+.achievement-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #666;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: var(--gello-gold);
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: var(--gello-brown);
+}
+
+.empty-state small {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* Quick Actions Panel */
+.quick-actions {
+  margin: 32px 20px 0;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.quick-actions-title {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gello-brown);
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--gello-cream), #fff);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--gello-brown);
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  min-height: 44px;
+}
+
+.quick-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(116, 46, 16, 0.15);
+  color: var(--gello-brown-dark);
+}
+
+.quick-action-btn i {
+  font-size: 1.5rem;
+  color: var(--gello-brown);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .profile-hero {
+    padding: 40px 16px;
+    margin: -1rem -0.75rem 0 -0.75rem;
+  }
+
+  .profile-avatar-large {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-avatar-placeholder {
+    font-size: 40px;
+  }
+
+  .profile-name {
+    font-size: 1.5rem;
+  }
+
+  .profile-stats {
+    margin: -30px 12px 0;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px 12px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .profile-tabs {
+    margin: 0 12px;
+    padding: 16px 12px 0;
+  }
+
+  .profile-tab {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  .profile-content {
+    padding: 16px 12px;
+    margin: 0 12px;
+  }
+
+  .quick-actions {
+    margin: 24px 12px 0;
+    padding: 16px;
+  }
+
+  .achievements-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-hero {
+    padding: 32px 12px;
+  }
+
+  .profile-avatar-large {
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-avatar-placeholder {
+    font-size: 32px;
+  }
+
+  .profile-name {
+    font-size: 1.25rem;
+  }
+
+  .profile-stats {
+    grid-template-columns: 1fr;
+    margin: -24px 8px 0;
+  }
+
+  .stat-card {
+    flex-direction: row;
+    text-align: left;
+    gap: 16px;
+  }
+
+  .stat-icon {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .profile-tabs {
+    gap: 4px;
+    margin: 0 8px;
+  }
+
+  .profile-tab {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .profile-tab i {
+    margin-right: 4px;
+  }
+
+  .profile-content {
+    margin: 0 8px;
+    padding: 12px 8px;
+  }
+
+  .timeline {
+    padding-left: 24px;
+  }
+
+  .timeline-marker {
+    left: -20px;
+    width: 12px;
+    height: 12px;
+  }
+
+  .timeline-content {
+    padding: 12px;
+  }
+
+  .task-item {
+    padding: 12px;
+  }
+
+  .quick-actions {
+    margin: 16px 8px 0;
+    padding: 12px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .quick-action-btn {
+    padding: 12px 8px;
+    font-size: 0.8rem;
+  }
+
+  .quick-action-btn i {
+    font-size: 1.25rem;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card,
+  .task-item,
+  .achievement-card,
+  .quick-action-btn,
+  .profile-tab,
+  .tab-panel {
+    transition: none;
+    animation: none;
+  }
+
+  .stat-card {
+    opacity: 1;
+  }
+}
