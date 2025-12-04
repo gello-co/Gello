@@ -13,6 +13,7 @@ const RESOURCE_NOT_FOUND_ERROR = Symbol('ResourceNotFoundError');
 const FORBIDDEN_ERROR = Symbol('ForbiddenError');
 const RETRYABLE_ERROR = Symbol('RetryableError');
 const NON_RETRYABLE_ERROR = Symbol('NonRetryableError');
+const INSUFFICIENT_POINTS_ERROR = Symbol('InsufficientPointsError');
 
 export class DuplicateUserError extends Error {
   constructor(message: string = 'User with this email already exists') {
@@ -130,6 +131,21 @@ export class NonRetryableError extends Error {
     return (
       error instanceof NonRetryableError ||
       (error !== null && typeof error === 'object' && NON_RETRYABLE_ERROR in error)
+    );
+  }
+}
+
+export class InsufficientPointsError extends Error {
+  constructor(message: string = 'Insufficient points') {
+    super(message);
+    this.name = 'InsufficientPointsError';
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  static isInsufficientPointsError(error: unknown): error is InsufficientPointsError {
+    return (
+      error instanceof InsufficientPointsError ||
+      (error !== null && typeof error === 'object' && INSUFFICIENT_POINTS_ERROR in error)
     );
   }
 }

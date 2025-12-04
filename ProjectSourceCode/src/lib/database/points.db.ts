@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ResourceNotFoundError } from '../errors/app.errors.js';
 
-export type PointsReason = 'task_complete' | 'manual_award';
+export type PointsReason = 'task_complete' | 'manual_award' | 'redemption';
 
 export type PointsHistory = {
   id: string;

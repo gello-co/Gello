@@ -1,0 +1,485 @@
+<div class="points-shop-page">
+  <div class="container-fluid px-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+
+        {{!-- Header with balance --}}
+        <div class="text-center mb-5 fade-in">
+          <h1 class="page-title">Points Shop</h1>
+          <p class="page-subtitle">Redeem your hard-earned points for rewards</p>
+          <div class="balance-badge">
+            <img src="/images/gellocoin.png" alt="Points" class="balance-icon">
+            <span class="balance-amount">{{totalPoints}} pts</span>
+          </div>
+        </div>
+
+        {{!-- Flash messages --}}
+        {{#if successMessage}}
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+          <i class="bi bi-check-circle-fill me-2"></i>{{successMessage}}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {{/if}}
+        {{#if errorMessage}}
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>{{errorMessage}}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {{/if}}
+
+        {{!-- Shop Items Grid --}}
+        {{#if shopItems.length}}
+        <div class="shop-items-section fade-in">
+          <div class="row g-4">
+            {{#each shopItems}}
+            <div class="col-md-6 col-lg-4">
+              <div class="shop-item-card {{#unless canAfford}}unaffordable{{/unless}}">
+                <div class="shop-item-image">
+                  {{#if image_url}}
+                  <img src="{{image_url}}" alt="{{name}}">
+                  {{else}}
+                  <div class="shop-item-placeholder">
+                    <i class="bi bi-gift-fill"></i>
+                  </div>
+                  {{/if}}
+                  <span class="category-badge category-{{category}}">{{category}}</span>
+                </div>
+                <div class="shop-item-body">
+                  <h4 class="shop-item-name">{{name}}</h4>
+                  {{#if description}}
+                  <p class="shop-item-description">{{description}}</p>
+                  {{/if}}
+                  <div class="shop-item-footer">
+                    <div class="shop-item-cost">
+                      <img src="/images/gellocoin.png" alt="Points" class="cost-icon">
+                      <span>{{point_cost}} pts</span>
+                    </div>
+                    {{#if canAfford}}
+                    <button type="button" class="btn btn-redeem" data-bs-toggle="modal" data-bs-target="#redeemModal" onclick="setRedeemItem('{{id}}', '{{name}}', {{point_cost}}, {{../totalPoints}})">
+                      Redeem
+                    </button>
+                    {{else}}
+                    <div class="insufficient-badge">
+                      <i class="bi bi-lock-fill"></i>
+                      Need {{pointsNeeded}} more
+                    </div>
+                    {{/if}}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+        {{else}}
+        <div class="empty-state fade-in">
+          <div class="empty-state-icon">
+            <i class="bi bi-shop"></i>
+          </div>
+          <h3>No rewards available yet</h3>
+          <p>Check back soon for exciting rewards you can redeem with your points.</p>
+        </div>
+        {{/if}}
+
+        {{!-- Redemption History --}}
+        <div class="redemption-history-section fade-in mt-5">
+          <div class="leaderboard-card">
+            <div class="leaderboard-header">
+              <h3><i class="bi bi-clock-history me-2"></i>Recent Redemptions</h3>
+            </div>
+            <div id="redemptionsList">
+              {{#if redemptions.length}}
+              {{#each redemptions}}
+              <div class="member-row">
+                <div class="member-avatar redemption-icon">
+                  {{#if shop_item.image_url}}
+                  <img src="{{shop_item.image_url}}" alt="{{shop_item.name}}" class="avatar-img">
+                  {{else}}
+                  <i class="bi bi-gift-fill"></i>
+                  {{/if}}
+                </div>
+                <div class="member-info">
+                  <div class="member-name">{{shop_item.name}}</div>
+                  <div class="member-description">{{formatDate redeemed_at}}</div>
+                </div>
+                <div class="redemption-points">
+                  <span class="points-spent">-{{points_spent}} pts</span>
+                </div>
+              </div>
+              {{/each}}
+              {{else}}
+              <div class="empty-history">
+                <i class="bi bi-inbox"></i>
+                <p>No redemptions yet</p>
+              </div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{{!-- Redemption Confirmation Modal --}}
+<div class="modal fade" id="redeemModal" tabindex="-1" aria-labelledby="redeemModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form action="/points-shop/redeem" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="redeemModalLabel">Confirm Redemption</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="item_id" id="redeemItemId">
+          <div class="text-center mb-4">
+            <div class="redeem-item-icon">
+              <i class="bi bi-gift-fill"></i>
+            </div>
+            <h4 id="redeemItemName" class="redeem-item-title"></h4>
+          </div>
+          <div class="redeem-summary">
+            <div class="redeem-row">
+              <span>Item Cost</span>
+              <span id="redeemItemCost" class="cost-value"></span>
+            </div>
+            <div class="redeem-row">
+              <span>Your Balance</span>
+              <span id="redeemCurrentBalance" class="balance-value"></span>
+            </div>
+            <hr>
+            <div class="redeem-row total">
+              <span>Balance After</span>
+              <span id="redeemBalanceAfter" class="balance-after-value"></span>
+            </div>
+          </div>
+          <p class="redeem-warning text-center mt-3">
+            <i class="bi bi-info-circle"></i>
+            This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-login">Confirm Redemption</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function setRedeemItem(id, name, cost, currentBalance) {
+  document.getElementById('redeemItemId').value = id;
+  document.getElementById('redeemItemName').textContent = name;
+  document.getElementById('redeemItemCost').textContent = cost + ' pts';
+  document.getElementById('redeemCurrentBalance').textContent = currentBalance + ' pts';
+  document.getElementById('redeemBalanceAfter').textContent = (currentBalance - cost) + ' pts';
+}
+</script>
+
+<style>
+/* Points Shop Page Styles */
+.points-shop-page {
+  padding: 60px 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  min-height: calc(100vh - 76px);
+}
+
+.balance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #742e10, #5a2410);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  box-shadow: 0 5px 15px rgba(116, 46, 16, 0.3);
+}
+
+.balance-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Shop Item Cards */
+.shop-item-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-item-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(116, 46, 16, 0.2);
+}
+
+.shop-item-card.unaffordable {
+  opacity: 0.7;
+}
+
+.shop-item-card.unaffordable:hover {
+  transform: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.shop-item-image {
+  position: relative;
+  height: 160px;
+  background: linear-gradient(135deg, #fae1b8, #f3d18d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop-item-placeholder {
+  font-size: 4rem;
+  color: #742e10;
+  opacity: 0.5;
+}
+
+.category-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.category-badge.category-badge { background: #742e10; color: white; }
+.category-badge.category-perk { background: #28a745; color: white; }
+.category-badge.category-item { background: #17a2b8; color: white; }
+
+.shop-item-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-item-name {
+  color: #742e10;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.shop-item-description {
+  color: #5a2410;
+  font-size: 0.9rem;
+  flex: 1;
+  margin-bottom: 15px;
+}
+
+.shop-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.shop-item-cost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+  color: #742e10;
+  font-size: 1.1rem;
+}
+
+.cost-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-redeem {
+  background-color: #742e10;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-redeem:hover {
+  background-color: #5a2410;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(116, 46, 16, 0.3);
+  color: white;
+}
+
+.insufficient-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #dc3545;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: #742e10;
+  opacity: 0.5;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  color: #742e10;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: #5a2410;
+}
+
+/* Redemption History */
+.redemption-history-section .leaderboard-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.redemption-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #742e10;
+}
+
+.redemption-points {
+  flex-shrink: 0;
+}
+
+.points-spent {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 40px 20px;
+  color: #5a2410;
+}
+
+.empty-history i {
+  font-size: 2.5rem;
+  opacity: 0.5;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* Modal Styles */
+.redeem-item-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #fae1b8, #f3d18d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  font-size: 2.5rem;
+  color: #742e10;
+}
+
+.redeem-item-title {
+  color: #742e10;
+  font-weight: bold;
+}
+
+.redeem-summary {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.redeem-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #5a2410;
+}
+
+.redeem-row.total {
+  font-weight: bold;
+  color: #742e10;
+  margin-bottom: 0;
+}
+
+.redeem-row hr {
+  margin: 15px 0;
+}
+
+.cost-value {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.balance-value {
+  font-weight: 600;
+}
+
+.balance-after-value {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.redeem-warning {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .points-shop-page {
+    padding: 30px 0;
+  }
+  
+  .balance-badge {
+    font-size: 1.1rem;
+    padding: 10px 20px;
+  }
+  
+  .shop-item-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-redeem,
+  .insufficient-badge {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+</style>
