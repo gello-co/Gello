@@ -15,6 +15,9 @@
 					<a class="nav-link" href="/boards">Boards</a>
 				</li>
 				{{#if user}}
+					<li class="nav-item">
+						<a class="nav-link" href="/tasks">Tasks</a>
+					</li>
 					{{#if (eq user.role "admin")}}
 						<li class="nav-item">
 							<a class="nav-link" href="/teams">Teams</a>
@@ -23,6 +26,11 @@
 					<li class="nav-item">
 						<a class="nav-link" href="/leaderboard">Leaderboard</a>
 					</li>
+					{{#if (eq user.role "member")}}
+						<li class="nav-item">
+							<a class="nav-link" href="/points-shop">Points Shop</a>
+						</li>
+					{{/if}}
 				{{/if}}
 			</ul>
 			{{#if user}}

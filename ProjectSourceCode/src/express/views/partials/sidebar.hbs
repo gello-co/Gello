@@ -9,10 +9,14 @@
 	<nav class="sidebar-nav">
 		<ul>
 			<li><a href="/boards"><i class="fas fa-columns"></i> Boards</a></li>
+			<li><a href="/tasks"><i class="fas fa-tasks"></i> Tasks</a></li>
 			{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
 				<li><a href="/teams"><i class="fas fa-users"></i> {{#if (eq user.role "admin")}}Teams{{else}}My Team{{/if}}</a></li>
 			{{/if}}
 			<li><a href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+			{{#if (eq user.role "member")}}
+				<li><a href="/points-shop"><i class="fas fa-store"></i> Points Shop</a></li>
+			{{/if}}
 			<li><a href="/profile"><i class="fas fa-user"></i> Profile</a></li>
 		</ul>
 	</nav>
