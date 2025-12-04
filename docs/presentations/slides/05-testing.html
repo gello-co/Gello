@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gello Code Tour - Testing</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../assets/css/gello.css">
+</head>
+<body>
+  <!-- Back to Index Button -->
+  <a href="../index.html" class="nav-home" title="Back to Tours" aria-label="Back to tour index">
+    <i class="bi bi-house-fill"></i>
+  </a>
+
+  <!-- Breadcrumb Navigation -->
+  <nav class="slide-breadcrumb" aria-label="Breadcrumb">
+    <a href="../index.html">Tours</a>
+    <span class="separator">→</span>
+    <span class="current">Testing</span>
+  </nav>
+
+  <!-- Progress Bar -->
+  <div class="slide-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="slide-progress-bar"></div>
+  </div>
+  <span class="slide-progress-text" aria-live="polite">1 / 7</span>
+
+  <div class="reveal">
+    <div class="slides">
+      <section class="title-slide">
+        <h1>Testing Tour</h1>
+        <p class="subtitle">Gello Codebase Tour - Part 5</p>
+        <p class="muted">Unit, integration, and E2E testing strategies</p>
+        <aside class="notes">This module covers testing patterns and conventions.</aside>
+      </section>
+
+      <section>
+        <h2>Test Pyramid + Organization</h2>
+        <div class="columns">
+          <div style="text-align: center;">
+            <div class="fragment" style="margin-bottom: 0.3em;">
+              <span class="badge" style="padding: 0.3em 1.5em;">E2E</span>
+              <span class="muted" style="font-size: 0.7em;"> Few, slow</span>
+            </div>
+            <div class="fragment" style="margin-bottom: 0.3em;">
+              <span class="badge" style="padding: 0.3em 2.5em;">Integration</span>
+              <span class="muted" style="font-size: 0.7em;"> API tests</span>
+            </div>
+            <div class="fragment">
+              <span class="badge" style="padding: 0.3em 3.5em;">Unit</span>
+              <span class="muted" style="font-size: 0.7em;"> Many, fast</span>
+            </div>
+          </div>
+          <div>
+            <pre class="tree" style="font-size: 0.65em;"><code>tests/
+├── unit/           # Isolated logic
+│   ├── lib/services/
+│   └── lib/utils/
+├── integration/    # API endpoints
+│   ├── auth.test.ts
+│   └── tasks.test.ts
+├── e2e/            # Full user flows
+│   └── *.spec.ts
+└── setup/helpers/  # Test utilities</code></pre>
+          </div>
+        </div>
+        <aside class="notes">Classic pyramid: more unit tests, fewer E2E tests. Test paths mirror app structure.</aside>
+      </section>
+
+      <section>
+        <h2>Unit + Integration Tests</h2>
+        <div class="columns">
+          <div>
+            <h3 style="font-size: 0.9em;">Unit (Vitest)</h3>
+            <pre><code class="language-typescript" style="font-size: 0.65em;">// tests/unit/services/points.test.ts
+describe('PointsService', () => {
+  it('awards correct points', async () => {
+    const mockDb = {
+      createHistory: vi.fn(),
+      incrementUserPoints: vi.fn(),
+    };
+    const service = new PointsService(mockDb);
+    await service.awardPoints('user-1', 10, 'task');
+    expect(mockDb.incrementUserPoints)
+      .toHaveBeenCalledWith('user-1', 10);
+  });
+});</code></pre>
+          </div>
+          <div>
+            <h3 style="font-size: 0.9em;">Integration (Supertest)</h3>
+            <pre><code class="language-typescript" style="font-size: 0.65em;">// tests/integration/tasks.test.ts
+describe('POST /api/tasks', () => {
+  it('creates a task', async () => {
+    const cookies = await loginAsUser('test@example.com');
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Cookie', cookies)
+      .send({ title: 'New Task', listId: 'list-1' });
+    expect(res.status).toBe(201);
+    expect(res.body.task.title).toBe('New Task');
+  });
+});</code></pre>
+          </div>
+        </div>
+        <aside class="notes">Unit tests mock dependencies. Integration tests hit real endpoints with auth.</aside>
+      </section>
+
+      <section>
+        <h2>E2E Tests (Playwright)</h2>
+        <pre><code class="language-typescript">// tests/e2e/task-flow.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('user completes a task', async ({ page }) => {
+  await page.goto('/login');
+  await page.fill('[name="email"]', 'test@example.com');
+  await page.fill('[name="password"]', 'password123');
+  await page.click('button[type="submit"]');
+
+  await page.goto('/boards/1');
+  await page.click('[data-task-id="1"] .complete-btn');
+
+  await expect(page.locator('[data-task-id="1"]')).toHaveClass(/completed/);
+});</code></pre>
+        <p class="fragment muted">Simulates real user interactions in a browser</p>
+        <aside class="notes">E2E tests verify complete user flows from login to task completion.</aside>
+      </section>
+
+      <section>
+        <h2>Test Helpers + Isolation</h2>
+        <pre><code class="language-typescript">// tests/setup/helpers/auth.ts
+export function generateTestEmail() {
+  return `test-${Date.now()}@example.com`;  // Unique per test
+}
+
+export async function createTestUser(email?: string) {
+  const testEmail = email ?? generateTestEmail();
+  return { email: testEmail, password: 'test123' };
+}
+
+export async function loginAsUser(email: string) {
+  const res = await request(app).post('/auth/login').send({ email, password: 'test123' });
+  return res.headers['set-cookie'];  // Returns session cookies
+}</code></pre>
+        <div class="columns fragment" style="font-size: 0.85em; margin-top: 1rem;">
+          <div><span class="accent">Isolation:</span> <code>generateTestEmail()</code> = unique users</div>
+          <div><span class="accent">Bypass:</span> <code>X-Test-Bypass</code> header (dev only)</div>
+        </div>
+        <aside class="notes">Helpers keep tests DRY. Each test gets unique users to prevent interference.</aside>
+      </section>
+
+      <section>
+        <h2>Test Commands</h2>
+        <div class="columns">
+          <div>
+            <pre><code class="language-bash" style="font-size: 0.8em;"># Run all tests
+bun test
+
+# Unit tests only
+bun run test:unit
+
+# Integration (serial)
+bun run test:integration
+
+# E2E tests
+bun run e2e</code></pre>
+          </div>
+          <div>
+            <pre><code class="language-bash" style="font-size: 0.8em;"># Watch mode
+bun test --watch
+
+# Single file
+bun test tests/unit/services/points.test.ts
+
+# With coverage
+bun run test:coverage
+
+# CI mode (bail on first failure)
+bun run test:ci</code></pre>
+          </div>
+        </div>
+        <aside class="notes">Different commands for different test types. Integration runs serially for reliability.</aside>
+      </section>
+
+      <section>
+        <h2>Summary</h2>
+        <ul>
+          <li class="fragment"><span class="accent">Pyramid:</span> Unit → Integration → E2E</li>
+          <li class="fragment"><span class="accent">Tools:</span> Vitest + Supertest + Playwright</li>
+          <li class="fragment"><span class="accent">Isolation:</span> Unique users per test via helpers</li>
+          <li class="fragment"><span class="accent">Quick run:</span> <code>bun test</code></li>
+        </ul>
+        <p class="fragment accent" style="margin-top: 2rem;">All Tours Complete</p>
+        <p class="fragment">
+          <a href="04-database.html">← Previous</a> · <a href="../index.html">Back to Index</a>
+        </p>
+        <aside class="notes">Testing ensures quality. Use helpers for DRY tests and proper isolation.</aside>
+      </section>
+    </div>
+  </div>
+
+  <!-- Completion Overlay (final tour) -->
+  <div class="completion-overlay" id="completion-overlay" style="display: none;">
+    <h3><i class="bi bi-trophy-fill me-2"></i>All Tours Complete</h3>
+    <p>You've finished all the Gello code tours</p>
+    <div class="actions">
+      <a href="../index.html" class="btn btn-primary">Back to Index</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/motion@11.18.0/dist/motion.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="../assets/js/tour-progress.js"></script>
+  <script src="../assets/js/confetti-setup.js"></script>
+  <script src="../assets/js/motion-setup.js"></script>
+  <script>
+    const TOUR_ID = '05-testing';
+    const NEXT_TOUR = null; // Final tour
+
+    Reveal.initialize({
+      hash: true,
+      slideNumber: false,
+      progress: false,
+      history: true,
+      plugins: [RevealHighlight, RevealNotes]
+    });
+
+    Reveal.on('slidechanged', () => {
+      const current = Reveal.getIndices().h + 1;
+      const total = Reveal.getTotalSlides();
+      const percent = (current / total) * 100;
+      const progressBar = document.querySelector('.slide-progress-bar');
+      const progressText = document.querySelector('.slide-progress-text');
+      if (progressBar) {
+        if (window.Motion && !window.GelloMotion?.prefersReducedMotion) {
+          window.Motion.animate(progressBar, { width: `${percent}%` }, { duration: 0.35, easing: [0.4, 0, 0.2, 1] });
+        } else {
+          progressBar.style.width = `${percent}%`;
+        }
+      }
+      if (progressText) progressText.textContent = `${current} / ${total}`;
+      if (Reveal.isLastSlide() && !sessionStorage.getItem(`tour-completed-${TOUR_ID}`)) {
+        sessionStorage.setItem(`tour-completed-${TOUR_ID}`, 'true');
+        handleTourCompletion();
+      }
+    });
+
+    function handleTourCompletion() {
+      const storageKey = 'gello-tour-progress';
+      let data = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      if (!data.tours) {
+        data = { version: 1, tours: { '01-project-overview': { completed: false, lastVisit: null }, '02-architecture': { completed: false, lastVisit: null }, '03-services': { completed: false, lastVisit: null }, '04-database': { completed: false, lastVisit: null }, '05-testing': { completed: false, lastVisit: null } }, allComplete: false };
+      }
+      const wasAlreadyComplete = data.tours[TOUR_ID]?.completed;
+      if (!wasAlreadyComplete) {
+        data.tours[TOUR_ID] = { completed: true, lastVisit: new Date().toISOString() };
+        data.allComplete = Object.values(data.tours).every(t => t.completed);
+        data.lastUpdated = new Date().toISOString();
+        localStorage.setItem(storageKey, JSON.stringify(data));
+        if (window.GelloConfetti) window.GelloConfetti.tourComplete();
+        setTimeout(() => {
+          const overlay = document.getElementById('completion-overlay');
+          if (overlay) {
+            overlay.style.display = 'block';
+            if (window.Motion && !window.GelloMotion?.prefersReducedMotion) {
+              window.Motion.animate(overlay, { opacity: [0, 1], y: [20, 0] }, { duration: 0.3 });
+            }
+          }
+        }, 1500);
+        // If all tours complete, trigger big fireworks
+        if (data.allComplete && window.GelloConfetti) {
+          setTimeout(() => window.GelloConfetti.allToursComplete(), 2000);
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('pre code').forEach(block => {
+        const wrapper = block.parentElement;
+        wrapper.style.position = 'relative';
+        const button = document.createElement('button');
+        button.className = 'copy-btn';
+        button.innerHTML = '<i class="bi bi-clipboard"></i>';
+        button.title = 'Copy to clipboard';
+        button.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(block.textContent);
+          button.innerHTML = '<i class="bi bi-check2"></i>';
+          button.classList.add('copied');
+          setTimeout(() => { button.innerHTML = '<i class="bi bi-clipboard"></i>'; button.classList.remove('copied'); }, 2000);
+        });
+        wrapper.appendChild(button);
+      });
+      const total = Reveal.getTotalSlides();
+      document.querySelector('.slide-progress-text').textContent = `1 / ${total}`;
+      document.querySelector('.slide-progress-bar').style.width = `${(1/total) * 100}%`;
+    });
+  </script>
+</body>
+</html>

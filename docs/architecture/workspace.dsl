@@ -41,7 +41,7 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 errorMiddleware = component "Error Middleware" "Centralized error handling" "Express Middleware"
 
                 # View Layer
-                viewEngine = component "View Engine" "Handlebars template rendering" "express-handlebars"
+                viewEngine = component "View Engine" "Handlebars template rendering" "View Engine"
             }
 
             staticAssets = container "Static Assets" "CSS, JavaScript, and images served by Express" "Bootstrap, HTMX, Alpine.js" "StaticAssets"
@@ -136,8 +136,22 @@ workspace "Gello" "Gamified task management application with points and leaderbo
         # Component View - Web Application
         component webApp "Components" {
             include *
-            autoLayout lr 200 150
+            autoLayout tb 400 300
             description "Component diagram showing the internal structure of the web application"
+        }
+
+        # Component View - Task Flow (filtered)
+        component webApp "TaskFlow" {
+            include taskRoutes taskService taskDb pointsService userDb viewEngine authMiddleware serviceMiddleware
+            autoLayout lr 300 200
+            description "Task management flow: routes -> services -> database with points calculation"
+        }
+
+        # Component View - Auth Flow (filtered)
+        component webApp "AuthFlow" {
+            include authRoutes authService userDb authMiddleware viewEngine
+            autoLayout lr 300 200
+            description "Authentication flow: login, session validation, user data access"
         }
 
         # Deployment Views
@@ -179,7 +193,7 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 color #ffffff
                 stroke #0F766E
                 strokeWidth 2
-                fontSize 24
+                fontSize 32
             }
 
             # External Systems - Warm gray
@@ -189,7 +203,7 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 color #ffffff
                 stroke #4B5563
                 strokeWidth 2
-                fontSize 20
+                fontSize 28
             }
 
             # Containers - Ocean blues
@@ -199,7 +213,7 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 color #ffffff
                 stroke #0284C7
                 strokeWidth 2
-                fontSize 18
+                fontSize 28
             }
             element "WebApp" {
                 shape WebBrowser
@@ -217,38 +231,54 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/database.svg
             }
 
-            # Components - Soft purples and blues by layer
+            # Components - High contrast with larger fonts
             element "Component" {
                 shape RoundedBox
                 background #A78BFA
-                color #1F2937
+                color #ffffff
                 stroke #7C3AED
-                strokeWidth 1
-                fontSize 14
+                strokeWidth 2
+                fontSize 20
             }
-            
+
             # Route layer - Blue
             element "Express Router" {
-                background #60A5FA
-                color #1E3A5F
+                background #3B82F6
+                color #ffffff
+                fontSize 20
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/signpost.svg
             }
-            
-            # Service layer - Purple  
+
+            # Service layer - Purple
             element "TypeScript Service" {
-                background #C4B5FD
-                color #3B0764
+                background #8B5CF6
+                color #ffffff
+                fontSize 20
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/gear.svg
             }
-            
+
             # Database layer - Green
             element "Supabase Client" {
-                background #6EE7B7
-                color #064E3B
+                background #059669
+                color #ffffff
+                fontSize 20
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/database.svg
             }
-            
+
             # Middleware - Orange
             element "Express Middleware" {
-                background #FDBA74
-                color #7C2D12
+                background #EA580C
+                color #ffffff
+                fontSize 20
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/funnel.svg
+            }
+
+            # View Engine - Rose
+            element "View Engine" {
+                background #E11D48
+                color #ffffff
+                fontSize 20
+                icon https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/code.svg
             }
 
             # Deployment Nodes - Clean whites and grays
@@ -258,7 +288,7 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 color #1E293B
                 stroke #CBD5E1
                 strokeWidth 2
-                fontSize 16
+                fontSize 24
             }
             element "Infrastructure Node" {
                 shape RoundedBox
@@ -269,11 +299,11 @@ workspace "Gello" "Gamified task management application with points and leaderbo
 
             # Relationships - Clean dark lines
             relationship "Relationship" {
-                color #475569
+                color #1E293B
                 thickness 2
                 style solid
                 routing Orthogonal
-                fontSize 14
+                fontSize 18
             }
             relationship "Sync" {
                 style dashed
@@ -284,12 +314,6 @@ workspace "Gello" "Gamified task management application with points and leaderbo
                 color #8B5CF6
             }
         }
-
-        # Optional: Custom branding
-        branding {
-            font "Inter"
-        }
-
         # Use default theme as base
         theme default
     }

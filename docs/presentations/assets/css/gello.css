@@ -1,0 +1,632 @@
+/* Gello Code Tour Theme - Matching Gello brand colors */
+
+:root {
+  /* Primary palette from Gello app */
+  --gello-brown: #742e10;         /* Primary chocolate brown */
+  --gello-brown-dark: #5a2410;    /* Darker brown for hover/accents */
+  --gello-brown-darker: #3d1a0b;  /* Even darker for backgrounds */
+  --gello-gold: #f3d18d;          /* Gold/cream accent */
+  --gello-gold-dark: #c9a05c;     /* Darker gold */
+  --gello-cream: #f2e4de;         /* Light cream background */
+  --gello-bronze: #c97b3a;        /* Bronze/orange accent */
+  --gello-text-light: #faf6f3;    /* Light text on dark */
+  --gello-text-dark: #742e10;     /* Dark text on light */
+}
+
+/* Override reveal.js theme variables */
+.reveal {
+  --r-background-color: var(--gello-brown-darker);
+  --r-main-color: var(--gello-text-light);
+  --r-heading-color: var(--gello-gold);
+  --r-link-color: var(--gello-gold);
+  --r-link-color-hover: var(--gello-cream);
+  --r-selection-background-color: rgba(243, 209, 141, 0.3);
+}
+
+/* Headings */
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+  color: var(--gello-gold);
+  text-transform: none;
+  font-weight: 600;
+}
+
+.reveal h1 {
+  font-size: 2.5em;
+}
+
+.reveal h2 {
+  font-size: 1.8em;
+}
+
+.reveal h3 {
+  font-size: 1.4em;
+  color: var(--gello-cream);
+}
+
+/* Code blocks */
+.reveal pre {
+  background: var(--gello-brown-dark);
+  border-radius: 8px;
+  border: 1px solid rgba(243, 209, 141, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.reveal pre code {
+  font-size: 0.75em;
+  line-height: 1.5;
+  max-height: 480px;
+  padding: 1em;
+}
+
+.reveal code {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+/* Inline code */
+.reveal p code,
+.reveal li code {
+  background: rgba(243, 209, 141, 0.15);
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: var(--gello-gold);
+}
+
+/* Lists */
+.reveal ul,
+.reveal ol {
+  text-align: left;
+  margin-left: 1em;
+}
+
+.reveal li {
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+}
+
+/* Tables */
+.reveal table {
+  margin: auto;
+  border-collapse: collapse;
+}
+
+.reveal table th {
+  background: var(--gello-brown-dark);
+  color: var(--gello-gold);
+  padding: 0.5em 1em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reveal table td {
+  padding: 0.5em 1em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reveal table tr:nth-child(even) {
+  background: rgba(243, 209, 141, 0.05);
+}
+
+/* Blockquotes */
+.reveal blockquote {
+  background: var(--gello-brown-dark);
+  border-left: 4px solid var(--gello-gold);
+  padding: 1em;
+  margin: 1em 0;
+  font-style: normal;
+}
+
+/* Highlight classes */
+.reveal .highlight {
+  background: rgba(243, 209, 141, 0.2);
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+}
+
+.reveal .accent {
+  color: var(--gello-gold);
+}
+
+.reveal .success {
+  color: #4caf50;
+}
+
+.reveal .muted {
+  color: #b8a99a;
+  font-size: 0.85em;
+}
+
+/* Two-column layout */
+.reveal .columns {
+  display: flex;
+  gap: 2em;
+}
+
+.reveal .columns > * {
+  flex: 1;
+}
+
+/* Directory tree styling */
+.reveal .tree {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7em;
+  text-align: left;
+  background: var(--gello-brown-dark);
+  padding: 1em;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+/* Flow diagram styling */
+.reveal .flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+
+.reveal .flow-box {
+  background: var(--gello-brown-dark);
+  border: 2px solid var(--gello-gold);
+  padding: 0.5em 1em;
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--gello-cream);
+}
+
+.reveal .flow-arrow {
+  color: var(--gello-gold);
+  font-size: 1.5em;
+}
+
+/* Badge/tag styling */
+.reveal .badge {
+  display: inline-block;
+  background: var(--gello-brown);
+  color: var(--gello-cream);
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin: 0.2em;
+  border: 1px solid var(--gello-gold-dark);
+}
+
+.reveal .badge-success {
+  background: #2e7d32;
+  border-color: #4caf50;
+}
+
+.reveal .badge-secondary {
+  background: var(--gello-brown-dark);
+  border-color: var(--gello-brown);
+}
+
+/* Title slide special styling */
+.reveal .title-slide h1 {
+  font-size: 3em;
+  margin-bottom: 0.5em;
+}
+
+.reveal .title-slide .subtitle {
+  color: var(--gello-cream);
+  font-size: 1.2em;
+}
+
+/* Slide number styling */
+.reveal .slide-number {
+  background: var(--gello-brown-dark);
+  color: var(--gello-gold-dark);
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+/* Progress bar */
+.reveal .progress {
+  background: var(--gello-brown-dark);
+  height: 4px;
+}
+
+.reveal .progress span {
+  background: var(--gello-gold);
+}
+
+/* Speaker notes styling */
+.reveal .notes {
+  font-size: 0.9em;
+}
+
+/* Links */
+.reveal a {
+  color: var(--gello-gold);
+}
+
+.reveal a:hover {
+  color: var(--gello-cream);
+}
+
+/* Print/PDF improvements */
+@media print {
+  .reveal pre code {
+    max-height: none;
+  }
+
+  .reveal {
+    --r-background-color: white;
+    --r-main-color: #333;
+    --r-heading-color: var(--gello-brown);
+  }
+}
+
+/* ============================================
+   CODE TOUR UI MODERNIZATION - New Styles
+   ============================================ */
+
+/* Animation initial states for Motion One */
+.tour-card {
+  opacity: 0;
+  transform: translateY(40px) scale(0.95);
+}
+
+.shortcuts {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Reduced motion: show immediately */
+@media (prefers-reduced-motion: reduce) {
+  .tour-card,
+  .shortcuts {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Glassmorphism effect on tour cards */
+.tour-card.glass {
+  background: rgba(90, 36, 16, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(243, 209, 141, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.tour-card.glass:hover {
+  background: rgba(90, 36, 16, 0.85);
+  border-color: var(--gello-gold);
+  box-shadow: 0 8px 32px rgba(243, 209, 141, 0.15);
+}
+
+/* Completion badge */
+.completion-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  background: var(--gello-gold);
+  color: var(--gello-brown-dark);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+/* Read time badge */
+.read-time {
+  color: #b8a99a;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Card footer layout */
+.card-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+/* Completed card state */
+.tour-card.completed {
+  border-color: rgba(243, 209, 141, 0.4);
+}
+
+/* All tours complete celebration banner */
+.celebration-banner {
+  background: linear-gradient(135deg, var(--gello-brown-dark) 0%, var(--gello-brown) 100%);
+  border: 2px solid var(--gello-gold);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 2rem;
+  box-shadow: 0 4px 20px rgba(243, 209, 141, 0.2);
+}
+
+.celebration-banner h2 {
+  color: var(--gello-gold);
+  margin-bottom: 0.5rem;
+}
+
+.celebration-banner p {
+  color: var(--gello-cream);
+  margin: 0;
+}
+
+/* Progress counter */
+.progress-counter {
+  color: #b8a99a;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.progress-counter .completed-count {
+  color: var(--gello-gold);
+  font-weight: 600;
+}
+
+/* Reset progress button */
+.reset-progress-btn {
+  background: transparent;
+  border: 1px solid rgba(243, 209, 141, 0.3);
+  color: #8a7a6a;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-progress-btn:hover {
+  border-color: var(--gello-gold);
+  color: var(--gello-gold);
+}
+
+/* ============================================
+   SLIDE DECK NAVIGATION CONTROLS
+   ============================================ */
+
+/* Back to index button */
+.nav-home {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  background: rgba(90, 36, 16, 0.9);
+  border: 1px solid rgba(243, 209, 141, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gello-gold);
+  font-size: 1.2rem;
+  z-index: 100;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.nav-home:hover {
+  background: var(--gello-brown);
+  border-color: var(--gello-gold);
+  transform: scale(1.05);
+  color: var(--gello-gold);
+}
+
+.nav-home:focus {
+  outline: 2px solid var(--gello-gold);
+  outline-offset: 2px;
+}
+
+/* Custom progress bar */
+.slide-progress {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.slide-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gello-brown), var(--gello-gold));
+  width: 0%;
+  transition: width 0.3s ease-out;
+}
+
+.slide-progress-text {
+  position: fixed;
+  bottom: 12px;
+  right: 20px;
+  color: var(--gello-gold-dark);
+  font-size: 0.85rem;
+  z-index: 100;
+  background: rgba(61, 26, 11, 0.8);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Breadcrumb navigation */
+.slide-breadcrumb {
+  position: fixed;
+  top: 20px;
+  left: 80px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  z-index: 100;
+}
+
+.slide-breadcrumb a {
+  color: var(--gello-gold-dark);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.slide-breadcrumb a:hover {
+  color: var(--gello-gold);
+}
+
+.slide-breadcrumb .separator {
+  color: #8a7a6a;
+}
+
+.slide-breadcrumb .current {
+  color: var(--gello-cream);
+}
+
+/* ============================================
+   COPY TO CLIPBOARD
+   ============================================ */
+
+.code-block-wrapper {
+  position: relative;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 10px;
+  background: rgba(243, 209, 141, 0.1);
+  border: 1px solid rgba(243, 209, 141, 0.2);
+  border-radius: 4px;
+  color: var(--gello-gold);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.code-block-wrapper:hover .copy-btn,
+.reveal pre:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  background: rgba(243, 209, 141, 0.2);
+  border-color: var(--gello-gold);
+}
+
+.copy-btn:focus {
+  outline: 2px solid var(--gello-gold);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.copy-btn.copied {
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(46, 204, 113, 0.4);
+  color: #2ecc71;
+}
+
+/* ============================================
+   TOUR COMPLETION OVERLAY
+   ============================================ */
+
+.completion-overlay {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gello-brown-dark);
+  border: 1px solid var(--gello-gold);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  z-index: 200;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 90%;
+  width: 400px;
+}
+
+.completion-overlay h3 {
+  color: var(--gello-gold);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+}
+
+.completion-overlay p {
+  color: var(--gello-cream);
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+}
+
+.completion-overlay .actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.completion-overlay .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.completion-overlay .btn-primary {
+  background: var(--gello-gold);
+  color: var(--gello-brown-dark);
+  border: none;
+}
+
+.completion-overlay .btn-primary:hover {
+  background: var(--gello-cream);
+}
+
+.completion-overlay .btn-secondary {
+  background: transparent;
+  border: 1px solid var(--gello-gold);
+  color: var(--gello-gold);
+}
+
+.completion-overlay .btn-secondary:hover {
+  background: rgba(243, 209, 141, 0.1);
+}
+
+/* ============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================ */
+
+/* Focus indicators */
+.tour-card:focus,
+.tour-card:focus-visible {
+  outline: 3px solid var(--gello-gold);
+  outline-offset: 3px;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Live region for announcements */
+.aria-live-region {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

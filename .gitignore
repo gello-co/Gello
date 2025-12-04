@@ -175,3 +175,4 @@ docs/presentations/dist/
 # Structurizr Lite generated files
 docs/architecture/.structurizr/
 docs/architecture/workspace.json
+docs/architecture/export/
