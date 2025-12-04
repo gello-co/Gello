@@ -95,6 +95,8 @@ async function truncateAllTables(): Promise<void> {
   console.log("🗑️  Truncating all tables...");
 
   const tables = [
+    "redemptions",
+    "shop_items",
     "points_history",
     "tasks",
     "lists",
@@ -255,6 +257,72 @@ async function createTestUsers(teamId: string): Promise<UserRecord[]> {
   return users;
 }
 
+async function createShopItems(): Promise<void> {
+  console.log("🛍️  Creating shop items...");
+
+  const shopItems = [
+    {
+      name: "Top Performer Badge",
+      description: "Display a gold badge on your profile",
+      point_cost: 50,
+      category: "badge",
+      image_url: "/images/shop/badge-gold.svg",
+      is_active: true,
+    },
+    {
+      name: "Coffee Voucher",
+      description: "Redeem for a free coffee at the office",
+      point_cost: 100,
+      category: "perk",
+      image_url: "/images/shop/coffee.svg",
+      is_active: true,
+    },
+    {
+      name: "Custom Avatar",
+      description: "Upload a custom profile avatar",
+      point_cost: 75,
+      category: "item",
+      image_url: "/images/shop/avatar.svg",
+      is_active: true,
+    },
+    {
+      name: "Lunch Pass",
+      description: "Free team lunch on us",
+      point_cost: 250,
+      category: "perk",
+      image_url: "/images/shop/lunch.svg",
+      is_active: true,
+    },
+    {
+      name: "Day Off Pass",
+      description: "Take an extra day off",
+      point_cost: 500,
+      category: "perk",
+      image_url: "/images/shop/vacation.svg",
+      is_active: true,
+    },
+    {
+      name: "Priority Support",
+      description: "Get priority support for your tasks",
+      point_cost: 150,
+      category: "perk",
+      image_url: "/images/shop/support.svg",
+      is_active: true,
+    },
+  ];
+
+  const { data, error } = await supabase
+    .from("shop_items")
+    .insert(shopItems)
+    .select();
+
+  if (error) {
+    console.warn(`⚠️  Warning creating shop items:`, error.message);
+  } else {
+    console.log(`✅ Created ${data?.length ?? 0} shop items`);
+  }
+}
+
 async function createTestData(
   teamId: string,
   adminUserId: string,
@@ -378,6 +446,9 @@ async function main() {
     }
 
     await createTestData(team.id, adminUser.id, memberUser.id);
+
+    // Step 4: Create shop items
+    await createShopItems();
 
     console.log("");
     console.log("🎉 Seed completed successfully!");
