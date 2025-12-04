@@ -1,0 +1,37 @@
+name: Generate Architecture Diagrams
+
+on:
+  push:
+    paths:
+      - 'docs/architecture/workspace.dsl'
+    branches:
+      - main
+      - dev
+  pull_request:
+    paths:
+      - 'docs/architecture/workspace.dsl'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate C4 diagrams
+        uses: sebastienfi/structurizr-gen-images@main
+        with:
+          structurizr_workspace_filename: docs/architecture/workspace.dsl
+          output_folder: docs/architecture/diagrams
+          formats: svg,png
+
+      - name: Commit generated diagrams
+        if: github.event_name == 'push'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'docs: auto-generate architecture diagrams [skip ci]'
+          file_pattern: 'docs/architecture/diagrams/*'
