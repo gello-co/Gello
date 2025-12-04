@@ -65,6 +65,11 @@ lint:
         - supabase/.temp/**
         - playwright-report/**
         - test-results/**
+    # Ignore checkov secret detection in devcontainer.json - these are intentional
+    # local development credentials (password123, postgres:postgres)
+    - linters: [checkov]
+      paths:
+        - .devcontainer/devcontainer.json
   # Threshold settings for gradual adoption
   threshold:
     - linters: [biome]

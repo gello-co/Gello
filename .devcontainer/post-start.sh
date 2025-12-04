@@ -74,7 +74,7 @@ echo "✅ Post-start complete"
 
 # Run health check if available
 if [ -f ".devcontainer/healthcheck.sh" ]; then
-    echo ""
-    echo "🏥 Running health check..."
-    bash .devcontainer/healthcheck.sh || true
+  echo ""
+  echo "🏥 Running health check..."
+  bash .devcontainer/healthcheck.sh || true
 fi

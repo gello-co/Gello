@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger.js';
 import { getSupabaseClient } from '@/lib/supabase.js';
 
 export type HealthStatus = {
@@ -14,7 +15,7 @@ export async function checkHealth(): Promise<HealthStatus> {
     const { error } = await supabase.from('users').select('id').limit(1);
     db = !error;
   } catch (error) {
-    console.error('Health check: Database connection failed', error);
+    logger.error({ error }, 'Health check: Database connection failed');
     db = false;
   }
   // Future components (cache, externalApi, etc.) should be added here and ANDed into ok

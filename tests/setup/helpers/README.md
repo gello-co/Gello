@@ -10,48 +10,48 @@ import { createTestUser, loginAsUser, prepareTestDb } from "../setup/helpers";
 
 ### auth.ts - User & Session Management
 
-| Function | Description |
-|----------|-------------|
-| `createTestUser(email, password, role?, displayName?)` | Creates a test user in Supabase |
-| `loginAsUser(email, password, options?)` | Logs in and returns session cookies |
-| `loginAsAdmin(options?)` | Logs in as seeded admin user |
-| `generateTestEmail(label)` | Generates unique test email (e.g., `label-uuid@test.local`) |
-| `resetAuthTestState()` | Cleans up shared auth state between tests |
+| Function                                                | Description                                               |
+| ------------------------------------------------------- | --------------------------------------------------------- |
+| `createTestUser(email, password, role?, displayName?)`  | Creates a test user in Supabase                           |
+| `loginAsUser(email, password, options?)`                | Logs in and returns session cookies                       |
+| `loginAsAdmin(options?)`                                | Logs in as seeded admin user                              |
+| `generateTestEmail(label)`                              | Generates unique test email (e.g., `label-uuid@test.local`) |
+| `resetAuthTestState()`                                  | Cleans up shared auth state between tests                 |
 
 ### csrf.ts - CSRF Token Handling
 
-| Function | Description |
-|----------|-------------|
-| `getCsrfToken(cookies?)` | Fetches CSRF token from `/api/csrf-token` |
+| Function                                      | Description                            |
+| --------------------------------------------- | -------------------------------------- |
+| `getCsrfToken(cookies?)`                      | Fetches CSRF token from `/api/csrf-token` |
 | `setCsrfHeadersIfEnabled(req, token, cookie?)` | Adds CSRF headers to supertest request |
 
 ### db.ts - Database Setup
 
-| Function | Description |
-|----------|-------------|
-| `prepareTestDb()` | Fast cleanup via TRUNCATE + re-seed (preferred) |
-| `resetTestDb()` | Full database reset via Supabase CLI |
-| `getTestSupabaseClient()` | Returns shared service-role Supabase client |
-| `getAnonSupabaseClient()` | Returns shared anon-key Supabase client |
-| `seedTestData()` | Runs `scripts/seed-simple.ts` |
+| Function                    | Description                                    |
+| --------------------------- | ---------------------------------------------- |
+| `prepareTestDb()`           | Fast cleanup via TRUNCATE + re-seed (preferred) |
+| `resetTestDb()`             | Full database reset via Supabase CLI           |
+| `getTestSupabaseClient()`   | Returns shared service-role Supabase client    |
+| `getAnonSupabaseClient()`   | Returns shared anon-key Supabase client        |
+| `seedTestData()`            | Runs `scripts/seed-simple.ts`                  |
 
 ### db-cleanup.ts - Data Cleanup
 
-| Function | Description |
-|----------|-------------|
-| `cleanupTestData(client)` | TRUNCATEs all tables via `truncate_all_tables` RPC |
+| Function                    | Description                                            |
+| --------------------------- | ------------------------------------------------------ |
+| `cleanupTestData(client)`   | TRUNCATEs all tables via `truncate_all_tables` RPC     |
 
 ### db-lock.ts - Parallel Test Safety
 
-| Function | Description |
-|----------|-------------|
+| Function                          | Description                           |
+| --------------------------------- | ------------------------------------- |
 | `acquireDbLock(requestId, timeoutMs?)` | File-based lock for DB operations |
 
 ### mock.ts - Mocking Utilities
 
-| Function | Description |
-|----------|-------------|
-| `mockFn(fn)` | Type-safe cast for `vi.fn()` mocks |
+| Function      | Description                       |
+| ------------- | --------------------------------- |
+| `mockFn(fn)`  | Type-safe cast for `vi.fn()` mocks |
 
 ## Environment Requirements
 

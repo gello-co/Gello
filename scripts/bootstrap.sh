@@ -28,7 +28,7 @@ PROJECT_ROOT="$(pwd)"
 
 # Function: Check if Doppler is available and authenticated
 check_doppler() {
-  if command -v doppler >/dev/null 2>&1 && [ -f "${PROJECT_ROOT}/doppler.yaml" ]; then
+  if command -v doppler >/dev/null 2>&1 && [[ -f "${PROJECT_ROOT}/doppler.yaml" ]]; then
     # Also verify we can access secrets (authenticated and configured)
     if doppler secrets --only-names >/dev/null 2>&1; then
       return 0
@@ -55,10 +55,10 @@ export_oauth_for_supabase() {
     discord_secret=$(doppler secrets get SB_AUTH_EXTERNAL_DISCORD_SECRET --plain 2>/dev/null || echo "")
     github_client_id=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_CLIENT_ID --plain 2>/dev/null || echo "")
     github_secret=$(doppler secrets get SB_AUTH_EXTERNAL_GITHUB_SECRET --plain 2>/dev/null || echo "")
-    export SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID="$discord_client_id"
-    export SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET="$discord_secret"
-    export SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID="$github_client_id"
-    export SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET="$github_secret"
+    export SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID="${discord_client_id}"
+    export SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET="${discord_secret}"
+    export SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID="${github_client_id}"
+    export SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET="${github_secret}"
 
     echo -e "${GREEN}[OK]${NC} OAuth secrets loaded"
   else
@@ -74,7 +74,7 @@ export_oauth_for_supabase() {
 
 # Function: Check if Supabase is running
 check_supabase() {
-  if bunx supabase status > /dev/null 2>&1; then
+  if bunx supabase status >/dev/null 2>&1; then
     echo -e "${GREEN}[OK]${NC} Supabase is running"
     return 0
   else
@@ -97,7 +97,7 @@ start_supabase() {
     echo "        Please start Docker and try again, or use: bun run dev:mock"
     return 1
   fi
-  
+
   echo -e "${YELLOW}Starting Supabase...${NC}"
   bunx supabase start
   echo -e "${GREEN}[OK]${NC} Supabase started"
@@ -113,22 +113,22 @@ export_supabase_env() {
     value="${value%\"}"
     value="${value#\"}"
 
-    case "$key" in
-      API_URL)
-        export SUPABASE_URL="$value"
-        ;;
-      DB_URL)
-        export DATABASE_URL="$value"
-        ;;
-      ANON_KEY)
-        export SUPABASE_ANON_KEY="$value"
-        ;;
-      PUBLISHABLE_KEY)
-        export SUPABASE_PUBLISHABLE_KEY="$value"
-        ;;
-      SERVICE_ROLE_KEY|SECRET_KEY)
-        export SUPABASE_SERVICE_ROLE_KEY="$value"
-        ;;
+    case "${key}" in
+    API_URL)
+      export SUPABASE_URL="${value}"
+      ;;
+    DB_URL)
+      export DATABASE_URL="${value}"
+      ;;
+    ANON_KEY)
+      export SUPABASE_ANON_KEY="${value}"
+      ;;
+    PUBLISHABLE_KEY)
+      export SUPABASE_PUBLISHABLE_KEY="${value}"
+      ;;
+    SERVICE_ROLE_KEY | SECRET_KEY)
+      export SUPABASE_SERVICE_ROLE_KEY="${value}"
+      ;;
     esac
   done < <(bunx supabase status -o env 2>/dev/null)
 
@@ -161,7 +161,7 @@ start_dev_server() {
     echo ""
     # Doppler injects SB_* secrets, local Supabase vars already exported
     exec doppler run --project gello --config dev -- bun --hot src/index.ts
-  elif [ -n "${SUPABASE_URL:-}" ] && [ -n "${DATABASE_URL:-}" ]; then
+  elif [[ -n ${SUPABASE_URL-} ]] && [ -n "${DATABASE_URL-}" ]; then
     # Supabase is available but Doppler is not
     echo -e "${YELLOW}[WARN]${NC} Doppler not available, using local Supabase only"
     echo -e "${GREEN}[OK]${NC} Server running at http://localhost:3000"

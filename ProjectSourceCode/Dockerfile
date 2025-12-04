@@ -21,6 +21,10 @@ FROM oven/bun:1.3.2 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Create non-root user for security (CKV_DOCKER_3)
+RUN addgroup --system --gid 1001 gello && \
+    adduser --system --uid 1001 --ingroup gello gello
+
 # Copy only what is needed and install production dependencies
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/bun.lock* ./
@@ -30,7 +34,17 @@ RUN bun install --production
 COPY --from=deps /app/ProjectSourceCode/dist ./ProjectSourceCode/dist
 COPY --from=deps /app/ProjectSourceCode/src ./ProjectSourceCode/src
 
+# Set ownership to non-root user
+RUN chown -R gello:gello /app
+
 EXPOSE 3000
+
+# Switch to non-root user (CKV_DOCKER_8)
+USER gello
+
+# Healthcheck to verify container is running properly (CKV_DOCKER_2)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
 
 # Start the server using root script
 CMD ["bun", "run", "start"]
