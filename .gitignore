@@ -153,6 +153,7 @@ coverage/
 test-results/
 playwright-report/
 .playwright-mcp/
+reports/
 
 # IDE
 .vscode/

@@ -634,9 +634,16 @@ test.describe('03.1.5 - Critical Paths Verification', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Filter out known acceptable errors (favicon 404)
+    // Filter out known acceptable errors (external CDN/network issues)
     const actualErrors = consoleErrors.filter(
-      (err) => !(err.includes('favicon') || err.includes('404'))
+      (err) =>
+        !(
+          err.includes('favicon') ||
+          err.includes('404') ||
+          err.includes('Font Awesome') ||
+          err.includes('Failed to fetch') ||
+          err.includes('net::ERR_')
+        )
     );
 
     expect(actualErrors).toHaveLength(0);

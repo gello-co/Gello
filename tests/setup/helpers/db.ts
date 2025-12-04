@@ -19,7 +19,7 @@ export const RETRY_CONFIG = {
 } as const;
 
 function getSupabaseUrl(): string {
-  const url = process.env.SUPABASE_LOCAL_URL || process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_LOCAL_URL || process.env.SUPABASE_URL || process.env.SB_URL;
   if (!url) {
     throw new Error("Missing SUPABASE_URL. Run 'bunx supabase status -o env' to load credentials.");
   }
@@ -31,6 +31,7 @@ function getSupabaseServiceKey(): string {
     process.env.SERVICE_ROLE_KEY ||
     process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SB_SERVICE_ROLE_KEY ||
     process.env.SECRET_KEY;
   if (!key) {
     throw new Error(
@@ -46,7 +47,8 @@ function getSupabaseAnonKey(): string {
     process.env.SUPABASE_LOCAL_ANON_KEY ||
     process.env.ANON_KEY ||
     process.env.SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY;
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SB_PUBLISHABLE_KEY;
   if (!key) {
     throw new Error(
       "Missing SUPABASE_ANON_KEY. Run 'bunx supabase status -o env' to load credentials."

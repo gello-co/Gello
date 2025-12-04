@@ -831,3 +831,74 @@ body {
   margin: 0 auto 40px;
   line-height: 1.8;
 }
+
+/* Mobile responsive styles (320px breakpoint) */
+@media (max-width: 480px) {
+  /* Prevent horizontal overflow */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Leaderboard page mobile adjustments */
+  .leaderboard-page {
+    padding: 30px 0;
+  }
+
+  .leaderboard-header {
+    padding: 15px;
+  }
+
+  .member-row {
+    padding: 15px;
+    flex-wrap: wrap;
+  }
+
+  .member-avatar {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+
+  .member-info {
+    min-width: 0;
+  }
+
+  .member-name {
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
+  .member-actions {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .btn-encourage {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  /* Winner cards mobile adjustments */
+  .winner-card {
+    padding: 15px;
+  }
+
+  .winner-image {
+    height: 150px;
+  }
+
+  .winner-name {
+    font-size: 1rem;
+  }
+
+  /* Page titles mobile adjustments */
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .page-subtitle {
+    font-size: 1rem;
+  }
+}

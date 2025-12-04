@@ -41,17 +41,24 @@ import { validateSupabaseEnv } from '../../../ProjectSourceCode/src/lib/database
 describe('Supabase Environment Validation', () => {
   const originalEnv = { ...process.env };
 
+  // Keys to clear before each test
+  const envKeysToReset = [
+    'SUPABASE_URL',
+    'SB_URL',
+    'API_URL',
+    'SUPABASE_LOCAL_URL',
+    'SUPABASE_PUBLISHABLE_KEY',
+    'SB_PUBLISHABLE_KEY',
+    'PUBLISHABLE_KEY',
+    'SUPABASE_LOCAL_ANON_KEY',
+    'ANON_KEY',
+  ];
+
   beforeEach(() => {
-    // Reset environment before each test - clear ALL supabase-related vars
-    delete process.env.SUPABASE_URL;
-    delete process.env.SB_URL;
-    delete process.env.API_URL;
-    delete process.env.SUPABASE_LOCAL_URL;
-    delete process.env.SUPABASE_PUBLISHABLE_KEY;
-    delete process.env.SB_PUBLISHABLE_KEY;
-    delete process.env.PUBLISHABLE_KEY;
-    delete process.env.SUPABASE_LOCAL_ANON_KEY;
-    delete process.env.ANON_KEY;
+    // Reset environment before each test - properly delete ALL supabase-related vars
+    for (const key of envKeysToReset) {
+      delete process.env[key];
+    }
     vi.resetAllMocks();
   });
 

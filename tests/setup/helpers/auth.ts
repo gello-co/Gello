@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { User } from '../../../ProjectSourceCode/src/lib/database/users.db.js';
 import { DuplicateUserError } from '../../../ProjectSourceCode/src/lib/errors/app.errors.js';
 import { AuthService } from '../../../ProjectSourceCode/src/lib/services/auth.service.js';
-import { SEEDED_USER_PASSWORD } from '../../../scripts/seed-simple.js';
 import { setCsrfHeadersIfEnabled } from './csrf.js';
 import {
   createTimeoutPromise,
@@ -13,7 +12,8 @@ import {
   retryWithBackoff,
 } from './db.js';
 
-export { SEEDED_USER_PASSWORD };
+// Test users password (hardcoded to avoid importing from Bun-specific scripts)
+export const SEEDED_USER_PASSWORD = 'password123';
 
 export type TestUser = {
   user: User;
