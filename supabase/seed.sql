@@ -1,5 +1,5 @@
 -- Insert seed users into auth.users (for Supabase Auth)
--- Password is 'password' (bcrypt hash from Laravel)
+-- Password is 'password123' (aligned with TypeScript seed-simple.ts)
 -- Note: All varchar/text columns must be empty strings (not NULL) for GoTrue compatibility
 INSERT INTO auth.users (
     id,
@@ -24,13 +24,13 @@ INSERT INTO auth.users (
     phone,
     phone_change
 ) VALUES
--- Admin user
+-- Admin user (aligned with TypeScript seed: admin@test.com)
 (
     '22222222-2222-2222-2222-222222222222',
     '00000000-0000-0000-0000-000000000000',
     'authenticated',
-    'admin@gello.dev',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    'admin@test.com',
+    '$2b$10$eqGAsF5cKUMN83sYzfQyx.1q4cVzs.gkTzMr1BelJJxP7T87ht4ay',
     NOW(),
     NOW(),
     NOW(),
@@ -48,13 +48,13 @@ INSERT INTO auth.users (
     NULL,
     NULL
 ),
--- Test member user
+-- Test member user (aligned with TypeScript seed: member@test.com)
 (
     '11111111-1111-1111-1111-111111111111',
     '00000000-0000-0000-0000-000000000000',
     'authenticated',
-    'test@gello.dev',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    'member@test.com',
+    '$2b$10$eqGAsF5cKUMN83sYzfQyx.1q4cVzs.gkTzMr1BelJJxP7T87ht4ay',
     NOW(),
     NOW(),
     NOW(),
@@ -91,7 +91,7 @@ INSERT INTO auth.identities (
     '22222222-2222-2222-2222-222222222222',
     '22222222-2222-2222-2222-222222222222',
     'email',
-    '{"sub": "22222222-2222-2222-2222-222222222222", "email": "admin@gello.dev", "email_verified": true, "phone_verified": false}',
+    '{"sub": "22222222-2222-2222-2222-222222222222", "email": "admin@test.com", "email_verified": true, "phone_verified": false}',
     NULL,
     NOW(),
     NOW()
@@ -102,7 +102,7 @@ INSERT INTO auth.identities (
     '11111111-1111-1111-1111-111111111111',
     '11111111-1111-1111-1111-111111111111',
     'email',
-    '{"sub": "11111111-1111-1111-1111-111111111111", "email": "test@gello.dev", "email_verified": true, "phone_verified": false}',
+    '{"sub": "11111111-1111-1111-1111-111111111111", "email": "member@test.com", "email_verified": true, "phone_verified": false}',
     NULL,
     NOW(),
     NOW()
@@ -124,8 +124,8 @@ INSERT INTO public.users (
 -- Admin user
 (
     '22222222-2222-2222-2222-222222222222',
-    'admin@gello.dev',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    'admin@test.com',
+    '$2b$10$eqGAsF5cKUMN83sYzfQyx.1q4cVzs.gkTzMr1BelJJxP7T87ht4ay',
     'Admin User',
     'admin',
     null,
@@ -136,9 +136,9 @@ INSERT INTO public.users (
 -- Test member user
 (
     '11111111-1111-1111-1111-111111111111',
-    'test@gello.dev',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-    'Test Member',
+    'member@test.com',
+    '$2b$10$eqGAsF5cKUMN83sYzfQyx.1q4cVzs.gkTzMr1BelJJxP7T87ht4ay',
+    'Member User',
     'member',
     null,
     0,

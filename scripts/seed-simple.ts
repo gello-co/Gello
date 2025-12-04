@@ -2,17 +2,60 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { hashSync } from "bcryptjs";
+import { $ } from "bun";
 
-// Initialize Supabase client with service role key
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Get Supabase credentials from env or local instance
+async function getSupabaseCredentials(): Promise<{
+  url: string;
+  serviceRoleKey: string;
+}> {
+  // Check env vars first (support both SUPABASE_ and SB_ prefixes)
+  const url = process.env.SUPABASE_URL || process.env.SB_URL;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SB_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
+  if (url && serviceRoleKey) {
+    return { url, serviceRoleKey };
+  }
+
+  // Try to get from local Supabase instance
+  console.log("📡 Getting credentials from local Supabase...");
+  try {
+    const result = await $`bunx supabase status -o env`.text();
+    const lines = result.split("\n");
+
+    let url = "";
+    let serviceRoleKey = "";
+
+    for (const line of lines) {
+      const [key, ...valueParts] = line.split("=");
+      const value = valueParts.join("=").replace(/^"|"$/g, "");
+
+      if (key === "API_URL") {
+        url = value;
+      } else if (key === "SERVICE_ROLE_KEY") {
+        serviceRoleKey = value;
+      }
+    }
+
+    if (url && serviceRoleKey) {
+      return { url, serviceRoleKey };
+    }
+  } catch {
+    // Fall through to error
+  }
+
   console.error("❌ Missing required environment variables:");
   console.error("   - SUPABASE_URL");
   console.error("   - SUPABASE_SERVICE_ROLE_KEY");
+  console.error("");
+  console.error("Either set these env vars or ensure local Supabase is running:");
+  console.error("   bun run db:start");
   process.exit(1);
 }
+
+const { url: supabaseUrl, serviceRoleKey: supabaseServiceRoleKey } =
+  await getSupabaseCredentials();
 
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: {
@@ -43,14 +86,9 @@ const testUsers = [
 interface UserRecord {
   id: string;
   email: string;
-  name: string;
+  display_name: string;
   role: string;
   team_id: string | null;
-}
-
-interface TeamRecord {
-  id: string;
-  name: string;
 }
 
 async function truncateAllTables(): Promise<void> {
@@ -63,7 +101,6 @@ async function truncateAllTables(): Promise<void> {
     "boards",
     "users",
     "teams",
-    "user_context",
   ];
 
   for (const table of tables) {
@@ -82,11 +119,22 @@ async function truncateAllTables(): Promise<void> {
   }
 }
 
-async function createTestUsers(): Promise<UserRecord[]> {
-  console.log("👥 Creating test users...");
-  const users: UserRecord[] = [];
+async function getOrCreateTeam(): Promise<{ id: string; name: string }> {
+  console.log("🏢 Getting or creating test team...");
 
-  // Create test team first
+  // Check if team already exists
+  const { data: existingTeam } = await supabase
+    .from("teams")
+    .select()
+    .eq("name", "Test Team")
+    .single();
+
+  if (existingTeam) {
+    console.log(`✅ Found existing team: ${existingTeam.name}`);
+    return existingTeam;
+  }
+
+  // Create new team
   const { data: team, error: teamError } = await supabase
     .from("teams")
     .insert({ name: "Test Team" })
@@ -99,77 +147,105 @@ async function createTestUsers(): Promise<UserRecord[]> {
   }
 
   console.log(`✅ Created team: ${team.name}`);
+  return team;
+}
+
+async function getOrCreateAuthUser(
+  email: string,
+  password: string
+): Promise<string> {
+  // Try to get existing auth user by listing users
+  const { data: listData } = await supabase.auth.admin.listUsers();
+
+  const existingAuthUser = listData?.users?.find((u) => u.email === email);
+
+  if (existingAuthUser) {
+    console.log(`ℹ️  Auth user ${email} already exists`);
+    return existingAuthUser.id;
+  }
+
+  // Create new auth user
+  const { data: authUser, error: authError } =
+    await supabase.auth.admin.createUser({
+      email: email,
+      password: password,
+      email_confirm: true,
+    });
+
+  if (authError) {
+    throw authError;
+  }
+
+  if (!authUser.user) {
+    throw new Error(`Failed to create auth user for ${email}`);
+  }
+
+  console.log(`✅ Created auth user: ${email}`);
+  return authUser.user.id;
+}
+
+async function createTestUsers(teamId: string): Promise<UserRecord[]> {
+  console.log("👥 Creating test users...");
+  const users: UserRecord[] = [];
 
   for (const userData of testUsers) {
     try {
-      // Create auth user
-      const { data: authUser, error: authError } =
-        await supabase.auth.admin.createUser({
-          email: userData.email,
-          password: userData.password,
-          email_confirm: true,
-        });
+      // Get or create auth user
+      const authUserId = await getOrCreateAuthUser(
+        userData.email,
+        userData.password
+      );
 
-      if (authError) {
-        // If user already exists, try to get the existing user
-        if (authError.message.includes("already been registered")) {
-          console.log(
-            `ℹ️  User ${userData.email} already exists, skipping creation`
-          );
-          continue;
-        }
-        throw authError;
-      }
-
-      if (!authUser.user) {
-        throw new Error(`Failed to create auth user for ${userData.email}`);
-      }
-
-      // Create user record in public.users table
-      const { data: user, error: userError } = await supabase
+      // Check if public.users record exists
+      const { data: existingUser } = await supabase
         .from("users")
-        .insert({
-          id: authUser.user.id,
-          email: userData.email,
-          password_hash: hashSync(userData.password, 10), // Use cost 10 for compatibility
-          display_name: userData.name,
-          role: userData.role,
-          team_id: team.id,
-          total_points: 0,
-        })
         .select()
+        .eq("id", authUserId)
         .single();
 
-      if (userError) {
-        // If user already exists in public.users, try to update instead
-        if (userError.message.includes("duplicate key value")) {
-          console.log(
-            `ℹ️  User ${userData.email} already exists in public.users, updating...`
-          );
-          const { data: updatedUser, error: updateError } = await supabase
-            .from("users")
-            .update({
-              display_name: userData.name,
-              role: userData.role,
-              team_id: team.id,
-            })
-            .eq("email", userData.email)
-            .select()
-            .single();
+      if (existingUser) {
+        // Update existing user
+        const { data: updatedUser, error: updateError } = await supabase
+          .from("users")
+          .update({
+            display_name: userData.name,
+            role: userData.role,
+            team_id: teamId,
+            total_points: 0,
+          })
+          .eq("id", authUserId)
+          .select()
+          .single();
 
-          if (updateError) {
-            throw updateError;
-          }
+        if (updateError) {
+          throw updateError;
+        }
 
-          users.push(updatedUser);
-        } else {
+        console.log(`✅ Updated user: ${userData.email} (${userData.role})`);
+        users.push(updatedUser);
+      } else {
+        // Create new user record in public.users table
+        const { data: user, error: userError } = await supabase
+          .from("users")
+          .insert({
+            id: authUserId,
+            email: userData.email,
+            password_hash: hashSync(userData.password, 10),
+            display_name: userData.name,
+            role: userData.role,
+            team_id: teamId,
+            total_points: 0,
+          })
+          .select()
+          .single();
+
+        if (userError) {
           throw userError;
         }
-      } else {
+
+        console.log(`✅ Created user: ${userData.email} (${userData.role})`);
         users.push(user);
       }
-
-      console.log(`✅ Created user: ${userData.email} (${userData.role})`);
     } catch (error) {
       console.error(`❌ Error creating user ${userData.email}:`, error);
       throw error;
@@ -282,7 +358,8 @@ async function main() {
     await truncateAllTables();
 
     // Step 2: Create test users
-    const users = await createTestUsers();
+    const team = await getOrCreateTeam();
+    const users = await createTestUsers(team.id);
 
     if (users.length === 0) {
       throw new Error(
@@ -300,7 +377,7 @@ async function main() {
       );
     }
 
-    await createTestData(adminUser.team_id!, adminUser.id, memberUser.id);
+    await createTestData(team.id, adminUser.id, memberUser.id);
 
     console.log("");
     console.log("🎉 Seed completed successfully!");
