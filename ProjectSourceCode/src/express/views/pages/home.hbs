@@ -1,78 +1,298 @@
 <!-- Landing Page - Gello: Gamified Project Management -->
-<div class="container my-5">
-  <!-- Hero Section -->
-  <div class="row mb-5">
-    <div class="col-lg-8 mx-auto text-center">
-      <h1 class="display-3 fw-bold mb-4">
-        <i class="fas fa-gamepad text-primary me-2"></i>
-        Gello
-      </h1>
-      <p class="lead mb-4 text-muted">
-        Gamified project management for teams. Earn points, climb leaderboards, and make work feel like play.
-      </p>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-4">
-        <a href="/login" class="btn btn-primary btn-lg px-4">
-          <i class="fas fa-sign-in-alt me-2"></i>Get Started
-        </a>
-        <a href="/register" class="btn btn-outline-primary btn-lg px-4">
-          <i class="fas fa-user-plus me-2"></i>Sign Up
-        </a>
+
+<!-- Hero Section -->
+<section class="landing-hero">
+  <div class="hero-content">
+    <div class="hero-mascot">
+      <img src="/public/images/gelloicon1.png" alt="Gello mascot" class="hero-logo-bg">
+    </div>
+    <div class="hero-features">
+      <div class="hero-feature">
+        <i class="fas fa-star"></i>
+        <span>Earn points for tasks</span>
       </div>
-      <p class="text-muted small">
-        <a href="/about" class="text-decoration-none">Learn more about Gello →</a>
-      </p>
+      <div class="hero-feature">
+        <i class="fas fa-trophy"></i>
+        <span>Compete on leaderboards</span>
+      </div>
+      <div class="hero-feature">
+        <i class="fas fa-chart-line"></i>
+        <span>Track progress visually</span>
+      </div>
+    </div>
+    <div class="hero-cta">
+      <a href="/login" class="btn-hero-primary">
+        <i class="fas fa-sign-in-alt me-2"></i>Get Started
+      </a>
+      <a href="/docs/presentations/index.html" class="btn-hero-secondary">
+        <i class="fas fa-play-circle me-2"></i>Explore Features
+      </a>
     </div>
   </div>
+</section>
 
-  <!-- Features Section -->
-  <div class="row g-4 mb-5">
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="fas fa-columns fa-3x text-primary"></i>
+<!-- Mock Kanban Section -->
+<section class="kanban-section">
+  <div class="kanban-container">
+    <div class="kanban-header animate-on-scroll">
+      <h2>Your tasks, organized</h2>
+      <p>Drag cards between columns. Watch your points grow.</p>
+    </div>
+    <div class="kanban-board animate-on-scroll">
+      <!-- To Do Column -->
+      <div class="kanban-column">
+        <div class="kanban-column-header">
+          <span class="kanban-column-title">To Do</span>
+          <span class="kanban-column-count">3</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="kanban-card">
+            <div class="kanban-card-title">Design landing page</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+25 pts</span>
+              <span class="kanban-card-assignee">JD</span>
+            </div>
           </div>
-          <h5 class="card-title">Kanban Boards</h5>
-          <p class="card-text text-muted">
-            Organize tasks with drag-and-drop boards. Track progress from To Do to Done.
-          </p>
+          <div class="kanban-card">
+            <div class="kanban-card-title">Set up CI pipeline</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+40 pts</span>
+              <span class="kanban-card-assignee">MK</span>
+            </div>
+          </div>
+          <div class="kanban-card">
+            <div class="kanban-card-title">Write documentation</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+15 pts</span>
+              <span class="kanban-card-assignee">AL</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="fas fa-trophy fa-3x text-warning"></i>
+
+      <!-- In Progress Column -->
+      <div class="kanban-column">
+        <div class="kanban-column-header">
+          <span class="kanban-column-title">In Progress</span>
+          <span class="kanban-column-count">2</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="kanban-card">
+            <div class="kanban-card-title">API integration</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+35 pts</span>
+              <span class="kanban-card-assignee">SK</span>
+            </div>
           </div>
-          <h5 class="card-title">Points & Rewards</h5>
-          <p class="card-text text-muted">
-            Earn points for completing tasks. Compete on leaderboards and unlock achievements.
-          </p>
+          <div class="kanban-card">
+            <div class="kanban-card-title">User testing</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+20 pts</span>
+              <span class="kanban-card-assignee">JD</span>
+            </div>
+          </div>
+          <!-- Animated card placeholder -->
+          <div class="kanban-card kanban-card-animated">
+            <div class="kanban-card-title">Review PR #42</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+10 pts</span>
+              <span class="kanban-card-assignee">MK</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body text-center p-4">
-          <div class="mb-3">
-            <i class="fas fa-users fa-3x text-success"></i>
+
+      <!-- Done Column -->
+      <div class="kanban-column">
+        <div class="kanban-column-header">
+          <span class="kanban-column-title">Done</span>
+          <span class="kanban-column-count">4</span>
+        </div>
+        <div class="kanban-cards">
+          <div class="kanban-card">
+            <div class="kanban-card-title">Project setup</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+30 pts</span>
+              <span class="kanban-card-assignee">AL</span>
+            </div>
           </div>
-          <h5 class="card-title">Team Collaboration</h5>
-          <p class="card-text text-muted">
-            Work together with your team. Assign tasks, share boards, and celebrate wins.
-          </p>
+          <div class="kanban-card">
+            <div class="kanban-card-title">Database schema</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+45 pts</span>
+              <span class="kanban-card-assignee">SK</span>
+            </div>
+          </div>
+          <div class="kanban-card">
+            <div class="kanban-card-title">Auth system</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+50 pts</span>
+              <span class="kanban-card-assignee">JD</span>
+            </div>
+          </div>
+          <div class="kanban-card">
+            <div class="kanban-card-title">Seed data</div>
+            <div class="kanban-card-meta">
+              <span class="kanban-card-points">+15 pts</span>
+              <span class="kanban-card-assignee">MK</span>
+            </div>
+          </div>
+          <!-- Points popup -->
+          <div class="points-popup">+10 pts</div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Mock Mode Banner (only shown in dev) -->
-  {{#if mockMode}}
+<!-- Features Section -->
+<section class="features-section">
+  <div class="features-container">
+    <div class="features-header animate-on-scroll">
+      <h2>Everything you need</h2>
+      <p>Project management with built-in motivation</p>
+    </div>
+    <div class="features-grid">
+      <!-- Implemented Features -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-columns"></i>
+        </div>
+        <h3>Kanban Boards</h3>
+        <p>Organize tasks with drag-and-drop boards. Move cards from To Do to Done and watch progress unfold.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-star"></i>
+        </div>
+        <h3>Points & Rewards</h3>
+        <p>Every completed task earns points. Higher difficulty means bigger rewards. Track your earnings over time.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3>Team Collaboration</h3>
+        <p>Create teams, assign tasks, and share boards. Everyone sees progress in real-time.</p>
+      </div>
+
+      <!-- Coming Soon Features -->
+      <div class="feature-card coming-soon">
+        <span class="coming-soon-badge">Soon</span>
+        <div class="feature-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h3>Team Analytics</h3>
+        <p>Insights into team performance. See who's crushing it and where bottlenecks form.</p>
+      </div>
+
+      <div class="feature-card coming-soon">
+        <span class="coming-soon-badge">Soon</span>
+        <div class="feature-icon">
+          <i class="fas fa-medal"></i>
+        </div>
+        <h3>Achievement Badges</h3>
+        <p>Unlock badges for milestones. First task, 100 points, team MVP—collect them all.</p>
+      </div>
+
+      <div class="feature-card coming-soon">
+        <span class="coming-soon-badge">Soon</span>
+        <div class="feature-icon">
+          <i class="fas fa-store"></i>
+        </div>
+        <h3>Points Shop</h3>
+        <p>Spend earned points on rewards. Custom themes, team perks, and more.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section">
+  <div class="how-it-works-container">
+    <div class="how-it-works-header animate-on-scroll">
+      <h2>How it works</h2>
+      <p>Three steps to productive teamwork</p>
+    </div>
+    <div class="steps-container animate-on-scroll">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Create</h3>
+        <p>Set up your board and add tasks. Assign point values based on difficulty.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Complete</h3>
+        <p>Move tasks to Done. Earn points automatically. Track your progress.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Compete</h3>
+        <p>Check the leaderboard. See how you rank. Celebrate team wins.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA Section -->
+<section class="final-cta-section">
+  <div class="final-cta-container animate-on-scroll">
+    <h2>See how Gello works</h2>
+    <p>Take the interactive tour and explore every feature</p>
+    <a href="/docs/presentations/index.html" class="btn-cta-large">
+      Explore the Tour
+      <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+</section>
+
+<!-- Mock Mode Banner (only shown in dev) -->
+{{#if mockMode}}
+<div class="container my-4">
   <div class="alert alert-info text-center" role="alert">
     <i class="fas fa-flask me-2"></i>
     <strong>Mock Mode Active</strong> -
     <a href="/dashboard" class="alert-link">Go to Dashboard</a> (auto-logged in as admin)
   </div>
-  {{/if}}
 </div>
+{{/if}}
+
+<!-- Scroll Animation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Intersection Observer for scroll animations
+  var observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Also trigger feature card animations
+        if (entry.target.classList.contains('features-grid') ||
+            entry.target.closest('.features-grid')) {
+          var cards = document.querySelectorAll('.feature-card');
+          cards.forEach(function(card) {
+            card.classList.add('visible');
+          });
+        }
+      }
+    });
+  }, observerOptions);
+
+  // Observe all animate-on-scroll elements
+  document.querySelectorAll('.animate-on-scroll').forEach(function(el) {
+    observer.observe(el);
+  });
+
+  // Observe feature cards individually
+  document.querySelectorAll('.feature-card').forEach(function(el) {
+    observer.observe(el);
+  });
+});
+</script>
