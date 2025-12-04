@@ -18,9 +18,9 @@
 		{{/each}}
 	{{/if}}
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 	{{> navbar}}
-	<div class="dashboard-container">
+	<div class="dashboard-container flex-grow-1">
 		{{> sidebar}}
 		<main class="dashboard-main">
 			{{{body}}}
