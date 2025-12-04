@@ -12,6 +12,12 @@ echo "Bootstrap Consistency Audit Report"
 echo "=============================================="
 echo ""
 
+# Helper function to count files matching a pattern (SC2126 compliant)
+count_files_with_pattern() {
+  local pattern="$1"
+  grep -r -l "$pattern" "${VIEWS_DIR}" 2>/dev/null | wc -l || echo "0"
+}
+
 # Check 1: Inline styles
 echo "1. INLINE STYLES AUDIT"
 echo "----------------------"
@@ -25,8 +31,8 @@ echo ""
 # Check 2: Container usage
 echo "2. CONTAINER USAGE AUDIT"
 echo "------------------------"
-container_count=$(grep -r -c 'class="container' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-container_fluid_count=$(grep -r -c 'class="container-fluid' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
+container_count=$(count_files_with_pattern 'class="container')
+container_fluid_count=$(count_files_with_pattern 'class="container-fluid')
 echo "Files using .container: ${container_count}"
 echo "Files using .container-fluid: ${container_fluid_count}"
 echo ""
@@ -34,9 +40,9 @@ echo ""
 # Check 3: Bootstrap card components
 echo "3. CARD COMPONENT USAGE"
 echo "-----------------------"
-card_count=$(grep -r -c 'class="card' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-card_body_count=$(grep -r -c 'card-body' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-card_title_count=$(grep -r -c 'card-title' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
+card_count=$(count_files_with_pattern 'class="card')
+card_body_count=$(count_files_with_pattern 'card-body')
+card_title_count=$(count_files_with_pattern 'card-title')
 echo "Files using .card: ${card_count}"
 echo "Files using .card-body: ${card_body_count}"
 echo "Files using .card-title: ${card_title_count}"
@@ -45,10 +51,10 @@ echo ""
 # Check 4: Button classes
 echo "4. BUTTON CLASS USAGE"
 echo "---------------------"
-btn_count=$(grep -r -c 'class="btn' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-btn_primary=$(grep -r -c 'btn-primary' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-btn_secondary=$(grep -r -c 'btn-secondary' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-btn_success=$(grep -r -c 'btn-success' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
+btn_count=$(count_files_with_pattern 'class="btn')
+btn_primary=$(count_files_with_pattern 'btn-primary')
+btn_secondary=$(count_files_with_pattern 'btn-secondary')
+btn_success=$(count_files_with_pattern 'btn-success')
 echo "Files using .btn: ${btn_count}"
 echo "Files using .btn-primary: ${btn_primary}"
 echo "Files using .btn-secondary: ${btn_secondary}"
@@ -58,8 +64,8 @@ echo ""
 # Check 5: Form classes
 echo "5. FORM CLASS USAGE"
 echo "-------------------"
-form_control=$(grep -r -c 'form-control' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-form_label=$(grep -r -c 'form-label' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
+form_control=$(count_files_with_pattern 'form-control')
+form_label=$(count_files_with_pattern 'form-label')
 echo "Files using .form-control: ${form_control}"
 echo "Files using .form-label: ${form_label}"
 echo ""
@@ -67,8 +73,8 @@ echo ""
 # Check 6: Grid classes
 echo "6. GRID CLASS USAGE"
 echo "-------------------"
-row_count=$(grep -r -c 'class="row' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
-col_count=$(grep -r -c 'class="col' "${VIEWS_DIR}" 2>/dev/null | grep -v ':0$' | wc -l)
+row_count=$(count_files_with_pattern 'class="row')
+col_count=$(count_files_with_pattern 'class="col')
 echo "Files using .row: ${row_count}"
 echo "Files using .col-*: ${col_count}"
 echo ""
