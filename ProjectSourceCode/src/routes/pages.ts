@@ -34,30 +34,16 @@ function getPointsService(userId?: string) {
   return new PointsService(getSupabaseClient(), userId);
 }
 
-router.get("/admin/login", (_req, res) => {
-  res.render("pages/admin/login", {
-    title: "Admin Login",
+router.get("/login", (_req, res) => {
+  res.render("pages/login", {
+    title: "Login",
     layout: "auth",
   });
 });
 
-router.get("/admin/register", (_req, res) => {
-  res.render("pages/admin/register", {
-    title: "Admin Register",
-    layout: "auth",
-  });
-});
-
-router.get("/member/login", (_req, res) => {
-  res.render("pages/member/login", {
-    title: "Member Login",
-    layout: "auth",
-  });
-});
-
-router.get("/member/register", (_req, res) => {
-  res.render("pages/member/register", {
-    title: "Member Register",
+router.get("/register", (_req, res) => {
+  res.render("pages/register", {
+    title: "Register",
     layout: "auth",
   });
 });

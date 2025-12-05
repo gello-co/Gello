@@ -19,17 +19,22 @@ const router = express.Router();
 
 router.get("/", requireAuth, async (_req: Request, res: Response) => {
   const supabase = getSupabaseClient();
-  const { data } = await supabase.from("tasks").select("*");
+  const tasks  = await TaskService.getAllTasks(supabase);
   res.json(data);
 });
 
 router.get("/all", requireAuth,  async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
+
+
   const { data } = await supabase
     .from("tasks")
     .select("*")
   res.json(data);
+
 });
+
+
 
 router.post("/", requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
