@@ -8,26 +8,13 @@
                     <div class="login-card-body">
                         <h3>Assigned Tasks</h3>
                         <div class="tasks">
+                            {{#each tasks}}
                             <div>
                                 <input type="checkbox" id="task1" name="task1" />
-                                <label for="task1"> Task 1</label>
+                                <label for="task1"> {{this.name}}</label>
+                                {{!-- TODO: Add Task Description, points, and a delete button --}}
                             </div>
-                            <div>
-                                <input type="checkbox" id="task2" name="task2" />
-                                <label for="task2"> Task 2</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" id="task3" name="task3" />
-                                <label for="task3"> Task 3</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" id="task4" name="task4" />
-                                <label for="task4"> Task 4</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" id="task5" name="task5" />
-                                <label for="task5"> Task 5</label>
-                            </div>
+                            {{/each}}
                         </div>
                     </div>
                 </div>

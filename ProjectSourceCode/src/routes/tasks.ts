@@ -1,3 +1,5 @@
+
+//TODO: Refactor to use TaskService methods and validation instead of direct Supabase calls
 import express from "express";
 import type { Request, Response } from "express";
 import { TaskService } from "../services/task.service.js";
@@ -15,13 +17,21 @@ declare global {
 
 const router = express.Router();
 
-router.get("/", async (_req: Request, res: Response) => {
+router.get("/", requireAuth, async (_req: Request, res: Response) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase.from("tasks").select("*");
   res.json(data);
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.get("/all", requireAuth,  async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase
+    .from("tasks")
+    .select("*")
+  res.json(data);
+});
+
+router.post("/", requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase
     .from("tasks")
@@ -31,7 +41,7 @@ router.post("/", async (req: Request, res: Response) => {
   res.json(data);
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id",requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase
     .from("tasks")
@@ -42,10 +52,34 @@ router.put("/:id", async (req: Request, res: Response) => {
   res.json(data);
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.put("/:id/assign", requireAuth, async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase
+    .from("tasks")
+    .update({ assigned_to: req.body.assigned_to})
+    .eq("id", req.params.id)
+    .select()
+    .single();
+  res.json(data);
+});
+
+router.put("/:id/complete", requireAuth, async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase
+    .from("tasks")
+    .update({ completed: true })
+    .eq("id", req.params.id)
+    .select()
+    .single();
+  res.json(data);
+});
+
+
+router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
   await supabase.from("tasks").delete().eq("id", req.params.id);
   res.json({ ok: true });
 });
+
 
 export default router;
