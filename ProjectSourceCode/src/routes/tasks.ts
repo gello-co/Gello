@@ -19,8 +19,10 @@ const router = express.Router();
 
 router.get("/", requireAuth, async (_req: Request, res: Response) => {
   const supabase = getSupabaseClient();
-  const tasks  = await TaskService.getAllTasks(supabase);
-  res.json(data);
+  const tasks  = await supabase
+    .from("tasks")
+    .select("*");
+  res.json(tasks.data);
 });
 
 router.get("/all", requireAuth,  async (req: Request, res: Response) => {
@@ -32,6 +34,24 @@ router.get("/all", requireAuth,  async (req: Request, res: Response) => {
     .select("*")
   res.json(data);
 
+});
+
+router.get("/assignedTasks/:id", requireAuth, async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("assigned_to", id);
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching user tasks:", err);
+    res.status(500).json({ error: "Failed to fetch tasks for this user" });
+  }
 });
 
 
@@ -57,7 +77,7 @@ router.put("/:id",requireAuth, async (req: Request, res: Response) => {
   res.json(data);
 });
 
-router.put("/:id/assign", requireAuth, async (req: Request, res: Response) => {
+router.put("/assign/:id", requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase
     .from("tasks")
@@ -68,7 +88,7 @@ router.put("/:id/assign", requireAuth, async (req: Request, res: Response) => {
   res.json(data);
 });
 
-router.put("/:id/complete", requireAuth, async (req: Request, res: Response) => {
+router.put("/complete/:id", requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();
   const { data } = await supabase
     .from("tasks")

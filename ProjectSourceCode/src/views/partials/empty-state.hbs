@@ -1,0 +1,29 @@
+<div class="empty-state text-center py-5">
+	<div class="empty-state-icon mb-3">
+		{{#if icon}}
+			<i class="bi bi-{{icon}} display-4 text-muted"></i>
+		{{else}}
+			<i class="bi bi-inbox display-4 text-muted"></i>
+		{{/if}}
+	</div>
+	<h5 class="text-muted">{{#if title}}{{title}}{{else}}No items yet{{/if}}</h5>
+	{{#if message}}
+		<p class="text-muted mb-3">{{message}}</p>
+	{{/if}}
+	{{#if actionUrl}}
+		<a href="{{actionUrl}}" class="btn btn-primary">
+			{{#if actionIcon}}<i class="bi bi-{{actionIcon}} me-1"></i>{{/if}}
+			{{#if actionText}}{{actionText}}{{else}}Get Started{{/if}}
+		</a>
+	{{/if}}
+	{{#if actionHx}}
+		<button
+			class="btn btn-primary"
+			hx-get="{{actionHx}}"
+			hx-target="{{#if actionTarget}}{{actionTarget}}{{else}}#content{{/if}}"
+			hx-swap="innerHTML">
+			{{#if actionIcon}}<i class="bi bi-{{actionIcon}} me-1"></i>{{/if}}
+			{{#if actionText}}{{actionText}}{{else}}Get Started{{/if}}
+		</button>
+	{{/if}}
+</div>
