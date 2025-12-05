@@ -844,3 +844,64 @@ body {
   height: 100%;
   align-items: stretch;
 }
+
+/* css for teams page */
+.teams-page {
+    padding: 80px 0;
+    min-height: calc(100vh - 76px);
+}
+
+.join-team-card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(116, 46, 16, 0.15);
+    animation: fadeInUp 0.6s ease;
+}
+
+.role-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.role-card {
+    background: #fef9f3;
+    border: 3px solid #fae1b8;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.role-card:hover {
+    border-color: #f3d18d;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(116, 46, 16, 0.1);
+}
+
+.role-card:has(input:checked) {
+    border-color: #742e10;
+    background: #fef9f3;
+    box-shadow: 0 5px 15px rgba(116, 46, 16, 0.2);
+}
+
+.role-card h5 {
+    color: #742e10;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.role-card p {
+    color: #5a2410;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 576px) {
+    .role-options {
+        grid-template-columns: 1fr;
+    }
+}

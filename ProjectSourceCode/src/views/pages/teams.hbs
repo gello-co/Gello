@@ -1,0 +1,92 @@
+<div class="teams-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                
+                <div class="text-center mb-5">
+                    <h1 class="page-title">Join a Team</h1>
+                    <p class="page-subtitle">Enter your team code to get started</p>
+                </div>
+
+                <div class="join-team-card">
+                    <form id="joinTeamForm">
+                        
+                        <!-- Here is the Team Code Input -->
+                        <div class="mb-4">
+                            <label for="teamCode" class="form-label">Team Code</label>
+                            <input 
+                                type="text" 
+                                class="form-control login-input" 
+                                id="teamCode" 
+                                name="teamCode"
+                                placeholder="Enter 6-digit team code"
+                                maxlength="6"
+                                required>
+                            <small class="text-muted">Ask your team leader for the code</small>
+                        </div>
+
+                        <!-- Role Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">Select Your Role</label>
+                            <div class="role-options">
+                                <div class="role-card" onclick="selectRole('member')">
+                                    <input 
+                                        type="radio" 
+                                        name="role" 
+                                        id="roleMember" 
+                                        value="member" 
+                                        checked 
+                                        hidden>
+                                    <h5>Team Member</h5>
+                                    <p class="small">Participate in team activities and complete tasks</p>
+                                </div>
+                                
+                                <div class="role-card" onclick="selectRole('admin')">
+                                    <input 
+                                        type="radio" 
+                                        name="role" 
+                                        id="roleAdmin" 
+                                        value="admin" 
+                                        hidden>
+                                    <h5>Team Admin</h5>
+                                    <p class="small">Manage team members and oversee progress</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Here is the Submit Button -->
+                        <button type="submit" class="btn-signin w-100">
+                            Join Team
+                        </button>
+
+                        <!-- Alternative Option -->
+                        <div class="text-center mt-4">
+                            <p class="text-muted">
+                                Don't have a code? 
+                                <a href="/teams/create" class="register-link">Create a new team</a>
+                            </p>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Join Confirmation -->
+<div class="modal fade" id="joinSuccessModal" tabindex="-1" aria-labelledby="joinSuccessLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="joinSuccessLabel">Welcome to the Team! 🎉</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You've successfully joined the team!</p>
+                <p class="text-muted">Redirecting to your team dashboard...</p>
+            </div>
+        </div>
+    </div>
+</div>

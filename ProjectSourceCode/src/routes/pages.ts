@@ -271,6 +271,14 @@ router.get("/points-shop", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/teams", requireAuth, (req, res) => {
+  res.render("pages/teams", { 
+    title: "Join Team",
+    layout: "dashboard",
+    user: req.user,
+    scripts: ["/js/teams.js"],
+  });
+});
 
 
 export default router;
