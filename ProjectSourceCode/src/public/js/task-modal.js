@@ -3,6 +3,7 @@
  * Handles task creation and editing via the task modal
  */
 
+
 document.addEventListener("DOMContentLoaded", () => {
   const saveTaskBtn = document.getElementById("saveTaskBtn");
   if (!saveTaskBtn) return;

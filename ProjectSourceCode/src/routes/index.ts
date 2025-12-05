@@ -30,6 +30,12 @@ router.get("/", (req, res) => {
   });
 });
 
+// router.get("/task-member", (req, res) => {
+//   res.render("pages/admin/tasks", {
+//     title: "Gello",
+//     layout: "main",
+//   });
+// });
 
 
 export default router;

@@ -1,3 +1,6 @@
+<script
+      src="/js/tasks.js"
+    ></script>
 <div class="tasks-page">
     <button class="btn btn-primary btn-new-task" data-bs-toggle="modal" data-bs-target="#newTaskModal">New
         Task</button>
@@ -7,14 +10,14 @@
                 <div class="tasks-card">
                     <div class="login-card-body">
                         <h3>Assigned Tasks</h3>
-                        <div class="tasks">
-                            {{#each tasks}}
+                        <div class="tasks" id="assignedTasks">
+                            
                             <div>
-                                <input type="checkbox" id="task1" name="task1" />
-                                <label for="task1"> {{this.name}}</label>
+                                {{!-- <input type="checkbox" id="task1" name="task1" />
+                                <label for="task1"> {{this.name}}</label> --}}
                                 {{!-- TODO: Add Task Description, points, and a delete button --}}
                             </div>
-                            {{/each}}
+                
                         </div>
                     </div>
                 </div>
@@ -33,9 +36,6 @@
                         <div id="userStats" class="mt-3">
                             <p>Tasks Completed: —</p>
                             <p>Current Points: —</p>
-                            <p>High Priority Tasks: —</p>
-                            <p>Medium Priority Tasks: —</p>
-                            <p>Low Priority Tasks: —</p>
                         </div>
                     </div>
                 </div>
@@ -43,7 +43,8 @@
         </div>
     </div>
 
-    <div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel" aria-hidden="true">
+    <div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="newTaskForm">
@@ -58,19 +59,27 @@
                                 required />
                         </div>
                         <div class="mb-3">
-                            <label for="taskPriority" class="form-label">Priority</label>
-                            <select class="form-select" id="taskPriority">
-                                <option value="low" selected>Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
+                            <label for="taskPoints" class="form-label">Points</label>
+                            <select class="form-select" id="taskPoints">
+                                <option value=1 selected>1</option>
+                                <option value=2>2</option>
+                                <option value=3>3</option>
                             </select>
                         </div>
-                        <div class="mb-3">
+                        {{!-- <div class="mb-3">
+                            <label for="taskDifficulty" class="form-label">Difficulty</label>
+                            <select class="form-select" id="taskDifficulty">
+                                <option value="easy" selected>Easy</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="difficult">Difficult</option>
+                            </select>
+                        </div> --}}
+                        {{!-- <div class="mb-3">
                             <label for="assignedUser" class="form-label">Assign To</label>
                             <select class="form-select" id="assignedUser" required>
                                 <option value="">Select user...</option>
                             </select>
-                        </div>
+                        </div> --}}
                     </div>
 
                     <div class="modal-footer">
