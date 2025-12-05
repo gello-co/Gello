@@ -1,13 +1,19 @@
+
 <div class="tasks-page">
     <div class="container-fluid px-4">
         <div class="row g-4">
+
             <div class="col-md-6">
                 <div class="tasks-card">
                     <div class="login-card-body">
                         <h3>Tasks</h3>
-                        {{#each tasks}}
-                        {{/each}}
+
+                        <div class="tasks">
+                            {{#each tasks}}
+                                {{> task-card task=this user=../user}}
+                            {{/each}}
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -18,18 +24,11 @@
                         <div class="login-card-body">
                             <h3>Points Overview</h3>
                             <p>Current Points: </p>
-                            <p>Tasks to Points: </p>
-                            <div class="priority-list">
-                                <p style="color: rgb(206, 0, 0);">High Priority: </p>
-                                <p style="color: rgb(233, 186, 0);">Medium Priority: </p>
-                                <p style="color: rgb(0, 190, 9);">Low Priority: </p>
-                            </div>
                         </div>
                     </div>
                 </a>
             </div>
+
         </div>
     </div>
 </div>
-
-
