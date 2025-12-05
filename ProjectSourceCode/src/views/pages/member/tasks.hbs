@@ -1,4 +1,52 @@
+<div class="tasks-page">
+    <div class="container-fluid px-4">
+        <div class="row g-4">
 
+            <div class="col-md-6">
+                <div class="tasks-card">
+                    <div class="login-card-body">
+                        <h3>Tasks for {{user.display_name}}</h3>
+
+                        <div class="tasks">
+                            {{#if tasks.length}}
+                                {{#each tasks}}
+                                    <div class="row border rounded m-1 py-2 px-2">
+                                        <div class="col-8">
+                                            <strong>{{this.name}}</strong><br>
+                                            Points: {{this.points}}<br>
+                                        </div>
+                                        <div class="col-4 text-end">
+                                            Assigned To: {{user.display_name}}
+                                        </div>
+                                    </div>
+                                {{/each}}
+                            {{else}}
+                                <p>No tasks assigned.</p>
+                            {{/if}}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Points Overview -->
+            <div class="col-md-6">
+                <a href="./admin-tasks.hbs" style="text-decoration: none; color: inherit">
+                    <div class="tasks-card">
+                        <div class="login-card-body">
+                            <h3>Points Overview</h3>
+                            <p>Current Points: {{user.points}}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{{!-- 
 <div class="tasks-page">
     <div class="container-fluid px-4">
         <div class="row g-4">
@@ -31,4 +79,4 @@
 
         </div>
     </div>
-</div>
+</div> --}}

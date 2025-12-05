@@ -35,6 +35,46 @@ router.get("/all", requireAuth,  async (req: Request, res: Response) => {
 });
 
 
+router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { userId } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("assigned_to", userId);
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching user tasks:", err);
+    res.status(500).json({ error: "Failed to fetch tasks for this user" });
+  }
+});
+
+
+router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => {
+  const supabase = getSupabaseClient();
+  const { userId } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("assigned_to", userId);
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching user tasks:", err);
+    res.status(500).json({ error: "Failed to fetch tasks for this user" });
+  }
+});
+
+
 
 router.post("/", requireAuth, async (req: Request, res: Response) => {
   const supabase = getSupabaseClient();

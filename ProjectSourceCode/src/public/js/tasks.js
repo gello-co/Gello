@@ -1,11 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("newTaskForm");
     const tasksContainer = document.getElementById("assignedTasks");
+    const userSelect = document.getElementById("assignedUser");
+
+    const { data: users, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("role", "teammember");
+
+    if (error) {
+        console.error("Error loading users:", error);
+    } else {
+        users.forEach(user => {
+            const option = document.createElement("option");
+            option.value = user.id;
+            option.textContent = user.name;
+            userSelect.appendChild(option);
+        });
+    }
 
     function addTaskToUI(task) {
         const div = document.createElement("div");
         div.className = "row border rounded m-1 py-1 p-2";
-        div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}`;
+        div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}<br>Assigned To: ${task.user}`;
         tasksContainer.appendChild(div);
     }
 
@@ -14,7 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const task = {
             name: document.getElementById("taskName").value,
-            points: document.getElementById("taskPoints").value
+            points: document.getElementById("taskPoints").value,
+            user: document.getElementById("assignedUser").value
         };
 
         addTaskToUI(task);
@@ -24,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const tasksContainer = document.getElementById("assignedTasks");
 
-function addTaskToUI(taskInfo) {   
+function addTaskToUI(taskInfo) {
     const taskCard = createTaskCard(taskInfo);
     tasksContainer.appendChild(taskCard);
 }
