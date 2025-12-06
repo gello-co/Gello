@@ -287,3 +287,26 @@ export async function getSupabaseClientForRequest(
   // Return client with Authorization header set (may work for RPC even without session)
   return client;
 }
+
+/**
+ * Get admin Supabase client for privileged operations like auth user updates
+ * Uses the service role key which has unrestricted access to all data and auth operations
+ */
+let adminClient: SupabaseClient | null = null;
+
+export function getSupabaseAdminClient() {
+  if (adminClient) return adminClient;
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error(
+      "Supabase admin client not configured: SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY",
+    );
+  }
+  // Admin client with service role key for privileged operations
+  adminClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+  return adminClient;
+}

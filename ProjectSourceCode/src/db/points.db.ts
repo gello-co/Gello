@@ -85,6 +85,7 @@ export async function getLeaderboard(
   const { data, error } = await client
     .from("users")
     .select("id, display_name, email, avatar_url, total_points")
+    .eq("role", "member")
     .order("total_points", { ascending: false })
     .limit(limit);
 

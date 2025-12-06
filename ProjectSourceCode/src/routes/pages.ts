@@ -233,28 +233,59 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
 
     const topThree = leaderboard.slice(0, 3);
     const others = leaderboard.slice(3);
-    const isManager = req.user.role === "manager" || req.user.role === "admin";
     
-    if(isManager){
-      res.render("pages/admin/leaderboard", {
+    res.render("pages/leaderboard", {
       title: "Leaderboard",
       layout: "dashboard",
       user: req.user,
       topThree,
       others,
-      isManager,
-      });
-    } else{
-      res.render("pages/member/leaderboard", {
-        title: "Leaderboard",
-        layout: "dashboard",
-        user: req.user,
-        topThree,
-        others,
-        isManager,
-      });
-    }
+    });
   } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/profile", requireAuth, async (req, res, next) => {
+  try {
+    const { display_name, email } = req.body;
+    
+    if (!display_name || !email) {
+      return res.status(400).json({ error: "Display name and email are required" });
+    }
+
+    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+    const supabase = getSupabaseClient();
+    
+    // Update the users table
+    const { data, error } = await supabase
+      .from("users")
+      .update({ display_name, email })
+      .eq("id", req.user!.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Profile update error:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    // Update auth email using admin client
+    const { getSupabaseAdminClient } = await import("../lib/supabase.js");
+    const adminSupabase = getSupabaseAdminClient();
+    const { error: authError } = await adminSupabase.auth.admin.updateUserById(
+      req.user!.id,
+      { email: email }
+    );
+
+    if (authError) {
+      console.error("Auth email update error:", authError);
+      return res.status(400).json({ error: `Failed to update auth email: ${authError.message}` });
+    }
+
+    res.json({ success: true, user: data });
+  } catch (error) {
+    console.error("Profile update exception:", error);
     next(error);
   }
 });
