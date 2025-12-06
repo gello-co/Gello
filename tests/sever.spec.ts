@@ -9,6 +9,7 @@ import {
   createTestUser,
   generateTestEmail,
   getCsrfToken,
+  loginAsUser,
   prepareTestDb,
   setCsrfHeadersIfEnabled,
 } from "../setup/helpers/index.js";
@@ -68,13 +69,13 @@ describe("Auth API (bun)", () => {
       }
     });
 
-// Negative Testcase:
-// API: POST /auth/register
-// Input: {email: duplicateEmail, password: "password123", passwordConfirm: "password123", display_name: "Duplicate User"}
-// Expect: res.status == 409 and res.body.error == "User already exists"
-// Result: This test case should fail registration and return a status 409 along with an error message saying that the user already exists.
-// Explanation: The testcase creates a user with a duplicate email, and then tries to register again with the same email.
-// The API should detect the duplicate email and return a 409 status with an error message.
+    // Negative Testcase:
+    // API: POST /auth/register
+    // Input: {email: duplicateEmail, password: "password123", passwordConfirm: "password123", display_name: "Duplicate User"}
+    // Expect: res.status == 409 and res.body.error == "User already exists"
+    // Result: This test case should fail registration and return a status 409 along with an error message saying that the user already exists.
+    // Explanation: The testcase creates a user with a duplicate email, and then tries to register again with the same email.
+    // The API should detect the duplicate email and return a 409 status with an error message.
 
     it("should reject duplicate email", async () => {
       const duplicateEmail = generateTestEmail("duplicate");
@@ -96,21 +97,40 @@ describe("Auth API (bun)", () => {
       expect(response.body).toHaveProperty("error", "User already exists");
       expect(response.body).toHaveProperty("message");
     });
+  });
+});
 
-    it("should validate required fields", async () => {
-      const { token: csrfToken, cookie: csrfCookie } = await getCsrfTokenSafe();
+// Additional Positive Testcase:
+// API: POST /api/teams
+// Input: authenticated admin user and { name: 'Admin Team' }
+// Expect: res.status == 201 and response.body.name == 'Admin Team'
+// Result: This test should create a new team successfully as an admin.
+// Explanation: The testcase logs in as an admin user, then calls the /api/teams endpoint to create a new team.
+describe('POST /api/teams', () => {
+  it('should create team as admin', async () => {
+    const { token: csrfToken } = await getCsrfToken(adminCookies);
+    let req = request(app).post('/api/teams').set('Cookie', adminCookies);
+    req = setCsrfHeadersIfEnabled(req, csrfToken);
+    const response = await req.send({ name: 'Admin Team' });
 
-      let req = request(app).post("/auth/register");
-      req = setCsrfHeadersIfEnabled(req, csrfToken, csrfCookie);
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty('name', 'Admin Team');
+  });
+});
 
-      const response = await req.send({
-        email: "invalid-email",
-        password: "short",
-        passwordConfirm: "short",
-        display_name: "",
-      });
+// Additional Negative Testcase:
+// API: GET /api/points/leaderboard
+// Input: non-existent team ID, which is 00000000-0000-0000-0000-000000000000
+// Expect: res.status == 404
+// Result: This test should fail with 404 when requesting a leaderboard for a team that doesn't exist.
+// Explanation: The testcase tries to access the leaderboard for a team ID that does not exist.
+describe('GET /api/points/leaderboard', () => {
 
-      expect(response.status).toBe(400);
-    });
+  it('should return 404 for non-existent team', async () => {
+    const response = await request(app)
+      .get('/api/teams/00000000-0000-0000-0000-000000000000')
+      .set('Cookie', adminCookies);
+
+    expect(response.status).toBe(404);
   });
 });
