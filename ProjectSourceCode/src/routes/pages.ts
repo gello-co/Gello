@@ -227,14 +227,8 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
     const leaderboardService = new LeaderboardService(getSupabaseClient());
     const leaderboard = await leaderboardService.getLeaderboard(100);
 
-    // Filter out admins - only show members
-    const filteredLeaderboard = leaderboard.filter(user => user.role === "member");
-
-    const topThree = filteredLeaderboard.slice(0, 3);
-    const others = filteredLeaderboard.slice(3).map((user, index) => ({
-      ...user,
-      rank: index + 4,
-    }));
+    const topThree = leaderboard.slice(0, 3);
+    const others = leaderboard.slice(3);
     
     res.render("pages/leaderboard", {
       title: "Leaderboard",
@@ -244,6 +238,50 @@ router.get("/leaderboard", requireAuth, async (req, res, next) => {
       others,
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/profile", requireAuth, async (req, res, next) => {
+  try {
+    const { display_name, email } = req.body;
+    
+    if (!display_name || !email) {
+      return res.status(400).json({ error: "Display name and email are required" });
+    }
+
+    // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+    const supabase = getSupabaseClient();
+    
+    // Update the users table
+    const { data, error } = await supabase
+      .from("users")
+      .update({ display_name, email })
+      .eq("id", req.user!.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Profile update error:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    // Update auth email using admin client
+    const { getSupabaseAdminClient } = await import("../lib/supabase.js");
+    const adminSupabase = getSupabaseAdminClient();
+    const { error: authError } = await adminSupabase.auth.admin.updateUserById(
+      req.user!.id,
+      { email: email }
+    );
+
+    if (authError) {
+      console.error("Auth email update error:", authError);
+      return res.status(400).json({ error: `Failed to update auth email: ${authError.message}` });
+    }
+
+    res.json({ success: true, user: data });
+  } catch (error) {
+    console.error("Profile update exception:", error);
     next(error);
   }
 });

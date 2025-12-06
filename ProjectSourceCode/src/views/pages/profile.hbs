@@ -4,18 +4,111 @@
 			<div class="card">
 				<div class="card-body">
 					<div class="text-center mb-4">
-						<h2>{{user.display_name}}</h2>
-						<p class="text-muted">{{user.email}}</p>
-						{{#if user.role}}
-							<span class="badge bg-primary">{{user.role}}</span>
+						<div id="viewMode">
+							<h2 id="displayNameView">{{user.display_name}}</h2>
+							<p class="text-muted" id="emailView">{{user.email}}</p>
+							{{#if user.role}}
+								<span class="badge bg-primary">{{user.role}}</span>
+								<br />
+							{{/if}}
+							{{#unless isAdmin}}
+								{{> points-badge points=user.total_points}}
+							{{/unless}}
 							<br />
-						{{/if}}
-						{{#unless isAdmin}}
-							{{> points-badge points=user.total_points}}
-						{{/unless}}
+							<button class="btn btn-sm btn-primary mt-3" id="editBtn">Edit Profile</button>
+						</div>
+						<div id="editMode" style="display: none;">
+							<div class="mb-3">
+								<label for="displayNameInput" class="form-label">Display Name</label>
+								<input type="text" class="form-control" id="displayNameInput" value="{{user.display_name}}" required>
+							</div>
+							<div class="mb-3">
+								<label for="emailInput" class="form-label">Email</label>
+								<input type="email" class="form-control" id="emailInput" value="{{user.email}}" required>
+							</div>
+							<button class="btn btn-sm btn-success" id="saveBtn">Save</button>
+							<button class="btn btn-sm btn-secondary" id="cancelBtn">Cancel</button>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const viewMode = document.getElementById('viewMode');
+		const editMode = document.getElementById('editMode');
+		const editBtn = document.getElementById('editBtn');
+		const saveBtn = document.getElementById('saveBtn');
+		const cancelBtn = document.getElementById('cancelBtn');
+		const displayNameInput = document.getElementById('displayNameInput');
+		const emailInput = document.getElementById('emailInput');
+		const displayNameView = document.getElementById('displayNameView');
+		const emailView = document.getElementById('emailView');
+
+		editBtn.addEventListener('click', () => {
+			viewMode.style.display = 'none';
+			editMode.style.display = 'block';
+		});
+
+		cancelBtn.addEventListener('click', () => {
+			editMode.style.display = 'none';
+			viewMode.style.display = 'block';
+			displayNameInput.value = displayNameView.textContent;
+			emailInput.value = emailView.textContent;
+		});
+
+		saveBtn.addEventListener('click', async () => {
+			try {
+				console.log('Saving profile with:', {
+					display_name: displayNameInput.value,
+					email: emailInput.value
+				});
+
+				const response = await fetch('/pages/profile', {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						display_name: displayNameInput.value,
+						email: emailInput.value
+					})
+				});
+
+				console.log('Response status:', response.status);
+				console.log('Response headers:', response.headers);
+
+				const text = await response.text();
+				console.log('Response text:', text);
+
+				let result;
+				try {
+					result = JSON.parse(text);
+				} catch (e) {
+					console.error('Failed to parse response as JSON:', e);
+					alert(`Server error (${response.status}): ${text.substring(0, 100)}`);
+					return;
+				}
+
+				if (!response.ok) {
+					console.error('Error response:', result);
+					alert(`Failed: ${result.error || result.message || 'Unknown error'}`);
+					return;
+				}
+
+				// Update the display
+				displayNameView.textContent = result.user.display_name;
+				emailView.textContent = result.user.email;
+				
+				editMode.style.display = 'none';
+				viewMode.style.display = 'block';
+				
+				alert('Profile updated successfully!');
+			} catch (error) {
+				console.error('Error:', error);
+				alert('Failed to update profile: ' + error.message);
+			}
+		});
+	});
+</script>
