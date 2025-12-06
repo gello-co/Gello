@@ -81,10 +81,27 @@ export async function getTasksByAssignee(
     .from("tasks")
     .select("*")
     .eq("assigned_to", userId)
+    .order("completed_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to get tasks by assignee: ${error.message}`);
+  }
+
+  return (data ?? []) as Task[];
+}
+
+export async function getAllTasks(
+  client: SupabaseClient,
+): Promise<Task[]> {
+  const { data, error } = await client
+    .from("tasks")
+    .select("*")
+    .order("completed_at", { ascending: true, nullsFirst: true })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to get all tasks: ${error.message}`);
   }
 
   return (data ?? []) as Task[];

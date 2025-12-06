@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("newTaskForm");
     const tasksContainer = document.getElementById("assignedTasks");
     // const userSelect = document.getElementById("assignedUser");
@@ -6,15 +6,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const userSelect = document.getElementById("userSelect");
     const userStatsDiv = document.getElementById("userStats");
 
+    // Store users in a Map for quick lookup by ID
+    let usersMap = new Map();
+
     const { data: users, error } = await supabase
         .from("users")
         .select("*")
-        .eq("role", "teammember");
+        .eq("role", "member");
 
     if (error) {
         console.error("Error loading users:", error);
     } else {
         users.forEach(user => {
+            // Store in map for later lookup
+            usersMap.set(user.id, user.display_name);
+
             const option1 = document.createElement("option");
             option1.value = user.id;
             option1.textContent = user.display_name;
@@ -54,21 +60,81 @@ document.addEventListener("DOMContentLoaded", () => {
     function addTaskToUI(task) {
         const div = document.createElement("div");
         div.className = "row border rounded m-1 py-1 p-2";
-        div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}<br>Assigned To: ${task.user}`;
+
+        const displayName = usersMap.get(task.user) || "Unknown User";
+        div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}<br>Assigned To: ${displayName}`;
         tasksContainer.appendChild(div);
     }
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const task = {
-            name: document.getElementById("taskName").value,
-            points: document.getElementById("taskPoints").value,
-            user: document.getElementById("assignedUser").value
-        };
+        const taskName = document.getElementById("taskName").value;
+        const taskPoints = document.getElementById("taskPoints").value;
+        const assignedUserId = document.getElementById("assignedUser").value;
 
-        addTaskToUI(task);
-        form.reset();
+        try {
+            const response = await fetch("/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: taskName,
+                    story_points: parseInt(taskPoints),
+                    assigned_to: assignedUserId
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error:", errorData);
+                alert(`Failed: ${errorData.message || "Unknown error"}`);
+                return;
+            }
+
+            const task = {
+                name: taskName,
+                points: taskPoints,
+                user: assignedUserId
+            };
+
+            addTaskToUI(task);
+            form.reset();
+        } catch (err) {
+            console.error("Error:", err);
+            alert("Failed to create task");
+        }
+    });
+
+    // Add delete functionality
+    document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-task-btn')) {
+            const taskId = e.target.getAttribute('data-task-id');
+            
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(`Failed: ${error.message || 'Unknown error'}`);
+                    return;
+                }
+                
+                // Remove the task element from DOM
+                const taskElement = e.target.closest('.row');
+                taskElement.remove();
+                alert('Task deleted successfully!');
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to delete task');
+            }
+        }
     });
 });
 
