@@ -39,14 +39,12 @@
 
             <!-- Points Overview -->
             <div class="col-md-6">
-                <a href="./admin-tasks.hbs" style="text-decoration: none; color: inherit">
-                    <div class="tasks-card">
-                        <div class="login-card-body">
-                            <h3>Points Overview</h3>
-                            <p>Current Points: {{user.points}}</p>
-                        </div>
+                <div class="tasks-card">
+                    <div class="login-card-body">
+                        <h3>Points Overview</h3>
+                        <p id="pointsDisplay">Current Points: {{user.total_points}}</p>
                     </div>
-                </a>
+                </div>
             </div>
 
         </div>
@@ -76,6 +74,8 @@
                         return;
                     }
                     
+                    const result = await response.json();
+                    
                     // Update the task element to show completed status
                     taskElement.style.backgroundColor = '#e8f5e9';
                     taskElement.style.opacity = '0.7';
@@ -87,6 +87,10 @@
                     // Move to bottom
                     const tasksContainer = taskElement.parentElement;
                     tasksContainer.appendChild(taskElement);
+                    
+                    // Update points display
+                    const pointsDisplay = document.getElementById('pointsDisplay');
+                    pointsDisplay.textContent = `Current Points: ${result.newTotalPoints}`;
                     
                     alert('Task completed and points earned!');
                 } catch (err) {
