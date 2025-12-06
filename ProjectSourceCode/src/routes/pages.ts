@@ -11,6 +11,7 @@ import { TaskService } from "../services/task.service.js";
 import { TeamService } from "../services/team.service.js";
 import { getSupabaseClient } from "../lib/supabase.js";
 import { requireAuth } from "../middleware/requireAuth.js";
+import { env } from "../utils/env.js";
 
 const router = express.Router();
 
@@ -116,6 +117,8 @@ router.get("/tasks", requireAuth, async (req, res, next) => {
         // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
         user: req.user!,
         boards,
+        SUPABASE_URL: env.SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
       });
     }else{
       res.render("pages/member/tasks", {
@@ -124,6 +127,8 @@ router.get("/tasks", requireAuth, async (req, res, next) => {
         // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
         user: req.user!,
         boards,
+        SUPABASE_URL: env.SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
       });
     }
   } catch (error) {

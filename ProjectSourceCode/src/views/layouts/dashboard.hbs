@@ -42,6 +42,15 @@
 	></script>
 	<script src="https://unpkg.com/htmx.org@2.0.8"></script>
 	<script src="https://kit.fontawesome.com/a456ae42df.js" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script>
+		{{#if SUPABASE_URL}}
+		window.supabase = supabase.createClient(
+			'{{SUPABASE_URL}}',
+			'{{SUPABASE_PUBLISHABLE_KEY}}'
+		);
+		{{/if}}
+	</script>
 	{{#if scripts}}
 		{{#each scripts}}
 			<script src="{{this}}"></script>

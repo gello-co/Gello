@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("newTaskForm");
     const tasksContainer = document.getElementById("assignedTasks");
     // const userSelect = document.getElementById("assignedUser");
@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const { data: users, error } = await supabase
         .from("users")
         .select("*")
-        .eq("role", "teammember");
+        .eq("role", "member");
 
     if (error) {
         console.error("Error loading users:", error);
