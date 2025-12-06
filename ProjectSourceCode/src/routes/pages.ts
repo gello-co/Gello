@@ -99,34 +99,27 @@ router.get("/teams/:id", requireAuth, async (req, res, next) => {
 
 router.get("/tasks", requireAuth, async (req, res, next) => {
   try {
-    // requireAuth guarantees req.user is set when next() is called
-    const boardService = getBoardService();
-    const teamId = req.query.team_id as string | undefined;
-    let boards: Awaited<ReturnType<typeof boardService.getBoardsByTeam>> = [];
-    if (teamId) {
-      boards = await boardService.getBoardsByTeam(teamId);
-    } else {
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      boards = await boardService.getBoardsForUser(req.user!.id);
-    }
+    const taskService = getTaskService();
     const isAdmin = req.user?.role === "admin";
+    
     if(isAdmin){
       res.render("pages/admin/tasks", {
-        title: "Boards",
+        title: "Tasks",
         layout: "dashboard",
         // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
         user: req.user!,
-        boards,
         SUPABASE_URL: env.SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
       });
     }else{
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      const tasks = await taskService.getTasksByAssignee(req.user!.id);
       res.render("pages/member/tasks", {
-        title: "Boards",
+        title: "My Tasks",
         layout: "dashboard",
         // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
         user: req.user!,
-        boards,
+        tasks,
         SUPABASE_URL: env.SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
       });

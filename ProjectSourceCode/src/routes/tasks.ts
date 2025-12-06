@@ -57,13 +57,71 @@ router.get("/assignedTasks/:id", requireAuth, async (req: Request, res: Response
 
 
 router.post("/", requireAuth, async (req: Request, res: Response) => {
-  const supabase = getSupabaseClient();
-  const { data } = await supabase
-    .from("tasks")
-    .insert(req.body)
-    .select()
-    .single();
-  res.json(data);
+  try {
+    const supabase = getSupabaseClient();
+    
+    let listId: string | null = null;
+    const { data: existingList } = await supabase
+      .from("lists")
+      .select("id")
+      .eq("name", "Default Tasks")
+      .limit(1)
+      .maybeSingle();
+    
+    if (existingList) {
+      listId = existingList.id;
+    } else {
+      const { data: boards } = await supabase
+        .from("boards")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      
+      let boardId = boards?.id;
+      
+      if (!boardId) {
+        const { data: newBoard, error: boardError } = await supabase
+          .from("boards")
+          .insert({ name: "Main Board" })
+          .select("id")
+          .single();
+        
+        if (boardError || !newBoard) {
+          return res.status(500).json({ message: "Failed to create default board" });
+        }
+        boardId = newBoard.id;
+      }
+      
+      const { data: newList, error: listError } = await supabase
+        .from("lists")
+        .insert({ name: "Default Tasks", board_id: boardId, position: 0 })
+        .select("id")
+        .single();
+      
+      if (listError || !newList) {
+        return res.status(500).json({ message: "Failed to create default list" });
+      }
+      listId = newList.id;
+    }
+    
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert({
+        ...req.body,
+        list_id: listId,
+        position: 0
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      return res.status(500).json({ message: error.message });
+    }
+    res.json(data);
+  } catch (err) {
+    console.error("Error creating task:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 router.put("/:id",requireAuth, async (req: Request, res: Response) => {

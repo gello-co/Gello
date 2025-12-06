@@ -8,18 +8,22 @@
                         <h3>Tasks for {{user.display_name}}</h3>
 
                         <div class="tasks">
-                            {{#if tasks.length}}
-                                {{#each tasks}}
-                                    <div class="row border rounded m-1 py-2 px-2">
-                                        <div class="col-8">
-                                            <strong>{{this.name}}</strong><br>
-                                            Points: {{this.points}}<br>
+                            {{#if tasks}}
+                                {{#if tasks.length}}
+                                    {{#each tasks}}
+                                        <div class="row border rounded m-1 py-2 px-2">
+                                            <div class="col-8">
+                                                <strong>{{this.title}}</strong><br>
+                                                Points: {{this.story_points}}
+                                            </div>
+                                            <div class="col-4 text-end">
+                                                Status: {{#if this.completed_at}}Done{{else}}Pending{{/if}}
+                                            </div>
                                         </div>
-                                        <div class="col-4 text-end">
-                                            Assigned To: {{user.display_name}}
-                                        </div>
-                                    </div>
-                                {{/each}}
+                                    {{/each}}
+                                {{else}}
+                                    <p>No tasks assigned.</p>
+                                {{/if}}
                             {{else}}
                                 <p>No tasks assigned.</p>
                             {{/if}}
