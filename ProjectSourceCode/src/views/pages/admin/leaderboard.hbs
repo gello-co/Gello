@@ -11,6 +11,7 @@
 
                 <div class="top-three-section fade-in">
                     <div class="row g-4">
+                    {{#each topThree}}
                         <div class="col-md-4">
                             <div class="winner-card">
                                 <img src="#" alt="Winner 1" class="winner-image">
@@ -18,20 +19,7 @@
                                 <div class="winner-note" id="top-shoutout-1">team lead shoutout</div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="winner-card">
-                                <img src="#" alt="Winner 2" class="winner-image">
-                                <div class="winner-name">Team Member 2</div>
-                                <div class="winner-note" id="top-shoutout-2">team lead shoutout</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="winner-card">
-                                <img src="#" alt="Winner 3" class="winner-image">
-                                <div class="winner-name">Team Member 3</div>
-                                <div class="winner-note" id="top-shoutout-3">team lead shoutout</div>
-                            </div>
-                        </div>
+                    {{/each}}
                     </div>
                 </div>
 

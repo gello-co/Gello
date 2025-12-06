@@ -15,16 +15,15 @@ import { calculateTaskPoints, validateManualAward } from "../utils/points.js";
 
 export class PointsService {
   private client: SupabaseClient;
-  constructor(
-    client: SupabaseClient,
-    _currentUserId?: string,
-  ) {
+
+  constructor(client: SupabaseClient, _currentUserId?: string) {
     this.client = client;
   }
 
+  // Award points for completing a task
   async awardPointsForTaskCompletion(
     taskId: string,
-    userId: string,
+    userId: string
   ): Promise<PointsHistory> {
     const task = await getTaskById(this.client, taskId);
     if (!task) {
@@ -46,9 +45,10 @@ export class PointsService {
     });
   }
 
+  // Manually award points to a user
   async awardManualPoints(
     input: ManualAwardInput,
-    awardedBy: string,
+    awardedBy: string
   ): Promise<PointsHistory> {
     if (!validateManualAward(input.points_earned)) {
       throw new Error("Invalid points amount");
@@ -68,14 +68,42 @@ export class PointsService {
     });
   }
 
+  // Deduct points from a user
+  async deductPoints(
+    userId: string,
+    points: number,
+    deductedBy: string,
+    notes?: string
+  ): Promise<PointsHistory> {
+    if (points <= 0) {
+      throw new Error("Points to deduct must be greater than 0");
+    }
+
+    const user = await getUserById(this.client, userId);
+    if (!user) {
+      throw new ResourceNotFoundError("User not found");
+    }
+
+    return createPointsHistory(this.client, {
+      user_id: userId,
+      points_earned: -points, // Negative points for deduction
+      reason: "manual_deduction",
+      awarded_by: deductedBy,
+      notes: notes ?? null,
+    });
+  }
+
+  // Get points history for a user
   async getPointsHistory(userId: string): Promise<PointsHistory[]> {
     return getPointsHistoryByUser(this.client, userId);
   }
 
+  // Get leaderboard
   async getLeaderboard(limit: number = 100): Promise<LeaderboardEntry[]> {
     return getLeaderboard(this.client, limit);
   }
 
+  // Get total points for a user
   async getUserPoints(userId: string): Promise<number> {
     return getUserPoints(this.client, userId);
   }

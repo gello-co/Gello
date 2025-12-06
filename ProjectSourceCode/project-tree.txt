@@ -1,0 +1,239 @@
+.
+├── .env
+├── .gitattributes
+├── .gitignore
+├── .gitmodules
+├── LICENSE
+├── biome.json
+├── bun-env.d.ts
+├── bun.lock
+├── bunfig.toml
+├── doppler.yaml
+├── package.json
+├── playwright.config.ts
+├── postcss.config.js
+├── project-tree.txt
+├── render.yaml
+├── scripts
+│   ├── bootstrap.sh
+│   ├── seed-simple.ts
+│   ├── verify-branches.sh
+│   └── verify-leaderboard.ts
+├── src
+│   ├── app.ts
+│   ├── db
+│   │   ├── boards.db.ts
+│   │   ├── items.db.ts
+│   │   ├── lists.db.ts
+│   │   ├── points.db.ts
+│   │   ├── supabase.types.ts
+│   │   ├── tasks.db.ts
+│   │   ├── teams.db.ts
+│   │   └── users.db.ts
+│   ├── errors
+│   │   ├── DuplicateUserError.ts
+│   │   ├── InvalidCredentialsError.ts
+│   │   ├── NonRetryableError.ts
+│   │   ├── ResourceNotFoundError.ts
+│   │   ├── RetryableError.ts
+│   │   ├── UserNotFoundError.ts
+│   │   └── ValidationError.ts
+│   ├── lib
+│   │   ├── logger.ts
+│   │   └── supabase.ts
+│   ├── middleware
+│   │   ├── csrf.ts
+│   │   ├── devBypass.ts
+│   │   ├── errorHandler.ts
+│   │   ├── request-logger.ts
+│   │   ├── requireAdmin.ts
+│   │   ├── requireAuth.ts
+│   │   ├── requireManager.ts
+│   │   └── validation.ts
+│   ├── public
+│   │   ├── css
+│   │   │   ├── index.css
+│   │   │   ├── input.css
+│   │   │   ├── output.css
+│   │   │   └── style.css
+│   │   ├── images
+│   │   │   ├── adminlogin.jpg
+│   │   │   ├── black-pfp.png
+│   │   │   ├── blue-pfp.png
+│   │   │   ├── frog-pfp.png
+│   │   │   ├── gello1st.png
+│   │   │   ├── gello2nd.png
+│   │   │   ├── gello3rd.png
+│   │   │   ├── gellocoin.png
+│   │   │   ├── gelloicon1.png
+│   │   │   ├── gelloicon2.png
+│   │   │   ├── green-hat-pfp.png
+│   │   │   ├── green-pfp.png
+│   │   │   ├── icon1.png
+│   │   │   ├── icon2.png
+│   │   │   ├── memberlogin.jpg
+│   │   │   ├── moon-pfp.png
+│   │   │   ├── pink-pfp.png
+│   │   │   ├── purple-pfp.png
+│   │   │   ├── red-pfp.png
+│   │   │   ├── stock.jpg
+│   │   │   └── witch-pfp.png
+│   │   └── js
+│   │       ├── board.js
+│   │       ├── login.js
+│   │       ├── register.js
+│   │       ├── task-card.js
+│   │       ├── task-modal.js
+│   │       ├── tasks.js
+│   │       └── teams.js
+│   ├── routes
+│   │   ├── admin.ts
+│   │   ├── auth.ts
+│   │   ├── boards.ts
+│   │   ├── index.ts
+│   │   ├── leaderboard.ts
+│   │   ├── lists.ts
+│   │   ├── pages-testing.ts
+│   │   ├── pages.ts
+│   │   ├── points.ts
+│   │   ├── tasks.ts
+│   │   ├── teams.ts
+│   │   └── users.ts
+│   ├── schemas
+│   │   ├── board.ts
+│   │   ├── item.ts
+│   │   ├── list.ts
+│   │   ├── points.ts
+│   │   ├── task.ts
+│   │   ├── team.ts
+│   │   └── user.ts
+│   ├── services
+│   │   ├── auth.service.ts
+│   │   ├── board.service.ts
+│   │   ├── item.services.ts
+│   │   ├── leaderboard.service.ts
+│   │   ├── list.service.ts
+│   │   ├── points.service.ts
+│   │   ├── task.service.ts
+│   │   └── team.service.ts
+│   ├── types
+│   │   └── express.d.ts
+│   ├── utils
+│   │   ├── env.ts
+│   │   ├── handelbars.ts
+│   │   ├── permissions.ts
+│   │   ├── points.ts
+│   │   └── retry.ts
+│   └── views
+│       ├── layouts
+│       │   ├── auth.hbs
+│       │   ├── dashboard.hbs
+│       │   └── main.hbs
+│       ├── pages
+│       │   ├── admin
+│       │   │   ├── leaderboard.hbs
+│       │   │   ├── profile.hbs
+│       │   │   └── tasks.hbs
+│       │   ├── home.hbs
+│       │   ├── login.hbs
+│       │   ├── member
+│       │   │   ├── leaderboard.hbs
+│       │   │   ├── profile.hbs
+│       │   │   └── tasks.hbs
+│       │   ├── points-shop.hbs
+│       │   ├── register.hbs
+│       │   └── teams.hbs
+│       └── partials
+│           ├── footer.hbs
+│           ├── list-column.hbs
+│           ├── navbar-old.hbs
+│           ├── navbar.hbs
+│           ├── points-badge.hbs
+│           ├── sidebar.hbs
+│           ├── task-card.hbs
+│           ├── task-modal.hbs
+│           └── user-avatar.hbs
+├── supabase
+│   ├── .branches
+│   │   └── _current_branch
+│   ├── .temp
+│   │   ├── cli-latest
+│   │   ├── gotrue-version
+│   │   ├── pooler-url
+│   │   ├── postgres-version
+│   │   ├── project-ref
+│   │   ├── rest-version
+│   │   ├── storage-migration
+│   │   └── storage-version
+│   ├── config.toml
+│   ├── migrations
+│   │   ├── 20251111120000_schema_initial.sql
+│   │   ├── 20251111123000_create_core_tables_and_policies.sql
+│   │   ├── 20251111T120000_schema_initial.sql
+│   │   ├── 20251111T123000_create_core_tables_and_policies.sql
+│   │   ├── 20251113100000_fix_rls_helpers.sql
+│   │   ├── 20251116172004_add_reorder_lists_rpc.sql
+│   │   ├── 20251116180847_add_create_points_history_atomic_rpc.sql
+│   │   ├── 20251116182936_add_complete_task_atomic_rpc.sql
+│   │   ├── 20251117001724_simplify_password_hash_column.sql
+│   │   ├── 20251117002144_refactor_rls_policies_with_current_user_role_helper.sql
+│   │   ├── 20251117093500_manager_team_policies.sql
+│   │   ├── 20251117115000_add_user_context_helpers.sql
+│   │   ├── 20251117120000_consolidated_rls_policies.sql
+│   │   ├── 20251117203724_add_test_helpers.sql
+│   │   └── 20251118055347_fix_rpc_functions_accept_user_id.sql
+│   ├── seed.sql
+│   └── tests
+│       ├── boards_rls.test.sql
+│       ├── lists_rls.test.sql
+│       ├── points_history_rls.test.sql
+│       ├── tasks_rls.test.sql
+│       ├── teams_rls.test.sql
+│       └── users_rls.test.sql
+├── tailwind.config.js
+├── tests
+│   ├── e2e
+│   │   ├── admin-pages-verification.spec.ts
+│   │   ├── auth-flow.spec.ts
+│   │   ├── board-workflow.spec.ts
+│   │   ├── csrf-verification.spec.ts
+│   │   ├── health.spec.ts
+│   │   └── visual-pages.spec.ts
+│   ├── health.test.ts
+│   ├── integration
+│   │   ├── auth.test.ts
+│   │   ├── boards.test.ts
+│   │   ├── lists.test.ts
+│   │   ├── points.test.ts
+│   │   ├── tasks.test.ts
+│   │   ├── teams.test.ts
+│   │   └── views.test.ts
+│   ├── setup
+│   │   ├── bun-setup.ts
+│   │   ├── ensure-template.ts
+│   │   ├── helpers
+│   │   │   ├── auth.ts
+│   │   │   ├── csrf.ts
+│   │   │   ├── db-cleanup.ts
+│   │   │   ├── db-lock.ts
+│   │   │   ├── db.ts
+│   │   │   ├── index.ts
+│   │   │   └── mock.ts
+│   │   ├── worker-db-preload.ts
+│   │   └── worker-db.ts
+│   └── unit
+│       ├── health.test.ts
+│       ├── services
+│       │   ├── auth.service.test.ts
+│       │   ├── board.service.test.ts
+│       │   ├── leaderboard.service.test.ts
+│       │   ├── list.service.test.ts
+│       │   ├── points.service.test.ts
+│       │   ├── task.service.test.ts
+│       │   └── team.service.test.ts
+│       └── utils
+│           ├── permissions.test.ts
+│           └── points.test.ts
+└── tsconfig.json
+
+35 directories, 202 files

@@ -70,12 +70,12 @@
                     <h2 class="section-title">Your Teams</h2>
                     
                     <div class="teams-grid">
-                        {{
+                        {{!-- {{
 #if
  (length teams)}}
                             {{
 #each
- teams}}
+ teams}} --}}
                             <div class="team-card">
                                 <div class="team-card-header">
                                     <h4>{{name}}</h4>
@@ -92,18 +92,18 @@
                                     <a href="/teams/{{id}}" class="btn btn-sm btn-primary">View Team</a>
                                 </div>
                             </div>
-                            {{
+                            {{!-- {{
 /each
 }}
-                        {{else}}
+                        {{else}} --}}
                             <div class="empty-state">
                                 <i class="fas fa-users fa-3x mb-3"></i>
                                 <h5>No teams yet</h5>
                                 <p class="text-muted">Join your first team using the form on the left!</p>
                             </div>
-                        {{
+                        {{!-- {{
 /if
-}}
+}} --}}
                     </div>
                 </div>
             </div>
