@@ -81,6 +81,7 @@ export async function getTasksByAssignee(
     .from("tasks")
     .select("*")
     .eq("assigned_to", userId)
+    .order("completed_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -96,6 +97,7 @@ export async function getAllTasks(
   const { data, error } = await client
     .from("tasks")
     .select("*")
+    .order("completed_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: false });
 
   if (error) {

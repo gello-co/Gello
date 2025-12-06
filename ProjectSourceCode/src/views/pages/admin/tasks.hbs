@@ -14,8 +14,8 @@
                             {{#if tasks}}
                                 {{#if tasks.length}}
                                     {{#each tasks}}
-                                        <div class="row border rounded m-1 py-1 p-2">
-                                            <strong>{{this.title}}</strong><br>Points: {{this.story_points}}<br>Assigned To: {{lookup ../usersMap this.assigned_to}}
+                                        <div class="row border rounded m-1 py-1 p-2" style="{{#if this.completed_at}}background-color: #e8f5e9;{{/if}}">
+                                            <strong>{{this.title}}</strong><br>Points: {{this.story_points}}<br>Assigned To: {{lookup ../usersMap this.assigned_to}}<br>Status: {{#if this.completed_at}}<span style="color: green;">✓ Completed</span>{{else}}<span style="color: orange;">Pending</span>{{/if}}
                                         </div>
                                     {{/each}}
                                 {{else}}
