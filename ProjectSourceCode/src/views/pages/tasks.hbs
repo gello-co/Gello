@@ -1,0 +1,244 @@
+<div class="tasks-page">
+	<div class="container-fluid px-4">
+		<div class="row g-4">
+			{{#if isAdmin}}
+				<!-- Admin View: Create Task Form and All Tasks -->
+				<div class="col-12">
+					<div class="tasks-card">
+						<div class="login-card-body">
+							<h3>Create New Task</h3>
+							<form id="newTaskForm">
+								<div class="row mb-3">
+									<div class="col-md-4">
+										<input type="text" class="form-control login-input" id="taskName" placeholder="Task Name" required>
+									</div>
+									<div class="col-md-4">
+										<input type="number" class="form-control login-input" id="taskPoints" placeholder="Story Points" required>
+									</div>
+									<div class="col-md-4">
+										<select class="form-control login-input" id="assignedUser" required>
+											<option value="">Assign to...</option>
+										</select>
+									</div>
+								</div>
+								<button type="submit" class="btn btn-primary btn-login">Create Task</button>
+							</form>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-12">
+					<div class="tasks-card">
+						<div class="login-card-body">
+							<h3>All Tasks</h3>
+							<div class="tasks">
+								{{#if tasks}}
+									{{#if tasks.length}}
+										{{#each tasks}}
+											<div class="row border rounded m-1 py-2 px-2" data-task-id="{{this.id}}" style="{{#if this.completed_at}}background-color: #e8f5e9; opacity: 0.7;{{/if}}">
+												<div class="col-10">
+													<strong>{{this.title}}</strong><br>
+													Points: {{this.story_points}} | Assigned to: {{lookup ../usersMap this.assigned_to}}
+												</div>
+												<div class="col-2 text-end">
+													<button class="btn btn-sm btn-danger delete-task-btn" data-task-id="{{this.id}}">Delete</button>
+												</div>
+											</div>
+										{{/each}}
+									{{else}}
+										<p>No tasks created yet.</p>
+									{{/if}}
+								{{else}}
+									<p>No tasks created yet.</p>
+								{{/if}}
+							</div>
+						</div>
+					</div>
+				</div>
+			{{else}}
+				<!-- Member View: Assigned Tasks and Points Overview -->
+				<div class="col-md-6">
+					<div class="tasks-card">
+						<div class="login-card-body">
+							<h3>Tasks for {{user.display_name}}</h3>
+							<div class="tasks">
+								{{#if tasks}}
+									{{#if tasks.length}}
+										{{#each tasks}}
+											<div class="row border rounded m-1 py-2 px-2" data-task-id="{{this.id}}" style="{{#if this.completed_at}}background-color: #e8f5e9; opacity: 0.7;{{/if}}">
+												<div class="col-8">
+													<strong>{{this.title}}</strong><br>
+													Points: {{this.story_points}}
+												</div>
+												<div class="col-4 text-end">
+													{{#if this.completed_at}}
+														<span style="color: green;">✓ Completed</span>
+													{{else}}
+														<button class="btn btn-sm btn-success complete-task-btn" data-task-id="{{this.id}}">Complete</button>
+													{{/if}}
+												</div>
+											</div>
+										{{/each}}
+									{{else}}
+										<p>No tasks assigned.</p>
+									{{/if}}
+								{{else}}
+									<p>No tasks assigned.</p>
+								{{/if}}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Points Overview -->
+				<div class="col-md-6">
+					<div class="tasks-card">
+						<div class="login-card-body">
+							<h3>Points Overview</h3>
+							<p id="pointsDisplay">Current Points: {{user.total_points}}</p>
+						</div>
+					</div>
+				</div>
+			{{/if}}
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', async () => {
+		{{#if isAdmin}}
+			// Admin task form handling
+			const form = document.getElementById("newTaskForm");
+			const assignSelect = document.getElementById("assignedUser");
+			
+			const { data: users, error } = await supabase
+				.from("users")
+				.select("*")
+				.eq("role", "member");
+
+			if (!error && users) {
+				users.forEach(user => {
+					const option = document.createElement("option");
+					option.value = user.id;
+					option.textContent = user.display_name;
+					assignSelect.appendChild(option);
+				});
+			}
+
+			if (form) {
+				form.addEventListener("submit", async (e) => {
+					e.preventDefault();
+
+					const taskName = document.getElementById("taskName").value;
+					const taskPoints = document.getElementById("taskPoints").value;
+					const assignedUserId = document.getElementById("assignedUser").value;
+
+					try {
+						const response = await fetch("/tasks", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								title: taskName,
+								story_points: parseInt(taskPoints),
+								assigned_to: assignedUserId
+							})
+						});
+
+						if (!response.ok) {
+							const errorData = await response.json();
+							alert(`Failed: ${errorData.message || "Unknown error"}`);
+							return;
+						}
+
+						alert("Task created successfully!");
+						location.reload();
+					} catch (error) {
+						console.error("Error:", error);
+						alert("Failed to create task");
+					}
+				});
+			}
+
+			// Delete task handling
+			const deleteButtons = document.querySelectorAll('.delete-task-btn');
+			deleteButtons.forEach(button => {
+				button.addEventListener('click', async (e) => {
+					e.preventDefault();
+					const taskId = button.getAttribute('data-task-id');
+					
+					if (!confirm('Are you sure you want to delete this task?')) {
+						return;
+					}
+
+					try {
+						const response = await fetch(`/tasks/${taskId}`, {
+							method: 'DELETE',
+							headers: { 'Content-Type': 'application/json' }
+						});
+
+						if (!response.ok) {
+							const error = await response.json();
+							alert(`Failed: ${error.message || 'Unknown error'}`);
+							return;
+						}
+
+						const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+						taskElement.remove();
+						alert('Task deleted successfully');
+					} catch (error) {
+						console.error('Error:', error);
+						alert('Failed to delete task');
+					}
+				});
+			});
+		{{else}}
+			// Member task completion handling
+			const completeButtons = document.querySelectorAll('.complete-task-btn');
+			
+			completeButtons.forEach(button => {
+				button.addEventListener('click', async (e) => {
+					e.preventDefault();
+					const taskId = button.getAttribute('data-task-id');
+					const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+					
+					try {
+						const response = await fetch(`/tasks/${taskId}/complete`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' }
+						});
+						
+						if (!response.ok) {
+							const error = await response.json();
+							alert(`Failed: ${error.message || 'Unknown error'}`);
+							return;
+						}
+						
+						const result = await response.json();
+						
+						// Update the task element to show completed status
+						taskElement.style.backgroundColor = '#e8f5e9';
+						taskElement.style.opacity = '0.7';
+						
+						// Replace button with completion message
+						const buttonCol = button.parentElement;
+						buttonCol.innerHTML = '<span style="color: green;">✓ Completed</span>';
+						
+						// Move to bottom
+						const tasksContainer = taskElement.parentElement;
+						tasksContainer.appendChild(taskElement);
+						
+						// Update points display
+						const pointsDisplay = document.getElementById('pointsDisplay');
+						pointsDisplay.textContent = `Current Points: ${result.newTotalPoints}`;
+						
+						alert('Task completed and points earned!');
+					} catch (err) {
+						console.error('Error:', err);
+						alert('Failed to complete task');
+					}
+				});
+			});
+		{{/if}}
+	});
+</script>
