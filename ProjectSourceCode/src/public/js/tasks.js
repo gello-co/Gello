@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function addTaskToUI(task) {
         const div = document.createElement("div");
         div.className = "row border rounded m-1 py-1 p-2";
-        div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}<br>Assigned To: ${task.user}`;
+        div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}<br>Assigned To: ${task.display_name}`;
         tasksContainer.appendChild(div);
     }
 
