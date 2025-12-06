@@ -270,9 +270,24 @@ router.post("/:id/complete", requireAuth, async (req: Request, res: Response) =>
 
 
 router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
-  const supabase = getSupabaseClient();
-  await supabase.from("tasks").delete().eq("id", req.params.id);
-  res.json({ ok: true });
+  try {
+    const supabase = getSupabaseClient();
+    const taskId = req.params.id;
+    
+    const { error } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", taskId);
+    
+    if (error) {
+      return res.status(500).json({ message: error.message });
+    }
+    
+    res.json({ ok: true, message: "Task deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting task:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 

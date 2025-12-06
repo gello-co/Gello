@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function addTaskToUI(task) {
         const div = document.createElement("div");
         div.className = "row border rounded m-1 py-1 p-2";
-        // Look up the user's display name using the stored map
+
         const displayName = usersMap.get(task.user) || "Unknown User";
         div.innerHTML = `<strong>${task.name}</strong><br>Points: ${task.points}<br>Assigned To: ${displayName}`;
         tasksContainer.appendChild(div);
@@ -102,6 +102,38 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (err) {
             console.error("Error:", err);
             alert("Failed to create task");
+        }
+    });
+
+    // Add delete functionality
+    document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-task-btn')) {
+            const taskId = e.target.getAttribute('data-task-id');
+            
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(`Failed: ${error.message || 'Unknown error'}`);
+                    return;
+                }
+                
+                // Remove the task element from DOM
+                const taskElement = e.target.closest('.row');
+                taskElement.remove();
+                alert('Task deleted successfully!');
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to delete task');
+            }
         }
     });
 });

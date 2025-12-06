@@ -15,7 +15,12 @@
                                 {{#if tasks.length}}
                                     {{#each tasks}}
                                         <div class="row border rounded m-1 py-1 p-2" style="{{#if this.completed_at}}background-color: #e8f5e9;{{/if}}">
-                                            <strong>{{this.title}}</strong><br>Points: {{this.story_points}}<br>Assigned To: {{lookup ../usersMap this.assigned_to}}<br>Status: {{#if this.completed_at}}<span style="color: green;">✓ Completed</span>{{else}}<span style="color: orange;">Pending</span>{{/if}}
+                                            <div class="col-10">
+                                                <strong>{{this.title}}</strong><br>Points: {{this.story_points}}<br>Assigned To: {{lookup ../usersMap this.assigned_to}}<br>Status: {{#if this.completed_at}}<span style="color: green;">✓ Completed</span>{{else}}<span style="color: orange;">Pending</span>{{/if}}
+                                            </div>
+                                            <div class="col-2 text-end">
+                                                <button class="btn btn-sm btn-danger delete-task-btn" data-task-id="{{this.id}}">Delete</button>
+                                            </div>
                                         </div>
                                     {{/each}}
                                 {{else}}
