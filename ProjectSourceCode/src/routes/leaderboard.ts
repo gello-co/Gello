@@ -1,7 +1,7 @@
 import express from 'express';
-import { LeaderboardService } from '../../../lib/services/leaderboard.service.js';
-import { getSupabaseClient } from '../../../lib/supabase.js';
-import { requireAuth } from '../../../middleware/requireAuth.js';
+import { LeaderboardService } from '../services/leaderboard.service.js';
+import { getSupabaseClient } from '../lib/supabase.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
