@@ -103,42 +103,38 @@ router.get("/tasks", requireAuth, async (req, res, next) => {
     const supabase = getSupabaseClient();
     const isAdmin = req.user?.role === "admin";
     
-    if(isAdmin){
-      const allTasks = await taskService.getAllTasks();
+    let tasks = [];
+    let usersMap: Record<string, string> = {};
+    let title = "My Tasks";
+
+    if (isAdmin) {
+      tasks = await taskService.getAllTasks();
+      title = "All Tasks";
       
       // Fetch all users to create a lookup map
       const { data: users } = await supabase
         .from("users")
         .select("id, display_name");
       
-      const usersMap: Record<string, string> = {};
       users?.forEach(user => {
         usersMap[user.id] = user.display_name;
       });
-      
-      res.render("pages/admin/tasks", {
-        title: "Tasks",
-        layout: "dashboard",
-        // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-        user: req.user!,
-        tasks: allTasks,
-        usersMap,
-        SUPABASE_URL: env.SUPABASE_URL,
-        SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
-      });
-    }else{
+    } else {
       // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      const tasks = await taskService.getTasksByAssignee(req.user!.id);
-      res.render("pages/member/tasks", {
-        title: "My Tasks",
-        layout: "dashboard",
-        // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-        user: req.user!,
-        tasks,
-        SUPABASE_URL: env.SUPABASE_URL,
-        SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
-      });
+      tasks = await taskService.getTasksByAssignee(req.user!.id);
     }
+
+    res.render("pages/tasks", {
+      title,
+      layout: "dashboard",
+      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
+      user: req.user!,
+      tasks,
+      usersMap,
+      isAdmin,
+      SUPABASE_URL: env.SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY,
+    });
   } catch (error) {
     next(error);
   }

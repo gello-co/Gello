@@ -29,6 +29,7 @@ export type LeaderboardEntry = {
   email: string;
   avatar_url: string | null;
   total_points: number;
+  role: string;
   rank: number;
 };
 
@@ -99,6 +100,7 @@ export async function getLeaderboard(
     email: user.email,
     avatar_url: user.avatar_url,
     total_points: user.total_points,
+    role: user.role,
     rank: index + 1,
   })) as LeaderboardEntry[];
 }
