@@ -55,21 +55,23 @@ Opens: http://localhost:3000/
 
 Auto-reload: Edit files → Save → Browser auto-refreshes
 
-Stop Everything: 
+#### Stop Everything: 
 ```
 bun run stop
 ```
 (stops dev server + Supabase)
 
-Stop Individual Services:
+#### Stop Individual Services:
 
 Press Ctrl+C in terminal (stops dev server only)
+
 ```
 bun run supabase:stop
 ```
-  (stops Supabase only)
-  Start Development Server Only
-  If Supabase is already running, you can start just the dev server:
+(stops Supabase only)
+
+#### Start Development Server Only
+If Supabase is already running, you can start just the dev server:
 ```
 bun run dev
 ```
