@@ -6,6 +6,7 @@ import {
   getTaskById,
   getTasksByAssignee,
   getTasksByList,
+  getAllTasks,
   moveTask,
   type Task,
   updateTask,
@@ -36,6 +37,10 @@ export class TaskService {
 
   async getTasksByAssignee(userId: string): Promise<Task[]> {
     return getTasksByAssignee(this.client, userId);
+  }
+
+  async getAllTasks(): Promise<Task[]> {
+    return getAllTasks(this.client);
   }
 
   async createTask(input: CreateTaskInput): Promise<Task> {

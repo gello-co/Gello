@@ -90,6 +90,21 @@ export async function getTasksByAssignee(
   return (data ?? []) as Task[];
 }
 
+export async function getAllTasks(
+  client: SupabaseClient,
+): Promise<Task[]> {
+  const { data, error } = await client
+    .from("tasks")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to get all tasks: ${error.message}`);
+  }
+
+  return (data ?? []) as Task[];
+}
+
 export async function createTask(
   client: SupabaseClient,
   input: CreateTaskInput,

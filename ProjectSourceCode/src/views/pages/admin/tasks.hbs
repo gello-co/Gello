@@ -11,13 +11,19 @@
                     <div class="login-card-body">
                         <h3>Assigned Tasks</h3>
                         <div class="tasks" id="assignedTasks">
-                            
-                            <div>
-                                {{!-- <input type="checkbox" id="task1" name="task1" />
-                                <label for="task1"> {{this.name}}</label> --}}
-                                {{!-- TODO: Add Task Description, points, and a delete button --}}
-                            </div>
-                
+                            {{#if tasks}}
+                                {{#if tasks.length}}
+                                    {{#each tasks}}
+                                        <div class="row border rounded m-1 py-1 p-2">
+                                            <strong>{{this.title}}</strong><br>Points: {{this.story_points}}<br>Assigned To: {{lookup ../usersMap this.assigned_to}}
+                                        </div>
+                                    {{/each}}
+                                {{else}}
+                                    <p>No tasks created yet.</p>
+                                {{/if}}
+                            {{else}}
+                                <p>No tasks created yet.</p>
+                            {{/if}}
                         </div>
                     </div>
                 </div>
