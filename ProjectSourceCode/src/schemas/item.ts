@@ -30,8 +30,14 @@ export const createUserItemAssociationSchema = z.object({
   user_id: z.uuid(),
   item_id: z.uuid(),
 });
+export const deleteUserItemAssociationSchema = z.object({
+  user_id: z.uuid(),
+  item_id: z.uuid(),
+});
 
 export type Item = z.infer<typeof itemSchema>;
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
 export type UserItemAssociation = z.infer<typeof userItemAssociationSchema>;
+export type CreateUserItemAssociationInput = z.infer<typeof createUserItemAssociationSchema>;
+export type DeleteUserItemAssociationInput = z.infer<typeof deleteUserItemAssociationSchema>;

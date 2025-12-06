@@ -7,6 +7,7 @@ import pagesRouter from "./pages";
 import authRouter from "./auth";
 import teamRouter from "./teams";
 import pageTestRouter from "./pages-testing.js";
+import itemRouter from "./items.js";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use('/tasks', tasksRouter);
 router.use('/auth', authRouter);
 router.use('/teams', teamRouter);
 router.use('/test', pageTestRouter);
+router.use('/items', itemRouter);
 
 router.get("/", (req, res) => {
   // Redirect authenticated users to boards page

@@ -6,6 +6,7 @@ import "../types/express.d.js";
 import { BoardService } from "../services/board.service.js";
 import { LeaderboardService } from "../services/leaderboard.service.js";
 import { ListService } from "../services/list.service.js";
+import { ItemService } from "../services/item.services.js";
 import { PointsService } from "../services/points.service.js";
 import { TaskService } from "../services/task.service.js";
 import { TeamService } from "../services/team.service.js";
@@ -287,13 +288,14 @@ router.put("/profile", requireAuth, async (req, res, next) => {
 });
 
 router.get("/points-shop", requireAuth, async (req, res, next) => {
-  //let item = await getItemsService().getAllItems();
+  const itemService = new ItemService(getSupabaseClient());
+  const _items = await itemService.getAllItems();
   try {
     res.render("pages/points-shop/index", {
       title: "Points Shop",
       layout: "dashboard",
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
+      items: _items
     });
     
   }catch (error) {

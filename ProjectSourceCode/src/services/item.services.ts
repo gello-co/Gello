@@ -5,9 +5,12 @@ import {
   deleteItem,
   getItemById,
   getItemsByUser,
+  getAllItems,
   updateItem,
+  createUserItemAssociation,
+  deleteUserItemAssociation
 } from "../db/items.db.js";
-import type { CreateItemInput, UpdateItemInput } from "../schemas/item.js";
+import type { CreateItemInput, CreateUserItemAssociationInput, DeleteUserItemAssociationInput, UpdateItemInput } from "../schemas/item.js";
 
 export class ItemService {
   private client: SupabaseClient;
@@ -19,19 +22,31 @@ export class ItemService {
       return getItemById(this.client, id);
     }
   
-    // async getItemsForUser(userId: string): Promise<Item[]> {
-    //   return getItemsByUser(this.client, userId);
-    // }
+  async getItemsByUser(userId: string): Promise<Item[]> {
+     return getItemsByUser(this.client, userId);
+  }
   
-    async createItem(input: CreateItemInput): Promise<Item> {
-      return createItem(this.client, input);
-    }
+  async createItem(input: CreateItemInput): Promise<Item> {
+    return createItem(this.client, input);
+  }
+
+  async updateItem(input: UpdateItemInput): Promise<Item> {
+    return updateItem(this.client, input);
+  }
+
+  async deleteItem(id: string): Promise<void> {
+    return deleteItem(this.client, id);
+  }
+
+  async getAllItems(): Promise<Item[]> {
+    return getAllItems(this.client);
+  }
+
+  async createUserItemAssociation(input: CreateUserItemAssociationInput): Promise<void> {
+    return createUserItemAssociation(this.client, input.user_id, input.item_id);
+  }
   
-    async updateItem(input: UpdateItemInput): Promise<Item> {
-      return updateItem(this.client, input);
-    }
-  
-    async deleteItem(id: string): Promise<void> {
-      return deleteItem(this.client, id);
-    }
+  async deleteUserItemAssociation(input: DeleteUserItemAssociationInput): Promise<void> {
+    return deleteUserItemAssociation(this.client, input.user_id, input.item_id);
+  }
 }

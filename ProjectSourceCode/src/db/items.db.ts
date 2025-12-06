@@ -33,6 +33,11 @@ export type CreateUserItemAssociationInput = {
     item_id: string;
 };
 
+export type DeleteUserItemAssociationInput = {
+    user_id: string;
+    item_id: string;
+};
+
 export async function createItem(
     client: SupabaseClient,
     input: CreateItemInput,
@@ -117,14 +122,15 @@ export async function getAllItems(
 export async function getItemsByUser(
     client: SupabaseClient,
     userId: string,
-): Promise<void> {
+): Promise<Item[]> {
     const { data, error } = await client
         .from("user_to_items")
-        .select("item_id")
+        .select("items(*)")
         .eq("user_id", userId);
     if (error) {
         throw new Error(`Failed to get items for user: ${error.message}`);
     }
+    return (data?.map((row: any) => row.items) ?? []) as Item[];
 }
 
 export async function createUserItemAssociation(
@@ -137,6 +143,21 @@ export async function createUserItemAssociation(
         .insert({ user_id: userId, item_id: itemId });
     if (error) {
         throw new Error(`Failed to associate item with user: ${error.message}`);
+    }
+}
+
+export async function deleteUserItemAssociation(
+    client: SupabaseClient,
+    userId: string,
+    itemId: string,
+): Promise<void> {
+    const { error } = await client
+        .from("user_to_items")
+        .delete()
+        .eq("user_id", userId)
+        .eq("item_id", itemId);
+    if (error) {
+        throw new Error(`Failed to delete association between user and item: ${error.message}`);
     }
 }
 
