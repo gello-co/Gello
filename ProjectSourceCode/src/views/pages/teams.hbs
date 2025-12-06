@@ -1,76 +1,113 @@
 <div class="teams-page">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-8">
-                
-                <div class="text-center mb-5">
-                    <h1 class="page-title">Join a Team</h1>
-                    <p class="page-subtitle">Enter your team code to get started</p>
-                </div>
+    <div class="container-fluid px-4">
+        <div class="row">
+            
+            {{!-- Left Side: Join Team Form --}}
+            <div class="col-lg-4 col-md-5">
+                <div class="join-team-section">
+                    <h2 class="section-title">Join a Team</h2>
+                    <p class="section-subtitle">Enter your team code to get started</p>
 
-                <div class="join-team-card">
-                    <form id="joinTeamForm">
-                        
-                        <!-- Here is the Team Code Input -->
-                        <div class="mb-4">
-                            <label for="teamCode" class="form-label">Team Code</label>
-                            <input 
-                                type="text" 
-                                class="form-control login-input" 
-                                id="teamCode" 
-                                name="teamCode"
-                                placeholder="Enter 6-digit team code"
-                                maxlength="6"
-                                required>
-                            <small class="text-muted">Ask your team leader for the code</small>
-                        </div>
+                    <div class="join-team-card">
+                        <form id="joinTeamForm">
+                            
+                            <!-- Team Code Input -->
+                            <div class="mb-3">
+                                <label for="teamCode" class="form-label">Team Code</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control login-input" 
+                                    id="teamCode" 
+                                    name="teamCode"
+                                    placeholder="Enter 6-digit code"
+                                    maxlength="6"
+                                    required>
+                                <small class="text-muted">Ask your team leader for the code</small>
+                            </div>
 
-                        <!-- Role Selection -->
-                        <div class="mb-4">
-                            <label class="form-label">Select Your Role</label>
-                            <div class="role-options">
-                                <div class="role-card" onclick="selectRole('member')">
-                                    <input 
-                                        type="radio" 
-                                        name="role" 
-                                        id="roleMember" 
-                                        value="member" 
-                                        checked 
-                                        hidden>
-                                    <h5>Team Member</h5>
-                                    <p class="small">Participate in team activities and complete tasks</p>
-                                </div>
-                                
-                                <div class="role-card" onclick="selectRole('admin')">
-                                    <input 
-                                        type="radio" 
-                                        name="role" 
-                                        id="roleAdmin" 
-                                        value="admin" 
-                                        hidden>
-                                    <h5>Team Admin</h5>
-                                    <p class="small">Manage team members and oversee progress</p>
+                            <!-- Role Selection -->
+                            <div class="mb-3">
+                                <label class="form-label">Select Your Role</label>
+                                <div class="role-options">
+                                    <div class="role-card" onclick="selectRole('member')">
+                                        <input 
+                                            type="radio" 
+                                            name="role" 
+                                            id="roleMember" 
+                                            value="member" 
+                                            checked 
+                                            hidden>
+                                        <h6>Team Member</h6>
+                                        <p class="small mb-0">Participate in activities</p>
+                                    </div>
+                                    
+                                    <div class="role-card" onclick="selectRole('admin')">
+                                        <input 
+                                            type="radio" 
+                                            name="role" 
+                                            id="roleAdmin" 
+                                            value="admin" 
+                                            hidden>
+                                        <h6>Team Admin</h6>
+                                        <p class="small mb-0">Manage the team</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Here is the Submit Button -->
-                        <button type="submit" class="btn-signin w-100">
-                            Join Team
-                        </button>
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn-signin w-100">
+                                Join Team
+                            </button>
 
-                        <!-- Alternative Option -->
-                        <div class="text-center mt-4">
-                            <p class="text-muted">
-                                Don't have a code? 
-                                <a href="/teams/create" class="register-link">Create a new team</a>
-                            </p>
-                        </div>
-
-                    </form>
+                        </form>
+                    </div>
                 </div>
-
             </div>
+
+            {{!-- Right Side: Your Teams --}}
+            <div class="col-lg-8 col-md-7">
+                <div class="your-teams-section">
+                    <h2 class="section-title">Your Teams</h2>
+                    
+                    <div class="teams-grid">
+                        {{
+#if
+ (length teams)}}
+                            {{
+#each
+ teams}}
+                            <div class="team-card">
+                                <div class="team-card-header">
+                                    <h4>{{name}}</h4>
+                                    <span class="team-code">Code: {{team_code}}</span>
+                                </div>
+                                <div class="team-card-body">
+                                    <p class="team-description">{{description}}</p>
+                                    <div class="team-stats">
+                                        <span><i class="fas fa-users"></i> {{member_count}} members</span>
+                                        <span><i class="fas fa-trophy"></i> {{total_points}} points</span>
+                                    </div>
+                                </div>
+                                <div class="team-card-footer">
+                                    <a href="/teams/{{id}}" class="btn btn-sm btn-primary">View Team</a>
+                                </div>
+                            </div>
+                            {{
+/each
+}}
+                        {{else}}
+                            <div class="empty-state">
+                                <i class="fas fa-users fa-3x mb-3"></i>
+                                <h5>No teams yet</h5>
+                                <p class="text-muted">Join your first team using the form on the left!</p>
+                            </div>
+                        {{
+/if
+}}
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -85,7 +122,7 @@
             </div>
             <div class="modal-body">
                 <p>You've successfully joined the team!</p>
-                <p class="text-muted">Redirecting to your team dashboard...</p>
+                <p class="text-muted">Refreshing page...</p>
             </div>
         </div>
     </div>

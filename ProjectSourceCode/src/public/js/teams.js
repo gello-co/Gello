@@ -7,7 +7,7 @@ function selectRole(role) {
         card.style.boxShadow = 'none';
     });
     event.currentTarget.style.borderColor = '#742e10';
-    event.currentTarget.style.boxShadow = '0 5px 15px rgba(116, 46, 16, 0.2)';
+    event.currentTarget.style.boxShadow = '0 3px 10px rgba(116, 46, 16, 0.2)';
 }
 
 document.getElementById('joinTeamForm')?.addEventListener('submit', async (e) => {
@@ -19,12 +19,12 @@ document.getElementById('joinTeamForm')?.addEventListener('submit', async (e) =>
     // TODO: Replace with actual API call
     console.log('Joining team:', { teamCode, role });
     
-    // Show success modal (for demo)
+    // Show success modal
     const modal = new bootstrap.Modal(document.getElementById('joinSuccessModal'));
     modal.show();
     
-    // Redirect after 2 seconds (for demo)
+    // Reload page after 2 seconds
     setTimeout(() => {
-        window.location.href = '/teams';
+        window.location.reload();
     }, 2000);
 });

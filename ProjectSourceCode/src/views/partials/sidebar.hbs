@@ -7,7 +7,6 @@
 		</div>
 	</div>
 	<ul class="nav nav-pills flex-column mb-auto mx-3 my-3">
-			<li><a href="/pages/tasks"><i class="fas fa-columns"></i> Boards</a></li>
 			{{#if (or (eq user.role "admin") (eq user.role "manager"))}}
 				<li><a href="/teams"><i class="fas fa-users"></i> {{#if (eq user.role "admin")}}Teams{{else}}My Team{{/if}}</a></li>
 			{{/if}}
