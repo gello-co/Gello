@@ -1,0 +1,21 @@
+<div class="container my-5">
+	<div class="row">
+		<div class="col-md-8 mx-auto">
+			<div class="card">
+				<div class="card-body">
+					<div class="text-center mb-4">
+						<h2>{{user.display_name}}</h2>
+						<p class="text-muted">{{user.email}}</p>
+						{{#if user.role}}
+							<span class="badge bg-primary">{{user.role}}</span>
+							<br />
+						{{/if}}
+						{{#unless isAdmin}}
+							{{> points-badge points=user.total_points}}
+						{{/unless}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -202,32 +202,22 @@ router.get("/profile", requireAuth, async (req, res, next) => {
     // requireAuth guarantees req.user is set when next() is called
     const pointsService = getPointsService(req.user?.id);
     const taskService = getTaskService();
+    const isAdmin = req.user?.role === "admin";
 
     // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
     const pointsHistory = await pointsService.getPointsHistory(req.user!.id);
     // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-    const assignedTasks = await taskService.getTasksByAssignee(req.user!.id);
-    const isManager = req.user.role === "manager" || req.user.role === "admin";
+    let assignedTasks = isAdmin ? await taskService.getAllTasks() : await taskService.getTasksByAssignee(req.user!.id);
 
-    if(isManager){
-      res.render("pages/admin/profile", {
+    res.render("pages/profile", {
       title: "Profile",
       layout: "dashboard",
       // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
       user: req.user!,
       pointsHistory,
       assignedTasks,
-      })
-    }else{
-      res.render("pages/member/profile", {
-      title: "Profile",
-      layout: "dashboard",
-      // biome-ignore lint/style/noNonNullAssertion: req.user is guaranteed by requireAuth middleware
-      user: req.user!,
-      pointsHistory,
-      assignedTasks,
-      });
-    }
+      isAdmin,
+    });
     
   } catch (error) {
     next(error);
