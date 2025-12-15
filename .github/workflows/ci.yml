@@ -41,7 +41,7 @@ jobs:
 
       - name: Restore Bun cache
         id: bun-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
@@ -55,7 +55,7 @@ jobs:
 
       - name: Save Bun cache
         if: steps.bun-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
@@ -84,7 +84,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Restore Bun cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
@@ -138,7 +138,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Restore Bun cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
@@ -170,7 +170,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Restore Bun cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
@@ -202,7 +202,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Restore Bun cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock*', '**/package.json') }}
